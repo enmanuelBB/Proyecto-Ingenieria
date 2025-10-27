@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9133d3f9-b9c8-4c4c-86f5-66586babd51e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -40,6 +39,7 @@
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "SHELLCHECK.PATH": "I do mind",
     "Spring Boot.ProyectoApplication.executor": "Run",
     "git-widget-placeholder": "backend",
@@ -96,7 +96,7 @@
       <updated>1761522274757</updated>
       <workItem from="1761522276300" duration="2787000" />
       <workItem from="1761533153882" duration="1029000" />
-      <workItem from="1761535141974" duration="992000" />
+      <workItem from="1761535141974" duration="2395000" />
     </task>
     <servers />
   </component>
