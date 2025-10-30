@@ -1,0 +1,24 @@
+# Secretos
+.env
+
+# Archivos compilados de Java/Maven
+/backend/target/
+*.jar
+*.war
+
+# Archivos compilados de Node
+/frontend/node_modules/
+/frontend/build/
+/frontend/dist/
+npm-debug.log
+
+# Logs
+*.log
+
+# Archivos de IDE (IntelliJ, VSCode, Eclipse)
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
