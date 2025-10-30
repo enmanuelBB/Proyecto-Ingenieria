@@ -1,41 +1,40 @@
-version: '3.8'
-
 services:
-  # Servicio 1: Frontend (React/Angular/Vue servido con Nginx)
+  # Servicio 1: Frontend (Next.js)
   frontend:
     build:
-      context: ./frontend # 1. Le dice que construya usando la carpeta 'frontend'
+      context: ./frontend
     ports:
-      - "80:80" # 2. Expone tu app en http://localhost (puerto 80)
+      # Mapea el puerto 80 de tu máquina al 3000 del contenedor
+      - "80:3000"
+    environment:
+      # Esta es la URL que tu app Next.js usará para llamar al backend
+      - NEXT_PUBLIC_API_URL=http://backend:8080
     depends_on:
-      - backend # 3. No arranca hasta que el backend esté listo
+      - backend
 
-  # Servicio 2: Backend (Tu API Spring Boot)
+  # Servicio 2: Backend (Tu API Spring Boot) - (Sin cambios)
   backend:
     build:
-      context: ./backend # 1. Le dice que construya usando la carpeta 'backend'
+      context: ./backend
     ports:
-      - "8080:8080" # 2. Expone la API en el puerto 8080
+      - "8080:8080"
     environment:
-      # 3. Apunta a la base de datos 'db' (el nombre del servicio de abajo)
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/tareadb?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD} # Lee la clave del .env
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-
-      # Lee los secretos de JWT desde el archivo .env
       - SECURITY_JWT_SECRET_KEY=${SECURITY_JWT_SECRET_KEY}
       - SECURITY_JWT_EXPIRATION=86400000
       - SECURITY_JWT_REFRESH_EXPIRATION=604800000
     depends_on:
-      - db # 4. No arranca hasta que la BD esté lista
+      - db
 
-  # Servicio 3: Base de Datos (MySQL)
+  # Servicio 3: Base de Datos (MySQL) - (Sin cambios)
   db:
     image: mysql:8.0
     environment:
       - MYSQL_DATABASE=tareadb
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} # Lee la clave del .env
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
 
