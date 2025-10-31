@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     @GetMapping("/hello")
-
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> sayHelloAdmin() {
         return ResponseEntity.ok("¡Hola ADMIN! Has accedido a un endpoint protegido.");
