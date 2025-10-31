@@ -1,6 +1,6 @@
 package com.v1.proyecto.auth.config;
 
-import com.v1.proyecto.auth.models.Token;
+import com.v1.proyecto.auth.model.Token;
 import com.v1.proyecto.auth.repository.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

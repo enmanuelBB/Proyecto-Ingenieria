@@ -1,11 +1,8 @@
-package com.v1.proyecto.models;
+package com.v1.proyecto.model;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 @Data
 @AllArgsConstructor

@@ -2,7 +2,7 @@ package com.v1.proyecto.auth.config;
 
 import com.v1.proyecto.auth.repository.TokenRepository;
 import com.v1.proyecto.auth.service.JwtService;
-import com.v1.proyecto.auth.models.Users;
+import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.auth.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

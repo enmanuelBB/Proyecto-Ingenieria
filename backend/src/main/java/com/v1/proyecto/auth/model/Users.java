@@ -1,4 +1,4 @@
-package com.v1.proyecto.auth.models;
+package com.v1.proyecto.auth.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
