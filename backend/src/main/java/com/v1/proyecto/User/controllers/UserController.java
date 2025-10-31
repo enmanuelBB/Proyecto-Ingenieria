@@ -1,6 +1,6 @@
 package com.v1.proyecto.controllers;
 
-import com.v1.proyecto.model.UserResponse;
+import com.v1.proyecto.User.dto.UserResponse;
 import com.v1.proyecto.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.v1.proyecto.model;
+package com.v1.proyecto.User.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
