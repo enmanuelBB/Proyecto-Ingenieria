@@ -34,14 +34,13 @@ services:
   # Servicio 3: Base de Datos
   db:
     image: mysql:8.0
+    ports:
+      - "3307:3306" 
     environment:
       - MYSQL_DATABASE=tareadb
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-
-    # Esto le dice a Docker cómo comprobar si MySQL está vivo.
-    # Intentará hacer 'ping' a la BD con la contraseña.
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
