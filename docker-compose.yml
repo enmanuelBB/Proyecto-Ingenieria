@@ -1,5 +1,5 @@
 services:
-  # Servicio 1: Frontend (Sin cambios)
+  # Servicio 1: Frontend
   frontend:
     build:
       context: ./frontend
@@ -25,13 +25,13 @@ services:
       - SECURITY_JWT_SECRET_KEY=${SECURITY_JWT_SECRET_KEY}
       - SECURITY_JWT_EXPIRATION=86400000
       - SECURITY_JWT_REFRESH_EXPIRATION=604800000
-    # --- CAMBIO AQUÍ ---
-    # Ahora espera a que la 'db' esté "saludable"
+
+
     depends_on:
       db:
         condition: service_healthy
 
-  # Servicio 3: Base de Datos (ACTUALIZADO)
+  # Servicio 3: Base de Datos
   db:
     image: mysql:8.0
     environment:
@@ -39,7 +39,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-    # --- BLOQUE NUEVO AQUÍ ---
+
     # Esto le dice a Docker cómo comprobar si MySQL está vivo.
     # Intentará hacer 'ping' a la BD con la contraseña.
     healthcheck:
