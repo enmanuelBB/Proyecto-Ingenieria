@@ -1,18 +1,17 @@
 services:
-  # Servicio 1: Frontend (Next.js)
+  # Servicio 1: Frontend (Sin cambios)
   frontend:
     build:
       context: ./frontend
     ports:
-      # Mapea el puerto 80 de tu máquina al 3000 del contenedor
-      - "8081:3000"
+      - "8081:3000" # Usando el puerto 8081
     environment:
-      # Esta es la URL que tu app Next.js usará para llamar al backend
       - NEXT_PUBLIC_API_URL=http://backend:8080
     depends_on:
-      - backend
+      backend:
+        condition: service_started # Espera a que el backend inicie
 
-  # Servicio 2: Backend (Tu API Spring Boot) - (Sin cambios)
+  # Servicio 2: Backend (ACTUALIZADO)
   backend:
     build:
       context: ./backend
@@ -26,10 +25,13 @@ services:
       - SECURITY_JWT_SECRET_KEY=${SECURITY_JWT_SECRET_KEY}
       - SECURITY_JWT_EXPIRATION=86400000
       - SECURITY_JWT_REFRESH_EXPIRATION=604800000
+    # --- CAMBIO AQUÍ ---
+    # Ahora espera a que la 'db' esté "saludable"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
-  # Servicio 3: Base de Datos (MySQL) - (Sin cambios)
+  # Servicio 3: Base de Datos (ACTUALIZADO)
   db:
     image: mysql:8.0
     environment:
@@ -37,6 +39,14 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+    # --- BLOQUE NUEVO AQUÍ ---
+    # Esto le dice a Docker cómo comprobar si MySQL está vivo.
+    # Intentará hacer 'ping' a la BD con la contraseña.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mysql_data:
