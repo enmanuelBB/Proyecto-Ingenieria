@@ -1,6 +1,6 @@
-package com.v1.proyecto.repositories;
+package com.v1.proyecto.auth.repository;
 
-import com.v1.proyecto.models.Users;
+import com.v1.proyecto.auth.models.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -2,7 +2,7 @@ package com.v1.proyecto.controllers;
 
 import com.v1.proyecto.Services.UserServices;
 
-import com.v1.proyecto.models.Users;
+import com.v1.proyecto.auth.models.Users;
 import com.v1.proyecto.models.UsersDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,7 @@
 package com.v1.proyecto.Services;
-import com.v1.proyecto.models.Users;
+import com.v1.proyecto.auth.models.Users;
 import com.v1.proyecto.models.UsersDto;
-import com.v1.proyecto.repositories.UserRepository;
+import com.v1.proyecto.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

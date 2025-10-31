@@ -1,13 +1,13 @@
 package com.v1.proyecto.auth.service;
 
-import com.v1.proyecto.auth.controller.AuthRequest;
-import com.v1.proyecto.auth.controller.RegisterRequest;
-import com.v1.proyecto.auth.controller.TokenResponse;
-import com.v1.proyecto.models.Role;
-import com.v1.proyecto.models.Users;
-import com.v1.proyecto.models.Token;
+import com.v1.proyecto.auth.dto.AuthRequest;
+import com.v1.proyecto.auth.dto.RegisterRequest;
+import com.v1.proyecto.auth.dto.TokenResponse;
+import com.v1.proyecto.auth.models.Role;
+import com.v1.proyecto.auth.models.Users;
+import com.v1.proyecto.auth.models.Token;
 import com.v1.proyecto.auth.repository.TokenRepository;
-import com.v1.proyecto.repositories.UserRepository;
+import com.v1.proyecto.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.security.authentication.AuthenticationManager;

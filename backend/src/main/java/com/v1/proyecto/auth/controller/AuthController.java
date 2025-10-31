@@ -1,5 +1,8 @@
 package com.v1.proyecto.auth.controller;
 
+import com.v1.proyecto.auth.dto.AuthRequest;
+import com.v1.proyecto.auth.dto.RegisterRequest;
+import com.v1.proyecto.auth.dto.TokenResponse;
 import com.v1.proyecto.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

@@ -1,7 +1,7 @@
 package com.v1.proyecto.auth.service;
 
 import com.v1.proyecto.auth.config.JwtProperties;
-import com.v1.proyecto.models.Users;
+import com.v1.proyecto.auth.models.Users;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
