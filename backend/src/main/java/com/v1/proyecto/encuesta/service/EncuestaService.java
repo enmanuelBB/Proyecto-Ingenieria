@@ -126,6 +126,42 @@ public class EncuestaService {
     }
 
     @Transactional
+    public PreguntaDto updatePregunta(Integer idPregunta, PreguntaCreateDto preguntaDto) {
+
+        // 1. Encontrar la pregunta existente
+        Pregunta pregunta = preguntaRepository.findById(idPregunta)
+                .orElseThrow(() -> new RuntimeException("Pregunta no encontrada con id: " + idPregunta));
+
+        // 2. Actualizar los campos simples
+        pregunta.setTextoPregunta(preguntaDto.getTextoPregunta());
+        pregunta.setTipoPregunta(preguntaDto.getTipoPregunta());
+
+        // 3. Borrar las opciones antiguas
+        // Gracias a 'orphanRemoval = true', esto las eliminará de la BD
+        pregunta.getOpciones().clear();
+
+        // 4. Crear y añadir las nuevas opciones (si las hay)
+        if (preguntaDto.getOpciones() != null) {
+            List<OpcionRespuesta> nuevasOpciones = preguntaDto.getOpciones().stream()
+                    .map(opcionDto ->
+                            OpcionRespuesta.builder()
+                                    .textoOpcion(opcionDto.getTextoOpcion())
+                                    .valorDicotomizado(opcionDto.getValorDicotomizado())
+                                    .pregunta(pregunta) // <-- Link de vuelta a la Pregunta
+                                    .build()
+                    ).collect(Collectors.toList());
+
+            pregunta.getOpciones().addAll(nuevasOpciones);
+        }
+
+        // 5. Guardar la pregunta actualizada (guardará las opciones en cascada)
+        Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
+
+        // 6. Devolver el DTO de la pregunta actualizada
+        return mapPreguntaToDto(preguntaGuardada);
+    }
+
+    @Transactional
     public EncuestaResponseDto updateEncuesta(Integer id, EncuestaCreateDto encuestaDto) {
         // 1. Busca la encuesta que vamos a editar
         Encuesta encuestaExistente = encuestaRepository.findById(id)

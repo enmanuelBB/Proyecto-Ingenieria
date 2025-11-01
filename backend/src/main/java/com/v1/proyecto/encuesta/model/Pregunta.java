@@ -31,7 +31,7 @@ public class Pregunta {
     @JoinColumn(name = "id_encuesta", nullable = false)
     private Encuesta encuesta;
 
-    @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true) // <-- ¡AÑADE ORPHAN REMOVAL!
     private List<OpcionRespuesta> opciones;
     
    

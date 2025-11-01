@@ -1,10 +1,7 @@
 package com.v1.proyecto.encuesta.controller;
 
 import com.v1.proyecto.auth.model.Users;
-import com.v1.proyecto.encuesta.dto.EncuestaCreateDto;
-import com.v1.proyecto.encuesta.dto.EncuestaResponseDto;
-import com.v1.proyecto.encuesta.dto.RegistroRequestDto;
-import com.v1.proyecto.encuesta.dto.RegistroResponseDto;
+import com.v1.proyecto.encuesta.dto.*;
 import com.v1.proyecto.encuesta.service.EncuestaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +25,16 @@ public class EncuestaController {
     ) {
         EncuestaResponseDto encuestaCreada = encuestaService.createEncuestaCompleta(encuestaDto);
         return new ResponseEntity<>(encuestaCreada, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/preguntas/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<PreguntaDto> updatePregunta(
+            @PathVariable(name = "id") Integer idPregunta,
+            @Valid @RequestBody PreguntaCreateDto preguntaDto) {
+
+        PreguntaDto preguntaActualizada = encuestaService.updatePregunta(idPregunta, preguntaDto);
+        return ResponseEntity.ok(preguntaActualizada);
     }
 
     /**
