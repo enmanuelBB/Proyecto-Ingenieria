@@ -19,7 +19,7 @@ public class EncuestaController {
     private final EncuestaService encuestaService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN')") // <-- Solo el ADMIN puede crear encuestas
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EncuestaResponseDto> createEncuesta(
             @Valid @RequestBody EncuestaCreateDto encuestaDto
     ) {
@@ -64,7 +64,7 @@ public class EncuestaController {
     @PostMapping("/registro")
     public ResponseEntity<RegistroResponseDto> saveRegistroEncuesta(
             @Valid @RequestBody RegistroRequestDto registroDto,
-            @AuthenticationPrincipal Users user // Inyecta el usuario autenticado
+            @AuthenticationPrincipal Users user
     ) {
         if (user == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -73,6 +73,20 @@ public class EncuestaController {
         RegistroResponseDto respuesta = encuestaService.saveRegistro(registroDto, user);
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         // TODO: Manejar excepciones
+    }
+
+    @DeleteMapping("/preguntas/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deletePregunta(
+            @PathVariable (name= "id") Integer idPregunta
+    ) {
+        try {
+            encuestaService.deletePregunta(idPregunta);
+            return ResponseEntity.noContent().build(); // 204 (Éxito)
+        } catch (RuntimeException e) {
+            // Captura el "Pregunta no encontrada" del servicio
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
     }
 
     @PutMapping("/{id}")

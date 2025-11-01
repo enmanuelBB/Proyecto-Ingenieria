@@ -19,14 +19,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EncuestaService {
 
-    // Necesitamos todos estos repositorios
+    // repositorios
     private final EncuestaRepository encuestaRepository;
     private final PacienteRepository pacienteRepository;
     private final PreguntaRepository preguntaRepository;
     private final OpcionRespuestaRepository opcionRespuestaRepository;
     private final RegistroEncuestaRepository registroEncuestaRepository;
 
-    // --- FUNCIONALIDAD 1: OBTENER FORMULARIO (GET) ---
+
+    // --- FUNCIONALIDAD Encuesta 1: OBTENER FORMULARIO (GET) ---
 
     @Transactional(readOnly = true)
     public EncuestaResponseDto getEncuestaCompleta(Integer id) {
@@ -36,7 +37,7 @@ public class EncuestaService {
         return mapEncuestaToDto(encuesta);
     }
 
-    // --- FUNCIONALIDAD 2: GUARDAR FORMULARIO (POST) ---
+    // --- FUNCIONALIDAD Encuesta 2: GUARDAR FORMULARIO (POST) ---
 
     @Transactional
     public RegistroResponseDto saveRegistro(RegistroRequestDto registroDto, Users user) {
@@ -78,6 +79,7 @@ public class EncuestaService {
         return mapRegistroToDto(registroGuardado);
     }
 
+    // --- FUNCIONALIDAD Encuesta 3: CREAR Encuesta (POST) ---
     @Transactional
     public EncuestaResponseDto createEncuestaCompleta(EncuestaCreateDto encuestaDto) {
 
@@ -124,6 +126,7 @@ public class EncuestaService {
         return mapEncuestaToDto(encuestaGuardada);
     }
 
+    // --- FUNCIONALIDAD Encuesta 4: AÑADIR PREGUNTA  ---
     @Transactional
     public PreguntaDto addPreguntaToEncuesta(Integer idEncuesta, PreguntaCreateDto preguntaDto) {
 
@@ -158,6 +161,8 @@ public class EncuestaService {
         // 5. Devolver el DTO de la pregunta recién creada
         return mapPreguntaToDto(preguntaGuardada);
     }
+
+    // --- FUNCIONALIDAD Encuesta 5: EDITAR PREGUNTA  ---
 
     @Transactional
     public PreguntaDto updatePregunta(Integer idPregunta, PreguntaCreateDto preguntaDto) {
@@ -194,6 +199,7 @@ public class EncuestaService {
         return mapPreguntaToDto(preguntaGuardada);
     }
 
+    // --- FUNCIONALIDAD Encuesta 6: EDITAR TITULO Y VERSION ENCUESTA  ---
     @Transactional
     public EncuestaResponseDto updateEncuesta(Integer id, EncuestaCreateDto encuestaDto) {
         // 1. Busca la encuesta que vamos a editar
@@ -211,7 +217,22 @@ public class EncuestaService {
         return mapEncuestaToDto(encuestaGuardada);
     }
 
-    // --- FUNCIONALIDAD 5: ELIMINAR ENCUESTA (NUEVO) ---
+    // --- FUNCIONALIDAD Encuesta 7: ELIMINAR PREGUNTA  ---
+    @Transactional
+    public void deletePregunta(Integer idPregunta) {
+
+        // 1. Verifica que la pregunta existe antes de borrarla
+        if (!preguntaRepository.existsById(idPregunta)) {
+            throw new RuntimeException("Pregunta no encontrada con id: " + idPregunta);
+        }
+
+        // 2. Borra la pregunta.
+        // Gracias a CascadeType.ALL en la entidad Pregunta,
+        // esto borrará automáticamente todas las OpcionRespuesta asociadas.
+        preguntaRepository.deleteById(idPregunta);
+    }
+
+    // --- FUNCIONALIDAD Encuesta 8: ELIMINAR ENCUESTA ---
 
     @Transactional
     public void deleteEncuesta(Integer id) {
