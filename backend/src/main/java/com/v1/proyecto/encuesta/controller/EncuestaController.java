@@ -18,6 +18,11 @@ public class EncuestaController {
 
     private final EncuestaService encuestaService;
 
+    //---ENCUESTA--
+
+    /**
+     * CREAR ENCUESTA URL: POST /api/v1/encuestas
+     */
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EncuestaResponseDto> createEncuesta(
@@ -27,6 +32,48 @@ public class EncuestaController {
         return new ResponseEntity<>(encuestaCreada, HttpStatus.CREATED);
     }
 
+    /**
+     * URL: GET /api/v1/encuestas/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<EncuestaResponseDto> getEncuestaCompleta(@PathVariable(name = "id") Integer id) {
+        EncuestaResponseDto encuestaDto = encuestaService.getEncuestaCompleta(id);
+        return ResponseEntity.ok(encuestaDto);
+    }
+
+    /**
+     * URL: DELETE /api/v1/encuestas/{id}
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteEncuesta(@PathVariable(name = "id") Integer id) {
+        try {
+            encuestaService.deleteEncuesta(id);
+            return ResponseEntity.noContent().build(); // 204 No Content
+        } catch (RuntimeException e) {
+            // Esto captura el "Encuesta no encontrada" del servicio
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+    }
+    /**
+     *solo actualiza el nombre y la version de la encuesta
+     *actualizar encuesta URL: PUT /api/v1/encuestas/{id}
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<EncuestaResponseDto> updateEncuesta(
+            @PathVariable Integer id,
+            @Valid @RequestBody EncuestaCreateDto encuestaDto) {
+
+        EncuestaResponseDto encuestaActualizada = encuestaService.updateEncuesta(id, encuestaDto);
+        return ResponseEntity.ok(encuestaActualizada); // Devuelve 200 OK
+    }
+
+    //---PREGUNTA---
+
+    /**
+     *actualizar pregunta URL: PUT /api/v1/encuestas/preguntas/{id}
+     */
     @PutMapping("/preguntas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PreguntaDto> updatePregunta(
@@ -37,6 +84,9 @@ public class EncuestaController {
         return ResponseEntity.ok(preguntaActualizada);
     }
 
+    /**
+     *añade pregunta a una encuesta URL: POST /api/v1/encuestas/preguntas
+     */
     @PostMapping("/{idEncuesta}/preguntas")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PreguntaDto> addPreguntaToEncuesta(
@@ -45,16 +95,6 @@ public class EncuestaController {
     ) {
         PreguntaDto nuevaPregunta = encuestaService.addPreguntaToEncuesta(idEncuesta, preguntaDto);
         return new ResponseEntity<>(nuevaPregunta, HttpStatus.CREATED);
-    }
-
-    /**
-     * Endpoint para OBTENER la estructura completa de una encuesta (para el frontend).
-     * URL: GET /api/v1/encuestas/{id}
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<EncuestaResponseDto> getEncuestaCompleta(@PathVariable(name = "id") Integer id) {
-        EncuestaResponseDto encuestaDto = encuestaService.getEncuestaCompleta(id);
-        return ResponseEntity.ok(encuestaDto);
     }
 
     /**
@@ -75,6 +115,9 @@ public class EncuestaController {
         // TODO: Manejar excepciones
     }
 
+    /**
+     *elimina una pregunta URL: DELETE /api/v1/encuestas/preguntas/{id}
+     */
     @DeleteMapping("/preguntas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deletePregunta(
@@ -88,31 +131,4 @@ public class EncuestaController {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
     }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<EncuestaResponseDto> updateEncuesta(
-            @PathVariable Integer id,
-            @Valid @RequestBody EncuestaCreateDto encuestaDto) {
-
-        EncuestaResponseDto encuestaActualizada = encuestaService.updateEncuesta(id, encuestaDto);
-        return ResponseEntity.ok(encuestaActualizada); // Devuelve 200 OK
-    }
-
-    /**
-     * Endpoint (SOLO ADMIN) para ELIMINAR una plantilla de encuesta.
-     * URL: DELETE /api/v1/encuestas/{id}
-     */
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteEncuesta(@PathVariable(name = "id") Integer id) {
-        try {
-            encuestaService.deleteEncuesta(id);
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } catch (RuntimeException e) {
-            // Esto captura el "Encuesta no encontrada" del servicio
-            return ResponseEntity.notFound().build(); // 404 Not Found
-        }
-    }
-
 }
