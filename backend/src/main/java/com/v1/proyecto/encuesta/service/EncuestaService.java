@@ -78,6 +78,81 @@ public class EncuestaService {
         return mapRegistroToDto(registroGuardado);
     }
 
+    @Transactional
+    public EncuestaResponseDto createEncuestaCompleta(EncuestaCreateDto encuestaDto) {
+
+        // 1. Crear la entidad Encuesta (raíz)
+        Encuesta encuesta = Encuesta.builder()
+                .titulo(encuestaDto.getTitulo())
+                .version(encuestaDto.getVersion())
+                .build();
+
+        // 2. Crear las Preguntas y Opciones
+        if (encuestaDto.getPreguntas() != null) {
+            List<Pregunta> preguntas = encuestaDto.getPreguntas().stream()
+                    .map(preguntaDto -> {
+
+                        // 2a. Crear la Pregunta
+                        Pregunta pregunta = Pregunta.builder()
+                                .textoPregunta(preguntaDto.getTextoPregunta())
+                                .tipoPregunta(preguntaDto.getTipoPregunta())
+                                .encuesta(encuesta) // <-- Link de vuelta a la Encuesta
+                                .build();
+
+                        // 2b. Crear las Opciones para esta Pregunta
+                        if (preguntaDto.getOpciones() != null) {
+                            List<OpcionRespuesta> opciones = preguntaDto.getOpciones().stream()
+                                    .map(opcionDto ->
+                                            OpcionRespuesta.builder()
+                                                    .textoOpcion(opcionDto.getTextoOpcion())
+                                                    .valorDicotomizado(opcionDto.getValorDicotomizado())
+                                                    .pregunta(pregunta) // <-- Link de vuelta a la Pregunta
+                                                    .build()
+                                    ).collect(Collectors.toList());
+                            pregunta.setOpciones(opciones);
+                        }
+                        return pregunta;
+                    }).collect(Collectors.toList());
+
+            encuesta.setPreguntas(preguntas);
+        }
+
+        // 3. Guardar todo en cascada
+        // Gracias a CascadeType.ALL, esto guarda la encuesta, las preguntas y las opciones.
+        Encuesta encuestaGuardada = encuestaRepository.save(encuesta);
+
+        // 4. Devolver el DTO de respuesta
+        return mapEncuestaToDto(encuestaGuardada);
+    }
+
+    @Transactional
+    public EncuestaResponseDto updateEncuesta(Integer id, EncuestaCreateDto encuestaDto) {
+        // 1. Busca la encuesta que vamos a editar
+        Encuesta encuestaExistente = encuestaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Encuesta no encontrada con id: " + id));
+
+        // 2. Actualiza los campos "simples" (título y versión)
+        encuestaExistente.setTitulo(encuestaDto.getTitulo());
+        encuestaExistente.setVersion(encuestaDto.getVersion());
+
+        // 3. Guarda los cambios
+        Encuesta encuestaGuardada = encuestaRepository.save(encuestaExistente);
+
+        // 4. Devuelve el DTO actualizado
+        return mapEncuestaToDto(encuestaGuardada);
+    }
+
+    // --- FUNCIONALIDAD 5: ELIMINAR ENCUESTA (NUEVO) ---
+
+    @Transactional
+    public void deleteEncuesta(Integer id) {
+
+        if (!encuestaRepository.existsById(id)) {
+            throw new RuntimeException("Encuesta no encontrada con id: " + id);
+        }
+        encuestaRepository.deleteById(id);
+    }
+
 
     // --- MÉTODOS PRIVADOS DE MAPEO (DTOs) ---
 

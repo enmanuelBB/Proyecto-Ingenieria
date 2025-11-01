@@ -1,6 +1,7 @@
 package com.v1.proyecto.encuesta.controller;
 
 import com.v1.proyecto.auth.model.Users;
+import com.v1.proyecto.encuesta.dto.EncuestaCreateDto;
 import com.v1.proyecto.encuesta.dto.EncuestaResponseDto;
 import com.v1.proyecto.encuesta.dto.RegistroRequestDto;
 import com.v1.proyecto.encuesta.dto.RegistroResponseDto;
@@ -20,6 +21,15 @@ import org.springframework.web.bind.annotation.*;
 public class EncuestaController {
 
     private final EncuestaService encuestaService;
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')") // <-- Solo el ADMIN puede crear encuestas
+    public ResponseEntity<EncuestaResponseDto> createEncuesta(
+            @Valid @RequestBody EncuestaCreateDto encuestaDto
+    ) {
+        EncuestaResponseDto encuestaCreada = encuestaService.createEncuestaCompleta(encuestaDto);
+        return new ResponseEntity<>(encuestaCreada, HttpStatus.CREATED);
+    }
 
     /**
      * Endpoint para OBTENER la estructura completa de una encuesta (para el frontend).
@@ -49,4 +59,27 @@ public class EncuestaController {
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         // TODO: Manejar excepciones
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<EncuestaResponseDto> updateEncuesta(
+            @PathVariable Integer id,
+            @Valid @RequestBody EncuestaCreateDto encuestaDto) {
+
+        EncuestaResponseDto encuestaActualizada = encuestaService.updateEncuesta(id, encuestaDto);
+        return ResponseEntity.ok(encuestaActualizada); // Devuelve 200 OK
+    }
+
+    /**
+     * Endpoint (SOLO ADMIN) para ELIMINAR una plantilla de encuesta.
+     * URL: DELETE /api/v1/encuestas/{id}
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteEncuesta(@PathVariable Integer id) {
+
+        encuestaService.deleteEncuesta(id);
+        return ResponseEntity.noContent().build(); // Devuelve 204 No Content (Éxito)
+    }
+
 }
