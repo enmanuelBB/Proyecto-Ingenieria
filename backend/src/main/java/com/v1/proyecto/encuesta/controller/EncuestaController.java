@@ -35,10 +35,9 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<EncuestaResponseDto> getEncuestaCompleta(@PathVariable Integer id) {
+    public ResponseEntity<EncuestaResponseDto> getEncuestaCompleta(@PathVariable(name = "id") Integer id) {
         EncuestaResponseDto encuestaDto = encuestaService.getEncuestaCompleta(id);
         return ResponseEntity.ok(encuestaDto);
-        // TODO: Manejar Not Found Exception si el service la lanza
     }
 
     /**
@@ -75,7 +74,7 @@ public class EncuestaController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteEncuesta(@PathVariable Integer id) { // <-- ¡CORRECCIÓN!
+    public ResponseEntity<Void> deleteEncuesta(@PathVariable(name = "id") Integer id) {
         try {
             encuestaService.deleteEncuesta(id);
             return ResponseEntity.noContent().build(); // 204 No Content
