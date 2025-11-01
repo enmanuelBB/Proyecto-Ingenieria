@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/encuestas")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
 public class EncuestaController {
 
     private final EncuestaService encuestaService;
@@ -76,10 +75,14 @@ public class EncuestaController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteEncuesta(@PathVariable Integer id) {
-
-        encuestaService.deleteEncuesta(id);
-        return ResponseEntity.noContent().build(); // Devuelve 204 No Content (Éxito)
+    public ResponseEntity<Void> deleteEncuesta(@PathVariable Integer id) { // <-- ¡CORRECCIÓN!
+        try {
+            encuestaService.deleteEncuesta(id);
+            return ResponseEntity.noContent().build(); // 204 No Content
+        } catch (RuntimeException e) {
+            // Esto captura el "Encuesta no encontrada" del servicio
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
     }
 
 }
