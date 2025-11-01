@@ -37,6 +37,16 @@ public class EncuestaController {
         return ResponseEntity.ok(preguntaActualizada);
     }
 
+    @PostMapping("/{idEncuesta}/preguntas")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<PreguntaDto> addPreguntaToEncuesta(
+            @PathVariable (name= "idEncuesta") Integer idEncuesta,
+            @Valid @RequestBody PreguntaCreateDto preguntaDto
+    ) {
+        PreguntaDto nuevaPregunta = encuestaService.addPreguntaToEncuesta(idEncuesta, preguntaDto);
+        return new ResponseEntity<>(nuevaPregunta, HttpStatus.CREATED);
+    }
+
     /**
      * Endpoint para OBTENER la estructura completa de una encuesta (para el frontend).
      * URL: GET /api/v1/encuestas/{id}

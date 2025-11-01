@@ -96,7 +96,7 @@ public class EncuestaService {
                         Pregunta pregunta = Pregunta.builder()
                                 .textoPregunta(preguntaDto.getTextoPregunta())
                                 .tipoPregunta(preguntaDto.getTipoPregunta())
-                                .encuesta(encuesta) // <-- Link de vuelta a la Encuesta
+                                .encuesta(encuesta)
                                 .build();
 
                         // 2b. Crear las Opciones para esta Pregunta
@@ -118,11 +118,45 @@ public class EncuestaService {
         }
 
         // 3. Guardar todo en cascada
-        // Gracias a CascadeType.ALL, esto guarda la encuesta, las preguntas y las opciones.
         Encuesta encuestaGuardada = encuestaRepository.save(encuesta);
 
         // 4. Devolver el DTO de respuesta
         return mapEncuestaToDto(encuestaGuardada);
+    }
+
+    @Transactional
+    public PreguntaDto addPreguntaToEncuesta(Integer idEncuesta, PreguntaCreateDto preguntaDto) {
+
+        // 1. Encontrar la encuesta "padre"
+        Encuesta encuesta = encuestaRepository.findById(idEncuesta)
+                .orElseThrow(() -> new RuntimeException("Encuesta no encontrada con id: " + idEncuesta));
+
+        // 2. Crear la nueva Pregunta
+        Pregunta pregunta = Pregunta.builder()
+                .textoPregunta(preguntaDto.getTextoPregunta())
+                .tipoPregunta(preguntaDto.getTipoPregunta())
+                .encuesta(encuesta) // <-- ¡El enlace clave!
+                .build();
+
+        // 3. Crear las Opciones para esta nueva Pregunta
+        if (preguntaDto.getOpciones() != null && !preguntaDto.getOpciones().isEmpty()) {
+            List<OpcionRespuesta> opciones = preguntaDto.getOpciones().stream()
+                    .map(opcionDto ->
+                            OpcionRespuesta.builder()
+                                    .textoOpcion(opcionDto.getTextoOpcion())
+                                    .valorDicotomizado(opcionDto.getValorDicotomizado())
+                                    .pregunta(pregunta) // <-- Link de vuelta a la Pregunta
+                                    .build()
+                    ).collect(Collectors.toList());
+
+            pregunta.setOpciones(opciones);
+        }
+
+        // 4. Guardar la nueva Pregunta
+        Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
+
+        // 5. Devolver el DTO de la pregunta recién creada
+        return mapPreguntaToDto(preguntaGuardada);
     }
 
     @Transactional
@@ -137,7 +171,6 @@ public class EncuestaService {
         pregunta.setTipoPregunta(preguntaDto.getTipoPregunta());
 
         // 3. Borrar las opciones antiguas
-        // Gracias a 'orphanRemoval = true', esto las eliminará de la BD
         pregunta.getOpciones().clear();
 
         // 4. Crear y añadir las nuevas opciones (si las hay)
