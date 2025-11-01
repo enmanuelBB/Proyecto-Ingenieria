@@ -4,6 +4,7 @@ import com.v1.proyecto.auth.dto.AuthRequest;
 import com.v1.proyecto.auth.dto.RegisterRequest;
 import com.v1.proyecto.auth.dto.TokenResponse;
 import com.v1.proyecto.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class AuthController {
     private final AuthService service;
 
     @PostMapping("/register")
-    public ResponseEntity<TokenResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
         final TokenResponse response = service.register(request);
         return ResponseEntity.ok(response);
     }
