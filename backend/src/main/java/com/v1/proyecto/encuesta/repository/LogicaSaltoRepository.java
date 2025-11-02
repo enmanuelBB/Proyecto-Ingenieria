@@ -9,6 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface LogicaSaltoRepository extends JpaRepository<LogicaSalto, Integer> {
-    // Método que necesitamos para el mapeo
     Optional<LogicaSalto> findByOpcionOrigen(OpcionRespuesta opcionOrigen);
 }
