@@ -140,7 +140,7 @@ public class EncuestaController {
     @DeleteMapping("/respuestas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteRespuesta(
-            @PathVariable("id") Integer idRespuesta
+            @PathVariable (name= "id") Integer idRespuesta
     ) {
         try {
             encuestaService.deleteRespuesta(idRespuesta);
