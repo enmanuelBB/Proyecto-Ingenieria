@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class RespuestaDetalladaDto {
     private Integer idRespuesta;
     private String textoPregunta;
-    private String respuestaDada; // Aquí pondremos el texto de la opción o el texto libre
+    private String respuestaDada;
+    private Integer idOpcionSeleccionada;
 }

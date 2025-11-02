@@ -354,11 +354,14 @@ public class EncuestaService {
 
     private RespuestaDetalladaDto mapRespuestaToDetalladaDto(Respuesta respuesta) {
         String textoRespuesta;
+        Integer idOpcion = null;
+
         if (respuesta.getOpcionSeleccionada() != null) {
-            // Si es selección única/múltiple, usa el texto de la opción
+            // Si es selección única/múltiple
             textoRespuesta = respuesta.getOpcionSeleccionada().getTextoOpcion();
+            idOpcion = respuesta.getOpcionSeleccionada().getIdOpcion();
         } else {
-            // Si es texto libre, usa el valorTexto
+            // Si es texto libre
             textoRespuesta = respuesta.getValorTexto();
         }
 
@@ -366,6 +369,7 @@ public class EncuestaService {
                 .idRespuesta(respuesta.getIdRespuesta())
                 .textoPregunta(respuesta.getPregunta().getTextoPregunta())
                 .respuestaDada(textoRespuesta)
+                .idOpcionSeleccionada(idOpcion) 
                 .build();
     }
 }
