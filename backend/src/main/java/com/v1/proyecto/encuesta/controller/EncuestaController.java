@@ -133,4 +133,21 @@ public class EncuestaController {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
     }
+
+    /**
+     *elimina una respuesta URL: DELETE /api/v1/encuestas/respuestas/{id}
+     */
+    @DeleteMapping("/respuestas/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteRespuesta(
+            @PathVariable("id") Integer idRespuesta
+    ) {
+        try {
+            encuestaService.deleteRespuesta(idRespuesta);
+            return ResponseEntity.noContent().build(); // 204 No Content (Éxito)
+        } catch (RuntimeException e) {
+            // Captura el "Respuesta no encontrada"
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+    }
 }

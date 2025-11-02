@@ -1,5 +1,7 @@
 package com.v1.proyecto.paciente.controller;
 
+import com.v1.proyecto.encuesta.dto.RegistroCompletoResponseDto;
+import com.v1.proyecto.encuesta.service.EncuestaService;
 import com.v1.proyecto.paciente.dto.PacienteRequestDto;
 import com.v1.proyecto.paciente.dto.PacienteResponseDto;
 import com.v1.proyecto.paciente.model.Paciente;
@@ -20,6 +22,7 @@ import java.util.List;
 public class PacienteController {
 
     private final PacienteService pacienteService;
+    private final EncuestaService encuestaService;
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
@@ -64,6 +67,18 @@ public class PacienteController {
         return pacienteService.findPacienteByRut(rut)
                 .map(pacienteDto -> ResponseEntity.ok(pacienteDto)) // Devuelve 200 OK
                 .orElse(ResponseEntity.notFound().build()); // Devuelve 404 Not Found
+    }
+
+    /**
+     * Endpoint para OBTENER todos los registros de encuestas de un paciente.
+     * URL: GET /api/v1/pacientes/{id}/registros
+     */
+    @GetMapping("/{idPaciente}/registros")
+    public ResponseEntity<List<RegistroCompletoResponseDto>> getRegistrosDelPaciente(
+            @PathVariable(name = "idPaciente") Integer idPaciente
+    ) {
+        List<RegistroCompletoResponseDto> registros = encuestaService.getRegistrosPorPaciente(idPaciente);
+        return ResponseEntity.ok(registros);
     }
 
     /**

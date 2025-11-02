@@ -27,6 +27,7 @@ public class EncuestaService {
     private final OpcionRespuestaRepository opcionRespuestaRepository;
     private final RegistroEncuestaRepository registroEncuestaRepository;
     private final LogicaSaltoRepository logicaSaltoRepository;
+    private final RespuestaRepository respuestaRepository;
 
     // --- FUNCIONALIDAD Encuesta 1: OBTENER FORMULARIO (GET) ---
 
@@ -226,7 +227,29 @@ public class EncuestaService {
         }
         encuestaRepository.deleteById(id);
     }
+    //--- FUNCIONALIDAD Encuesta 9: ELIMINAR respuesta---
+    @Transactional
+    public void deleteRespuesta(Integer idRespuesta) {
 
+        // 1. Verifica que la respuesta existe antes de borrarla
+        if (!respuestaRepository.existsById(idRespuesta)) {
+            throw new RuntimeException("Respuesta no encontrada con id: " + idRespuesta);
+        }
+
+        // 2. Borra la respuesta por su ID
+        respuestaRepository.deleteById(idRespuesta);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RegistroCompletoResponseDto> getRegistrosPorPaciente(Integer idPaciente) {
+        // 1. Busca todos los registros del paciente
+        List<RegistroEncuesta> registros = registroEncuestaRepository.findByPacienteIdPaciente(idPaciente);
+
+        // 2. Mapea la lista de Entidades a DTOs
+        return registros.stream()
+                .map(this::mapRegistroToCompletoDto)
+                .collect(Collectors.toList());
+    }
 
     // --- MÉTODOS PRIVADOS DE MAPEO (DTOs) ---
     // (Actualizados para enviar 'obligatoria' y 'logicaSalto' al frontend)
@@ -271,6 +294,37 @@ public class EncuestaService {
                 .idPaciente(registro.getPaciente().getIdPaciente())
                 .fechaRealizacion(registro.getFechaRealizacion())
                 .usuarioNombre(registro.getUsuario().getUsername())
+                .build();
+    }
+    private RegistroCompletoResponseDto mapRegistroToCompletoDto(RegistroEncuesta registro) {
+        return RegistroCompletoResponseDto.builder()
+                .idRegistro(registro.getIdRegistro())
+                .idPaciente(registro.getPaciente().getIdPaciente())
+                .nombrePaciente(registro.getPaciente().getNombre() + " " + registro.getPaciente().getApellidos())
+                .idEncuesta(registro.getEncuesta().getIdEncuesta())
+                .tituloEncuesta(registro.getEncuesta().getTitulo())
+                .fechaRealizacion(registro.getFechaRealizacion())
+                .usuarioNombre(registro.getUsuario().getUsername())
+                .respuestas(registro.getRespuestas().stream() // Mapea las respuestas
+                        .map(this::mapRespuestaToDetalladaDto)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    private RespuestaDetalladaDto mapRespuestaToDetalladaDto(Respuesta respuesta) {
+        String textoRespuesta;
+        if (respuesta.getOpcionSeleccionada() != null) {
+            // Si es selección única/múltiple, usa el texto de la opción
+            textoRespuesta = respuesta.getOpcionSeleccionada().getTextoOpcion();
+        } else {
+            // Si es texto libre, usa el valorTexto
+            textoRespuesta = respuesta.getValorTexto();
+        }
+
+        return RespuestaDetalladaDto.builder()
+                .idRespuesta(respuesta.getIdRespuesta())
+                .textoPregunta(respuesta.getPregunta().getTextoPregunta())
+                .respuestaDada(textoRespuesta)
                 .build();
     }
 }
