@@ -251,6 +251,47 @@ public class EncuestaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public RespuestaDetalladaDto updateRespuesta(Integer idRespuesta, RespuestaUpdateDto dto) {
+
+        // 1. Encontrar la respuesta a editar
+        Respuesta respuesta = respuestaRepository.findById(idRespuesta)
+                .orElseThrow(() -> new RuntimeException("Respuesta no encontrada con id: " + idRespuesta));
+
+        // 2. Lógica para actualizar la respuesta
+
+        // Si el DTO trae un ID de opción...
+        if (dto.getIdOpcionSeleccionada() != null) {
+            OpcionRespuesta nuevaOpcion = opcionRespuestaRepository.findById(dto.getIdOpcionSeleccionada())
+                    .orElseThrow(() -> new RuntimeException("Opción no encontrada con id: " + dto.getIdOpcionSeleccionada()));
+
+            // Validación: Asegurarse de que la nueva opción pertenezca a la misma pregunta
+            if (!nuevaOpcion.getPregunta().getIdPregunta().equals(respuesta.getPregunta().getIdPregunta())) {
+                throw new IllegalArgumentException("La nueva opción seleccionada no pertenece a la pregunta original.");
+            }
+
+            // Actualiza la opción y borra el texto libre
+            respuesta.setOpcionSeleccionada(nuevaOpcion);
+            respuesta.setValorTexto(null);
+
+        } else {
+            // Si el DTO trae texto libre...
+            // (Asegúrate de que esta sea una pregunta de texto libre)
+            if (!respuesta.getPregunta().getTipoPregunta().equals("TEXTO_LIBRE")) {
+                throw new IllegalArgumentException("No se puede asignar texto libre a una pregunta de selección.");
+            }
+            // Actualiza el texto y borra la opción
+            respuesta.setValorTexto(dto.getValorTexto());
+            respuesta.setOpcionSeleccionada(null);
+        }
+
+        // 3. Guardar la respuesta actualizada
+        Respuesta respuestaGuardada = respuestaRepository.save(respuesta);
+
+        // 4. Devolver el DTO detallado (que ya teníamos)
+        return mapRespuestaToDetalladaDto(respuestaGuardada);
+    }
+
     // --- MÉTODOS PRIVADOS DE MAPEO (DTOs) ---
     // (Actualizados para enviar 'obligatoria' y 'logicaSalto' al frontend)
 

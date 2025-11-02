@@ -150,4 +150,26 @@ public class EncuestaController {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
     }
+
+    /**
+     * Endpoint (SOLO ADMIN) para EDITAR una respuesta individual de un paciente.
+     * URL: PUT /api/v1/encuestas/respuestas/{id}
+     */
+    @PutMapping("/respuestas/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> updateRespuesta(
+            @PathVariable (name= "id") Integer idRespuesta,
+            @RequestBody RespuestaUpdateDto dto) {
+        try {
+            RespuestaDetalladaDto respuestaActualizada = encuestaService.updateRespuesta(idRespuesta, dto);
+            return ResponseEntity.ok(respuestaActualizada); // 200 OK
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage()); // 400 Bad Request
+
+        } catch (RuntimeException e) {
+            // Captura "Respuesta no encontrada" o "Opción no encontrada"
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // 404 Not Found
+        }
+    }
 }
