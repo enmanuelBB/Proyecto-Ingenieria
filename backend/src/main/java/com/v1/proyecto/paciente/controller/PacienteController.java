@@ -43,7 +43,7 @@ public class PacienteController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
-    public ResponseEntity<PacienteResponseDto> getPacienteById(@PathVariable Integer id) {
+    public ResponseEntity<PacienteResponseDto> getPacienteById(@PathVariable(name = "id") Integer id) {
         // El servicio ya devuelve un Optional<DTO>
         return pacienteService.findPacienteById(id)
                 .map(pacienteDto -> ResponseEntity.ok(pacienteDto))
@@ -52,8 +52,7 @@ public class PacienteController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
-    public ResponseEntity<PacienteResponseDto> updatePaciente(@PathVariable Integer id, @Valid @RequestBody PacienteRequestDto pacienteDto) {
-        // El servicio recibe DTO y devuelve Optional<DTO>
+    public ResponseEntity<PacienteResponseDto> updatePaciente(@PathVariable(name = "id") Integer id, @Valid @RequestBody PacienteRequestDto pacienteDto) {
         return pacienteService.updatePaciente(id, pacienteDto)
                 .map(pacienteActualizado -> ResponseEntity.ok(pacienteActualizado))
                 .orElse(ResponseEntity.notFound().build());
@@ -61,7 +60,7 @@ public class PacienteController {
 
     @GetMapping("/rut/{rut}")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
-    public ResponseEntity<PacienteResponseDto> getPacienteByRut(@PathVariable String rut) {
+    public ResponseEntity<PacienteResponseDto> getPacienteByRut(@PathVariable(name = "rut") String rut) {
         return pacienteService.findPacienteByRut(rut)
                 .map(pacienteDto -> ResponseEntity.ok(pacienteDto)) // Devuelve 200 OK
                 .orElse(ResponseEntity.notFound().build()); // Devuelve 404 Not Found
