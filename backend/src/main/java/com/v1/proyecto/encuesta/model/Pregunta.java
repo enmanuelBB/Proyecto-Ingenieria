@@ -33,6 +33,8 @@ public class Pregunta {
 
     @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true) // <-- ¡AÑADE ORPHAN REMOVAL!
     private List<OpcionRespuesta> opciones;
-    
-   
+
+    @Column(name = "obligatoria", nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    private boolean obligatoria;
+
 }

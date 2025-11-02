@@ -36,6 +36,7 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<EncuestaResponseDto> getEncuestaCompleta(@PathVariable(name = "id") Integer id) {
         EncuestaResponseDto encuestaDto = encuestaService.getEncuestaCompleta(id);
         return ResponseEntity.ok(encuestaDto);
@@ -102,6 +103,7 @@ public class EncuestaController {
      * URL: POST /api/v1/encuestas/registro
      */
     @PostMapping("/registro")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<RegistroResponseDto> saveRegistroEncuesta(
             @Valid @RequestBody RegistroRequestDto registroDto,
             @AuthenticationPrincipal Users user

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +26,7 @@ public class EncuestaService {
     private final PreguntaRepository preguntaRepository;
     private final OpcionRespuestaRepository opcionRespuestaRepository;
     private final RegistroEncuestaRepository registroEncuestaRepository;
-
+    private final LogicaSaltoRepository logicaSaltoRepository;
 
     // --- FUNCIONALIDAD Encuesta 1: OBTENER FORMULARIO (GET) ---
 
@@ -33,7 +34,7 @@ public class EncuestaService {
     public EncuestaResponseDto getEncuestaCompleta(Integer id) {
         Encuesta encuesta = encuestaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada con id: " + id));
-        
+
         return mapEncuestaToDto(encuesta);
     }
 
@@ -47,6 +48,28 @@ public class EncuestaService {
         Encuesta encuesta = encuestaRepository.findById(registroDto.getIdEncuesta())
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
 
+        // --- INICIO DE LA VALIDACIÓN DE PREGUNTAS OBLIGATORIAS ---
+
+        // 1. Obtiene todas las preguntas obligatorias de esta encuesta
+        Set<Integer> preguntasObligatoriasIds = encuesta.getPreguntas().stream()
+                .filter(Pregunta::isObligatoria)
+                .map(Pregunta::getIdPregunta)
+                .collect(Collectors.toSet());
+
+        // 2. Obtiene los IDs de las preguntas que el usuario SÍ respondió
+        Set<Integer> preguntasRespondidasIds = registroDto.getRespuestas().stream()
+                .map(RespuestaRequestDto::getIdPregunta)
+                .collect(Collectors.toSet());
+
+        // 3. Comprueba si faltan obligatorias
+        for (Integer idObligatoria : preguntasObligatoriasIds) {
+            if (!preguntasRespondidasIds.contains(idObligatoria)) {
+                // (En un escenario real, también deberías chequear la lógica de salto aquí)
+                throw new IllegalArgumentException("Respuesta faltante para la pregunta obligatoria ID: " + idObligatoria);
+            }
+        }
+        // --- FIN DE LA VALIDACIÓN ---
+
         RegistroEncuesta registro = RegistroEncuesta.builder()
                 .paciente(paciente)
                 .encuesta(encuesta)
@@ -58,7 +81,7 @@ public class EncuestaService {
         for (RespuestaRequestDto resDto : registroDto.getRespuestas()) {
             Pregunta pregunta = preguntaRepository.findById(resDto.getIdPregunta())
                     .orElseThrow(() -> new RuntimeException("Pregunta no encontrada"));
-            
+
             OpcionRespuesta opcion = null;
             if (resDto.getIdOpcionSeleccionada() != null) {
                 opcion = opcionRespuestaRepository.findById(resDto.getIdOpcionSeleccionada())
@@ -71,7 +94,7 @@ public class EncuestaService {
                     .opcionSeleccionada(opcion)
                     .valorTexto(resDto.getValorTexto())
                     .build();
-            
+
             registro.getRespuestas().add(respuesta);
         }
 
@@ -83,160 +106,121 @@ public class EncuestaService {
     @Transactional
     public EncuestaResponseDto createEncuestaCompleta(EncuestaCreateDto encuestaDto) {
 
-        // 1. Crear la entidad Encuesta (raíz)
         Encuesta encuesta = Encuesta.builder()
                 .titulo(encuestaDto.getTitulo())
                 .version(encuestaDto.getVersion())
                 .build();
 
-        // 2. Crear las Preguntas y Opciones
         if (encuestaDto.getPreguntas() != null) {
             List<Pregunta> preguntas = encuestaDto.getPreguntas().stream()
                     .map(preguntaDto -> {
 
-                        // 2a. Crear la Pregunta
                         Pregunta pregunta = Pregunta.builder()
                                 .textoPregunta(preguntaDto.getTextoPregunta())
                                 .tipoPregunta(preguntaDto.getTipoPregunta())
+                                .obligatoria(preguntaDto.isObligatoria())
                                 .encuesta(encuesta)
                                 .build();
 
-                        // 2b. Crear las Opciones para esta Pregunta
                         if (preguntaDto.getOpciones() != null) {
                             List<OpcionRespuesta> opciones = preguntaDto.getOpciones().stream()
                                     .map(opcionDto ->
                                             OpcionRespuesta.builder()
                                                     .textoOpcion(opcionDto.getTextoOpcion())
                                                     .valorDicotomizado(opcionDto.getValorDicotomizado())
-                                                    .pregunta(pregunta) // <-- Link de vuelta a la Pregunta
+                                                    .pregunta(pregunta)
                                                     .build()
                                     ).collect(Collectors.toList());
                             pregunta.setOpciones(opciones);
                         }
                         return pregunta;
                     }).collect(Collectors.toList());
-
             encuesta.setPreguntas(preguntas);
         }
-
-        // 3. Guardar todo en cascada
         Encuesta encuestaGuardada = encuestaRepository.save(encuesta);
-
-        // 4. Devolver el DTO de respuesta
         return mapEncuestaToDto(encuestaGuardada);
     }
 
-    // --- FUNCIONALIDAD Encuesta 4: AÑADIR PREGUNTA  ---
+    // --- FUNCIONALIDAD Encuesta 4: AÑADIR PREGUNTA ---
     @Transactional
     public PreguntaDto addPreguntaToEncuesta(Integer idEncuesta, PreguntaCreateDto preguntaDto) {
 
-        // 1. Encontrar la encuesta "padre"
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada con id: " + idEncuesta));
 
-        // 2. Crear la nueva Pregunta
         Pregunta pregunta = Pregunta.builder()
                 .textoPregunta(preguntaDto.getTextoPregunta())
                 .tipoPregunta(preguntaDto.getTipoPregunta())
-                .encuesta(encuesta) // <-- ¡El enlace clave!
+                .obligatoria(preguntaDto.isObligatoria())
+                .encuesta(encuesta)
                 .build();
 
-        // 3. Crear las Opciones para esta nueva Pregunta
         if (preguntaDto.getOpciones() != null && !preguntaDto.getOpciones().isEmpty()) {
             List<OpcionRespuesta> opciones = preguntaDto.getOpciones().stream()
                     .map(opcionDto ->
                             OpcionRespuesta.builder()
                                     .textoOpcion(opcionDto.getTextoOpcion())
                                     .valorDicotomizado(opcionDto.getValorDicotomizado())
-                                    .pregunta(pregunta) // <-- Link de vuelta a la Pregunta
+                                    .pregunta(pregunta)
                                     .build()
                     ).collect(Collectors.toList());
-
             pregunta.setOpciones(opciones);
         }
-
-        // 4. Guardar la nueva Pregunta
         Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
-
-        // 5. Devolver el DTO de la pregunta recién creada
         return mapPreguntaToDto(preguntaGuardada);
     }
 
-    // --- FUNCIONALIDAD Encuesta 5: EDITAR PREGUNTA  ---
-
+    // --- FUNCIONALIDAD Encuesta 5: EDITAR PREGUNTA ---
     @Transactional
     public PreguntaDto updatePregunta(Integer idPregunta, PreguntaCreateDto preguntaDto) {
 
-        // 1. Encontrar la pregunta existente
         Pregunta pregunta = preguntaRepository.findById(idPregunta)
                 .orElseThrow(() -> new RuntimeException("Pregunta no encontrada con id: " + idPregunta));
 
-        // 2. Actualizar los campos simples
         pregunta.setTextoPregunta(preguntaDto.getTextoPregunta());
         pregunta.setTipoPregunta(preguntaDto.getTipoPregunta());
+        pregunta.setObligatoria(preguntaDto.isObligatoria());
 
-        // 3. Borrar las opciones antiguas
         pregunta.getOpciones().clear();
 
-        // 4. Crear y añadir las nuevas opciones (si las hay)
         if (preguntaDto.getOpciones() != null) {
             List<OpcionRespuesta> nuevasOpciones = preguntaDto.getOpciones().stream()
                     .map(opcionDto ->
                             OpcionRespuesta.builder()
                                     .textoOpcion(opcionDto.getTextoOpcion())
                                     .valorDicotomizado(opcionDto.getValorDicotomizado())
-                                    .pregunta(pregunta) // <-- Link de vuelta a la Pregunta
+                                    .pregunta(pregunta)
                                     .build()
                     ).collect(Collectors.toList());
-
             pregunta.getOpciones().addAll(nuevasOpciones);
         }
-
-        // 5. Guardar la pregunta actualizada (guardará las opciones en cascada)
         Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
-
-        // 6. Devolver el DTO de la pregunta actualizada
         return mapPreguntaToDto(preguntaGuardada);
     }
 
-    // --- FUNCIONALIDAD Encuesta 6: EDITAR TITULO Y VERSION ENCUESTA  ---
+    // --- FUNCIONALIDAD Encuesta 6: EDITAR TITULO Y VERSION ENCUESTA ---
     @Transactional
     public EncuestaResponseDto updateEncuesta(Integer id, EncuestaCreateDto encuestaDto) {
-        // 1. Busca la encuesta que vamos a editar
         Encuesta encuestaExistente = encuestaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada con id: " + id));
-
-        // 2. Actualiza los campos "simples" (título y versión)
         encuestaExistente.setTitulo(encuestaDto.getTitulo());
         encuestaExistente.setVersion(encuestaDto.getVersion());
-
-        // 3. Guarda los cambios
         Encuesta encuestaGuardada = encuestaRepository.save(encuestaExistente);
-
-        // 4. Devuelve el DTO actualizado
         return mapEncuestaToDto(encuestaGuardada);
     }
 
-    // --- FUNCIONALIDAD Encuesta 7: ELIMINAR PREGUNTA  ---
+    // --- FUNCIONALIDAD Encuesta 7: ELIMINAR PREGUNTA ---
     @Transactional
     public void deletePregunta(Integer idPregunta) {
-
-        // 1. Verifica que la pregunta existe antes de borrarla
         if (!preguntaRepository.existsById(idPregunta)) {
             throw new RuntimeException("Pregunta no encontrada con id: " + idPregunta);
         }
-
-        // 2. Borra la pregunta.
-        // Gracias a CascadeType.ALL en la entidad Pregunta,
-        // esto borrará automáticamente todas las OpcionRespuesta asociadas.
         preguntaRepository.deleteById(idPregunta);
     }
 
     // --- FUNCIONALIDAD Encuesta 8: ELIMINAR ENCUESTA ---
-
     @Transactional
     public void deleteEncuesta(Integer id) {
-
         if (!encuestaRepository.existsById(id)) {
             throw new RuntimeException("Encuesta no encontrada con id: " + id);
         }
@@ -245,6 +229,7 @@ public class EncuestaService {
 
 
     // --- MÉTODOS PRIVADOS DE MAPEO (DTOs) ---
+    // (Actualizados para enviar 'obligatoria' y 'logicaSalto' al frontend)
 
     private EncuestaResponseDto mapEncuestaToDto(Encuesta encuesta) {
         return EncuestaResponseDto.builder()
@@ -261,6 +246,7 @@ public class EncuestaService {
                 .idPregunta(pregunta.getIdPregunta())
                 .textoPregunta(pregunta.getTextoPregunta())
                 .tipoPregunta(pregunta.getTipoPregunta())
+                .obligatoria(pregunta.isObligatoria())
                 .opciones(pregunta.getOpciones().stream()
                         .map(this::mapOpcionToDto)
                         .collect(Collectors.toList()))
@@ -268,9 +254,14 @@ public class EncuestaService {
     }
 
     private OpcionRespuestaDto mapOpcionToDto(OpcionRespuesta opcion) {
+        // Busca si esta opción dispara una lógica de salto
+        LogicaSalto logica = logicaSaltoRepository.findByOpcionOrigen(opcion).orElse(null);
+        Integer idPreguntaDestino = (logica != null) ? logica.getPreguntaDestino().getIdPregunta() : null;
+
         return OpcionRespuestaDto.builder()
                 .idOpcion(opcion.getIdOpcion())
                 .textoOpcion(opcion.getTextoOpcion())
+                .idPreguntaDestino(idPreguntaDestino)
                 .build();
     }
 

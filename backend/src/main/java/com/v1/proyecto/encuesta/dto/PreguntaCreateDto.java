@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PreguntaCreateDto {
     private String textoPregunta;
-    private String tipoPregunta; // ej: "SELECCION_UNICA", "TEXTO_LIBRE"
-    private List<OpcionRespuestaCreateDto> opciones; // Lista de opciones para esta pregunta
+    private String tipoPregunta;
+    private List<OpcionRespuestaCreateDto> opciones;
+    private boolean obligatoria;
 }
