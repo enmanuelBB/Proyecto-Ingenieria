@@ -72,7 +72,7 @@ public class PacienteController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deletePaciente(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletePaciente(@PathVariable(name = "id") Integer id) {
         // Primero verifica si el paciente existe
         if (pacienteService.findPacienteById(id).isPresent()) {
             pacienteService.deletePaciente(id);
