@@ -12,23 +12,11 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/v1/user")
 public class EditController {
 
     @Autowired
     private UserServices userServices;
-
-
-//agregar usuario
-    @PostMapping("")
-    public ResponseEntity<?> create(@RequestBody UsersDto dto) {
-        try {
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(userServices.create(dto));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al crear el usuario: " + e.getMessage());
-        }
-    }
 
     //mostrar todos los usuarios
     @GetMapping("")
