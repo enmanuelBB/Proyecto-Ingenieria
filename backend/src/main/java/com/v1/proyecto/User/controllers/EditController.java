@@ -1,7 +1,6 @@
-package com.v1.proyecto.controllers;
+package com.v1.proyecto.User.controllers;
 
-import com.v1.proyecto.Services.UserServices;
-
+import com.v1.proyecto.User.Services.UserServices;
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.User.dto.UsersDto;
 import org.springframework.beans.factory.annotation.Autowired;

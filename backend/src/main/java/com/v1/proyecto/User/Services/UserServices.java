@@ -1,4 +1,4 @@
-package com.v1.proyecto.Services;
+package com.v1.proyecto.User.Services;
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.User.dto.UsersDto;
 import com.v1.proyecto.auth.repository.UserRepository;

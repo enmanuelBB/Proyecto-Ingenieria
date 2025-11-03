@@ -1,4 +1,4 @@
-package com.v1.proyecto.controllers;
+package com.v1.proyecto.User.controllers;
 
 import com.v1.proyecto.User.dto.UserResponse;
 import com.v1.proyecto.auth.repository.UserRepository;
