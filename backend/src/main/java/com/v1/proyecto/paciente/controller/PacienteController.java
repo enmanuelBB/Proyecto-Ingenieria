@@ -74,6 +74,7 @@ public class PacienteController {
      * URL: GET /api/v1/pacientes/{id}/registros
      */
     @GetMapping("/{idPaciente}/registros")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<List<RegistroCompletoResponseDto>> getRegistrosDelPaciente(
             @PathVariable(name = "idPaciente") Integer idPaciente
     ) {

@@ -3,9 +3,11 @@ package com.v1.proyecto.User.controllers;
 import com.v1.proyecto.User.Services.UserServices;
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.User.dto.UsersDto;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,26 +15,28 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/user")
+@RequiredArgsConstructor
+@PreAuthorize("hasAuthority('ADMIN')")
 public class EditController {
 
-    @Autowired
-    private UserServices userServices;
+    private final UserServices userServices;
 
     //mostrar todos los usuarios
     @GetMapping("")
-    public ResponseEntity<List<Users>> getAllUsers() {
+    public ResponseEntity<List<UsersDto>> getAllUsers() {
         try {
-            List<Users> users = userServices.getAllUsers();
+            List<UsersDto> users = userServices.getAllUsers();
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
     //obtener usuario por id
     @GetMapping("/{id}")
-    public ResponseEntity<Users> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UsersDto> getUserById(@PathVariable (name= "id") Long id) {
         try {
-            Optional<Users> user = userServices.getUserById(id);
+            Optional<UsersDto> user = userServices.getUserById(id);
             if (user.isPresent()) {
                 return ResponseEntity.ok(user.get());
             } else {
@@ -45,7 +49,7 @@ public class EditController {
 
     //actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UsersDto dto) {
+    public ResponseEntity<String> updateUser(@PathVariable (name= "id") Long id, @RequestBody UsersDto dto) {
         try {
             boolean updated = userServices.updateUser(id, dto);
             if (updated) {
@@ -62,7 +66,7 @@ public class EditController {
 
     //eliminar usuario por id
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<String> deleteUser(@PathVariable (name= "id") Long id) {
         try {
             boolean deleted = userServices.deleteUser(id);
             if (deleted) {

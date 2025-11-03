@@ -2,38 +2,39 @@ package com.v1.proyecto.User.Services;
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.User.dto.UsersDto;
 import com.v1.proyecto.auth.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserServices {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository; // <-- 2. AÑADE FINAL
 
-    public Users create(UsersDto dto) {
-        Users user = new Users();
-        user.setName(dto.getName());
-        user.setLastname(dto.getLastname());
-        user.setPhone_number(dto.getPhone_number());
-        user.setAddress(dto.getAddress());
-        user.setEmail(dto.getEmail());
+    // --- MÉTODOS ACTUALIZADOS PARA USAR DTO ---
 
-        return userRepository.save(user);
+    @Transactional(readOnly = true)
+    public List<UsersDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToDto) // Convierte cada Users a UsersDto
+                .collect(Collectors.toList());
     }
 
-    public List<Users> getAllUsers() {
-        return userRepository.findAll();
+    @Transactional(readOnly = true)
+    public Optional<UsersDto> getUserById(Long id) {
+        return userRepository.findById(id)
+                .map(this::mapToDto); // Convierte el Users a UsersDto
     }
 
-    public Optional<Users> getUserById(Long id) {
-        return userRepository.findById(id);
-    }
-
+    @Transactional
     public boolean updateUser(Long id, UsersDto dto) {
         Optional<Users> userOptional = userRepository.findById(id);
 
@@ -50,11 +51,22 @@ public class UserServices {
         return false;
     }
 
+    @Transactional
     public boolean deleteUser(Long id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
         }
         return false;
+    }
+
+    private UsersDto mapToDto(Users user) {
+        return UsersDto.builder()
+                .name(user.getName())
+                .lastname(user.getLastname())
+                .phone_number(user.getPhone_number())
+                .address(user.getAddress())
+                .email(user.getEmail())
+                .build();
     }
 }
