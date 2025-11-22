@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthRequest {
+public class VerificationRequest {
 
-    @NotBlank(message = "El email es requerido")
-    @Email(message = "Formato de email inválido")
+    @NotBlank
+    @Email
     private String email;
 
-    @NotBlank(message = "La contraseña es requerida")
-    private String password;
+    @NotBlank
+    private String code;
 }

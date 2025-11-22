@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "tokens")
+@Entity(name = "Token")
 public class Token {
 
     @Id
     @GeneratedValue
-    private Integer id; // <-- Clave primaria, usa la columna 'id'
+    private Integer id;
 
     @Column(unique = true)
     private String token;

@@ -4,14 +4,14 @@ services:
     build:
       context: ./frontend
     ports:
-      - "8081:3000" # Usando el puerto 8081
+      - "8081:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8080
     depends_on:
       backend:
-        condition: service_started # Espera a que el backend inicie
+        condition: service_started
 
-  # Servicio 2: Backend (ACTUALIZADO)
+  # Servicio 2: Backend
   backend:
     build:
       context: ./backend
@@ -22,10 +22,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+      # JWT Secretos
       - SECURITY_JWT_SECRET_KEY=${SECURITY_JWT_SECRET_KEY}
       - SECURITY_JWT_EXPIRATION=86400000
       - SECURITY_JWT_REFRESH_EXPIRATION=604800000
 
+      # --- CORREOS (LO NUEVO) ---
+      - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
 
     depends_on:
       db:
@@ -37,7 +42,7 @@ services:
     ports:
       - "3307:3306"
     environment:
-      - MYSQL_DATABASE=proyecto
+      - MYSQL_DATABASE=tareadb # <-- Corregido para coincidir con la URL del backend
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql

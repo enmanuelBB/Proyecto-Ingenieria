@@ -3,6 +3,7 @@ package com.v1.proyecto.auth.controller;
 import com.v1.proyecto.auth.dto.AuthRequest;
 import com.v1.proyecto.auth.dto.RegisterRequest;
 import com.v1.proyecto.auth.dto.TokenResponse;
+import com.v1.proyecto.auth.dto.VerificationRequest;
 import com.v1.proyecto.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,13 @@ public class AuthController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) final String authentication
     ) {
         return service.refreshToken(authentication);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<TokenResponse> verifyCode(
+            @RequestBody VerificationRequest request
+    ) {
+        return ResponseEntity.ok(service.verifyCode(request));
     }
 
 }

@@ -1,6 +1,7 @@
-package com.v1.proyecto.auth.model;
+package com.v1.proyecto.auth.model; // (Asegúrate de que el paquete sea correcto)
 
-import jakarta.persistence.Entity;
+import com.v1.proyecto.encuesta.model.RegistroEncuesta;
+import com.v1.proyecto.auth.model.Token;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,59 +11,70 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name="user")
-
-public class Users implements Serializable, UserDetails {
+@Table(name = "user")
+public class Users implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Integer id;
 
-    @Column(nullable=false)
     private String name;
-
-    @Column(nullable=false)
     private String lastname;
+
+    @Column(unique = true)
+    private String email;
+
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     private String phone_number;
     private String address;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    // --- CAMPOS PARA 2FA ---
+    @Column(name = "mfa_enabled")
+    private boolean mfaEnabled;
 
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "verification_code_expires_at")
+    private LocalDateTime verificationCodeExpiresAt;
+
+    // --- CAMPO QUE TE FALTA (Para que funcione .enabled(true)) ---
     @Column(nullable = false)
-    private String password;
+    @Builder.Default // Importante para que por defecto sea true
+    private boolean enabled = true;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
-
+    // --- RELACIONES ---
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
 
+    // --- MÉTODOS DE UserDetails ---
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Devuelve una lista con la autoridad (rol) del usuario
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
-    public String getUsername() {
-        return this.email;
+    public String getPassword() {
+        return password;
     }
 
     @Override
-    public String getPassword() {
-        return this.password;
+    public String getUsername() {
+        return email;
     }
 
     @Override
@@ -82,7 +94,6 @@ public class Users implements Serializable, UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.enabled;
     }
-
 }
