@@ -1,7 +1,8 @@
-// Ubicación: components/LoginForm.tsx
+
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; 
 import styles from './LoginForm.module.css';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 
@@ -10,6 +11,8 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const router = useRouter(); 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => { 
     event.preventDefault();
@@ -22,19 +25,40 @@ function LoginForm() {
 
     setIsLoading(true);
 
-    // --- Simulación de llamada al Backend ---
-    console.log('Enviando credenciales:', { email, password });
-    
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
+      // peticion al backend
+      const response = await fetch('http://localhost:8080/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            email: email, 
+            password: password 
+        }),
+      });
+
+      if (response.ok) {
+        // Si la respuesta es exitosa (200 OK)
+        const data = await response.json();
+        
+        // Guardamos los tokens que nos envía el backend
+        localStorage.setItem('accessToken', data.access_token);
+        localStorage.setItem('refreshToken', data.refresh_token);
+        
+        console.log('Login exitoso, tokens guardados.');
+        
+        // Redirigir al usuario (por ejemplo, al dashboard o home)
       
-      if (email === "medico@gmail.com" && password === "seguro") {
-        console.log('Login exitoso!');
+        router.push('/dashboard'); 
       } else {
+        // Si las credenciales están mal (403/401)
         setError('Credenciales incorrectas. Verifique su email y contraseña.');
       }
+
     } catch (e) {
-      setError('Error de conexión. Intente más tarde.');
+      console.error(e);
+      setError('Error de conexión. Asegúrese de que el backend esté corriendo.');
     } finally {
       setIsLoading(false); 
     }
