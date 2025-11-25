@@ -5,21 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9133d3f9-b9c8-4c4c-86f5-66586babd51e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/VerificationRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/email/service/EmailService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/ForgotPasswordRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/ResetPasswordRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/ProyectoApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/ProyectoApplication.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/AuthRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/AuthRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/RegisterRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/RegisterRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/TokenResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/TokenResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Token.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Token.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Users.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Users.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/TokenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/TokenRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/UserRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/service/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -149,7 +141,8 @@
       <workItem from="1762018526432" duration="5504000" />
       <workItem from="1762048851491" duration="720000" />
       <workItem from="1762116254559" duration="7566000" />
-      <workItem from="1763777540259" duration="7169000" />
+      <workItem from="1763777540259" duration="7791000" />
+      <workItem from="1764077520139" duration="4017000" />
     </task>
     <servers />
   </component>

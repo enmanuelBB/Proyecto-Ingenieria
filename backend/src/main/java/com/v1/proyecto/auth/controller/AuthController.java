@@ -1,9 +1,6 @@
 package com.v1.proyecto.auth.controller;
 
-import com.v1.proyecto.auth.dto.AuthRequest;
-import com.v1.proyecto.auth.dto.RegisterRequest;
-import com.v1.proyecto.auth.dto.TokenResponse;
-import com.v1.proyecto.auth.dto.VerificationRequest;
+import com.v1.proyecto.auth.dto.*;
 import com.v1.proyecto.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +39,18 @@ public class AuthController {
             @RequestBody VerificationRequest request
     ) {
         return ResponseEntity.ok(service.verifyCode(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        service.forgotPassword(request);
+        return ResponseEntity.ok("Correo de recuperación enviado.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        service.resetPassword(request);
+        return ResponseEntity.ok("Contraseña actualizada exitosamente.");
     }
 
 }

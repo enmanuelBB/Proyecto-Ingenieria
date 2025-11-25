@@ -51,10 +51,16 @@ public class Users implements UserDetails {
     @Column(name = "verification_code_expires_at")
     private LocalDateTime verificationCodeExpiresAt;
 
-    // --- CAMPO QUE TE FALTA (Para que funcione .enabled(true)) ---
     @Column(nullable = false)
-    @Builder.Default // Importante para que por defecto sea true
+    @Builder.Default
     private boolean enabled = true;
+
+    // --- CAMPOS PARA RECUPERAR CONTRASEÑA ---
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
 
     // --- RELACIONES ---
     @OneToMany(mappedBy = "user")

@@ -28,7 +28,7 @@ services:
       - SECURITY_JWT_EXPIRATION=86400000
       - SECURITY_JWT_REFRESH_EXPIRATION=604800000
 
-      # --- CORREOS (LO NUEVO) ---
+      # --- CORREOS ---
       - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
       - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
 
@@ -42,7 +42,7 @@ services:
     ports:
       - "3307:3306"
     environment:
-      - MYSQL_DATABASE=tareadb # <-- Corregido para coincidir con la URL del backend
+      - MYSQL_DATABASE=tareadb
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
