@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByEmail(String email);
+    //metodo buscar por el token de recuperación
+    Optional<Users> findByResetToken(String resetToken);
 }
