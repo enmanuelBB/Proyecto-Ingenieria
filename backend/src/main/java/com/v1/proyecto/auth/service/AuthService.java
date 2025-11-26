@@ -3,8 +3,10 @@ package com.v1.proyecto.auth.service;
 import com.v1.proyecto.auth.dto.*;
 import com.v1.proyecto.auth.model.Role;
 import com.v1.proyecto.auth.model.Token;
+import com.v1.proyecto.auth.model.TrustedDevice;
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.auth.repository.TokenRepository;
+import com.v1.proyecto.auth.repository.TrustedDeviceRepository;
 import com.v1.proyecto.auth.repository.UserRepository;
 import com.v1.proyecto.email.service.EmailService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final TrustedDeviceRepository trustedDeviceRepository;
 
     // --- REGISTRO ---
     @Transactional
@@ -55,9 +58,9 @@ public class AuthService {
                 .build();
     }
 
-    // --- LOGIN (MODIFICADO PARA 2FA) ---
+    // --- LOGIN (CON DISPOSITIVOS DE CONFIANZA) ---
     public TokenResponse authenticate(final AuthRequest request) {
-        // ... (lógica existente de autenticación y 2FA)
+        // 1. Autenticar credenciales (usuario/pass)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -67,30 +70,45 @@ public class AuthService {
         final Users user = repository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-        // --- LÓGICA 2FA ---
+        // 2. Lógica 2FA Inteligente
         if (user.isMfaEnabled()) {
-            // 1. Generar código aleatorio de 6 dígitos
-            String code = String.format("%06d", new Random().nextInt(999999));
 
-            // 2. Guardar en base de datos
-            user.setVerificationCode(code);
-            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
-            repository.save(user);
+            // A. ¿Es un dispositivo de confianza válido?
+            boolean isTrusted = false;
+            if (request.getDeviceId() != null) {
+                var deviceOpt = trustedDeviceRepository.findByUserAndDeviceId(user, request.getDeviceId());
 
-            // 3. Enviar correo (Asíncrono)
-            emailService.sendEmail(
-                    user.getEmail(),
-                    "Código de Verificación - Cleanbuild",
-                    "Hola " + user.getName() + ", tu código de acceso es: " + code
-            );
+                // Si existe y no ha expirado
+                if (deviceOpt.isPresent() && deviceOpt.get().getExpiresAt().isAfter(LocalDateTime.now())) {
+                    isTrusted = true; // ¡Sí, es confiable!
+                }
+            }
 
-            // 4. Responder SIN tokens, avisando que se requiere código
-            return TokenResponse.builder()
-                    .mfaEnabled(true)
-                    .build();
+            // B. Si NO es confiable, pedimos código
+            if (!isTrusted) {
+                // Generar código
+                String code = String.format("%06d", new Random().nextInt(999999));
+
+                user.setVerificationCode(code);
+                user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+                repository.save(user);
+
+                // Enviar correo
+                emailService.sendEmail(
+                        user.getEmail(),
+                        "Código de Verificación - Cleanbuild",
+                        "Hola " + user.getName() + ", tu código de acceso es: " + code
+                );
+
+                // Devolver respuesta SIN tokens
+                return TokenResponse.builder()
+                        .mfaEnabled(true)
+                        .build();
+            }
+            // Si SÍ es confiable, nos saltamos el 'if' y generamos tokens abajo.
         }
 
-        // --- FLUJO NORMAL (Sin 2FA) ---
+        // 3. Generar Tokens (Flujo normal o Dispositivo Confiable)
         final String accessToken = jwtService.generateToken(user);
         final String refreshToken = jwtService.generateRefreshToken(user);
 
@@ -104,33 +122,41 @@ public class AuthService {
                 .build();
     }
 
-    // --- VERIFICAR CÓDIGO 2FA ---
+    // --- VERIFICAR CÓDIGO (Y GUARDAR DISPOSITIVO) ---
     @Transactional
     public TokenResponse verifyCode(final VerificationRequest request) {
-        // ... (lógica existente de verificación 2FA)
         final Users user = repository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Validar si hay código y si no ha expirado
         if (user.getVerificationCode() == null || user.getVerificationCodeExpiresAt() == null) {
             throw new RuntimeException("No hay una solicitud de verificación pendiente.");
         }
 
         if (LocalDateTime.now().isAfter(user.getVerificationCodeExpiresAt())) {
-            throw new RuntimeException("El código de verificación ha expirado. Intenta hacer login de nuevo.");
+            throw new RuntimeException("El código ha expirado.");
         }
 
-        // 2. Validar si el código coincide
         if (!user.getVerificationCode().equals(request.getCode())) {
-            throw new RuntimeException("Código de verificación incorrecto.");
+            throw new RuntimeException("Código incorrecto.");
         }
 
-        // 3. Limpiamos el código usado
+        // Limpiar código usado
         user.setVerificationCode(null);
         user.setVerificationCodeExpiresAt(null);
         repository.save(user);
 
-        // 4. Generamos y devolvemos los tokens
+        // --- NUEVO: Guardar dispositivo de confianza ---
+        if (request.isRememberDevice() && request.getDeviceId() != null) {
+            TrustedDevice device = TrustedDevice.builder()
+                    .user(user)
+                    .deviceId(request.getDeviceId())
+                    .expiresAt(LocalDateTime.now().plusDays(30)) // Recordar por 30 días
+                    .build();
+
+            trustedDeviceRepository.save(device);
+        }
+
+        // Generar tokens
         final String accessToken = jwtService.generateToken(user);
         final String refreshToken = jwtService.generateRefreshToken(user);
 
@@ -202,6 +228,8 @@ public class AuthService {
 
         repository.save(user);
     }
+
+
 
 
     // --- Métodos Auxiliares (Sin cambios) ---

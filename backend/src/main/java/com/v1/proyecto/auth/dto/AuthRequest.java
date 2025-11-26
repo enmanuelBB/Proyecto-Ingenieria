@@ -19,4 +19,6 @@ public class AuthRequest {
 
     @NotBlank(message = "La contraseña es requerida")
     private String password;
+
+    private String deviceId;
 }
