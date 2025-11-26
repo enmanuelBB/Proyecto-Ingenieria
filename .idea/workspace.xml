@@ -5,14 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9133d3f9-b9c8-4c4c-86f5-66586babd51e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/ForgotPasswordRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/ResetPasswordRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/TrustedDevice.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/TrustedDeviceRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Users.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Users.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/AuthRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/AuthRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/VerificationRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/VerificationRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/service/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

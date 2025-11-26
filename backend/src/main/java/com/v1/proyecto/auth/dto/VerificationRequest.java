@@ -19,4 +19,7 @@ public class VerificationRequest {
 
     @NotBlank
     private String code;
+
+    private String deviceId;
+    private boolean rememberDevice;
 }
