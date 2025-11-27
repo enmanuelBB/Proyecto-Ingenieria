@@ -58,9 +58,9 @@ public class AuthService {
                 .build();
     }
 
-    // --- LOGIN (CON DISPOSITIVOS DE CONFIANZA) ---
+ // --- LOGIN (CON DISPOSITIVOS DE CONFIANZA OBLIGATORIO) ---
     public TokenResponse authenticate(final AuthRequest request) {
-        // 1. Autenticar credenciales (usuario/pass)
+        // 1. Autenticar credenciales
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -70,25 +70,16 @@ public class AuthService {
         final Users user = repository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-        // 2. Lógica 2FA Inteligente
-        if (user.isMfaEnabled()) {
+        // 2. VERIFICACIÓN DE DISPOSITIVO (Para TODOS los usuarios)
+        // Si el frontend manda un deviceId, verificamos si es confiable.
+        if (request.getDeviceId() != null) {
+            var deviceOpt = trustedDeviceRepository.findByUserAndDeviceId(user, request.getDeviceId());
 
-            // A. ¿Es un dispositivo de confianza válido?
-            boolean isTrusted = false;
-            if (request.getDeviceId() != null) {
-                var deviceOpt = trustedDeviceRepository.findByUserAndDeviceId(user, request.getDeviceId());
-
-                // Si existe y no ha expirado
-                if (deviceOpt.isPresent() && deviceOpt.get().getExpiresAt().isAfter(LocalDateTime.now())) {
-                    isTrusted = true; // ¡Sí, es confiable!
-                }
-            }
-
-            // B. Si NO es confiable, pedimos código
-            if (!isTrusted) {
+            // Si NO existe el dispositivo o ha expirado -> ENVIAR CÓDIGO
+            if (deviceOpt.isEmpty() || deviceOpt.get().getExpiresAt().isBefore(LocalDateTime.now())) {
+                
                 // Generar código
                 String code = String.format("%06d", new Random().nextInt(999999));
-
                 user.setVerificationCode(code);
                 user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
                 repository.save(user);
@@ -96,19 +87,20 @@ public class AuthService {
                 // Enviar correo
                 emailService.sendEmail(
                         user.getEmail(),
-                        "Código de Verificación - Cleanbuild",
-                        "Hola " + user.getName() + ", tu código de acceso es: " + code
+                        "Nuevo Inicio de Sesión Detectado",
+                        "Hola " + user.getName() + ",\n\n" +
+                        "Estamos intentando iniciar sesión desde un nuevo dispositivo.\n" +
+                        "Tu código de verificación es: " + code
                 );
 
-                // Devolver respuesta SIN tokens
+                // Retornamos mfaEnabled = true para que el frontend pida el código
                 return TokenResponse.builder()
                         .mfaEnabled(true)
                         .build();
             }
-            // Si SÍ es confiable, nos saltamos el 'if' y generamos tokens abajo.
         }
 
-        // 3. Generar Tokens (Flujo normal o Dispositivo Confiable)
+        // 3. Si el dispositivo YA ES CONFIABLE (o no envió ID), generamos tokens
         final String accessToken = jwtService.generateToken(user);
         final String refreshToken = jwtService.generateRefreshToken(user);
 
