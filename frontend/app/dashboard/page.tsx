@@ -3,131 +3,225 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import styles from './dashboard.module.css';
+
+
+import { FaUserInjured, FaClipboardList, FaFileExport, FaSignOutAlt, FaPlus, FaSearch, FaUserPlus } from 'react-icons/fa';
+
+
+interface Paciente {
+  idPaciente: number;
+  rut: string;
+  nombre: string;
+  apellidos: string;
+  sexo: string;
+  fechaNacimiento: string;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<string | null>("Usuario");
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0 });
 
   useEffect(() => {
-    // 1. Verificar si existe el token en el navegador
-    // Nota: Usamos 'accessToken' porque así lo nombramos en el LoginForm
+    // 1. Seguridad: Verificar Token
     const token = localStorage.getItem('accessToken');
+    const savedUser = localStorage.getItem('userEmail');
 
     if (!token) {
-      // Si no hay token, no debería estar aquí -> Redirigir al Login
-      console.log("No hay token, redirigiendo al login...");
       router.push('/');
-    } else {
-      // Si hay token, permitimos ver la página
-      setIsAuthenticated(true);
+      return;
     }
+    setUser(savedUser || "Colaborador");
+
+    // 2. Cargar Datos Reales
+    const fetchData = async () => {
+      try {
+        // Petición a Pacientes
+        const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (resPacientes.ok) {
+          const dataPacientes: Paciente[] = await resPacientes.json();
+          // Mostramos solo los últimos 5 pacientes en la tabla (invirtiendo el array)
+          setPacientes(dataPacientes.slice(-5).reverse()); 
+          
+          // Calculamos estadísticas simples
+          setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
+        }
+        
+       
+
+      } catch (error) {
+        console.error("Error cargando dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [router]);
 
-  // Función para cerrar sesión
-  const handleLogout = () => {
- 
+const handleLogout = () => {
+    
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-
+    localStorage.removeItem('userEmail'); 
+    
+  
     router.push('/');
   };
 
-  // Evitamos un "flash" de contenido mostrando nada hasta verificar el token
-  if (!isAuthenticated) {
-    return null; 
-  }
-
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      padding: '3rem', 
-      backgroundColor: '#f8fafc', 
-      fontFamily: 'sans-serif',
-      color: '#1e293b'
-    }}>
+    <div className={styles.dashboardContainer}>
       
-      {/* Encabezado del Dashboard */}
-      <header style={{ marginBottom: '3rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#1e293b' }}>
-          Panel de Control
-        </h1>
-        <p style={{ color: '#64748b' }}>Sistema de Registro Clínico - Ingeniería Vital</p>
-      </header>
-
-      {/* Área de Acciones Rápidas */}
-      <main>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-          
-          {/* Tarjeta 1 */}
-          <div style={cardStyle}>
-            <h3 style={cardTitleStyle}>Nuevo Paciente</h3>
-            <p style={{ marginBottom: '1rem', color: '#64748b' }}>Registrar un nuevo participante en el estudio.</p>
-            <button style={actionButtonStyle}>+ Registrar</button>
-          </div>
-
-          {/* Tarjeta 2 */}
-          <div style={cardStyle}>
-            <h3 style={cardTitleStyle}>Ver Registros</h3>
-            <p style={{ marginBottom: '1rem', color: '#64748b' }}>Consultar y filtrar la base de datos de encuestas.</p>
-            <button style={secondaryButtonStyle}>Explorar</button>
-          </div>
-
+      {/* --- SIDEBAR --- */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarHeader}>
+          <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} />
+          <span className={styles.sidebarTitle}>Ingeniería Vital</span>
         </div>
-      </main>
 
-      {/* Botón de Cerrar Sesión Flotante */}
-      <button 
-        onClick={handleLogout}
-        style={{ 
-          position: 'fixed', 
-          bottom: '2rem', 
-          right: '2rem', 
-          backgroundColor: '#ef4444', 
-          color: 'white', 
-          padding: '0.8rem 1.5rem', 
-          border: 'none', 
-          borderRadius: '8px', 
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}
-      >
-        Cerrar Sesión
-      </button>
+        <nav className={styles.nav}>
+          <div className={`${styles.navItem} ${styles.navItemActive}`}>
+            <FaClipboardList /> Dashboard
+          </div>
+          <div className={styles.navItem} onClick={() => alert("Ir a lista completa de pacientes")}>
+            <FaUserInjured /> Pacientes
+          </div>
+          <div className={styles.navItem}>
+            <FaSearch /> Encuestas
+          </div>
+          <div className={styles.navItem}>
+            <FaFileExport /> Exportar Datos
+          </div>
+        </nav>
+
+        <button onClick={handleLogout} className={styles.logoutButton}>
+          <FaSignOutAlt /> Cerrar Sesión
+        </button>
+      </aside>
+
+      {/* --- CONTENIDO PRINCIPAL --- */}
+      <main className={styles.mainContent}>
+        
+        {/* Header Superior */}
+        <header className={styles.header}>
+          <div className={styles.welcomeText}>
+            <h1>Hola, {user} 👋</h1>
+            <p>Aquí tienes un resumen de la actividad del estudio.</p>
+          </div>
+          <div style={{display: 'flex', gap: '10px'}}>
+             {/* Aquí podrías poner un avatar o notificaciones */}
+          </div>
+        </header>
+
+        {/* Tarjetas de Estadísticas */}
+        <section className={styles.statsGrid}>
+          {/* Card 1: Pacientes */}
+          <div className={styles.statCard}>
+            <div className={`${styles.statIconBox} ${styles.iconBlue}`}>
+              <FaUserInjured />
+            </div>
+            <div className={styles.statInfo}>
+              <h3>Total Pacientes</h3>
+              <p>{loading ? "..." : stats.totalPacientes}</p>
+            </div>
+          </div>
+
+          {/* Card 2: Encuestas (Mockeado por ahora) */}
+          <div className={styles.statCard}>
+            <div className={`${styles.statIconBox} ${styles.iconPurple}`}>
+              <FaClipboardList />
+            </div>
+            <div className={styles.statInfo}>
+              <h3>Encuestas Completas</h3>
+              <p>0</p> {/* Conectar con backend cuando esté listo */}
+            </div>
+          </div>
+
+          {/* Card 3: Pendientes */}
+          <div className={styles.statCard}>
+            <div className={`${styles.statIconBox} ${styles.iconGreen}`}>
+              <FaPlus />
+            </div>
+            <div className={styles.statInfo}>
+              <h3>Registros Hoy</h3>
+              <p>0</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Grid Inferior: Tabla y Acciones */}
+        <section className={styles.sectionGrid}>
+          
+          {/* Tabla de Pacientes Recientes */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
+              <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer'}}>Ver todos</button>
+            </div>
+            
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>RUT</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={3}>Cargando datos...</td></tr>
+                ) : pacientes.length > 0 ? (
+                  pacientes.map((p) => (
+                    <tr key={p.idPaciente}>
+                      <td style={{fontWeight: '500'}}>{p.nombre} {p.apellidos}</td>
+                      <td>{p.rut}</td>
+                      <td>
+                        <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor:'pointer'}}>Ver Ficha</button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={3} style={{textAlign: 'center', padding: '2rem'}}>No hay registros recientes.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Acciones Rápidas */}
+          <div>
+             <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Gestión Rápida</h3>
+                </div>
+                
+                <button className={styles.actionButton}>
+                  <FaUserPlus size={20} color="#4f46e5"/>
+                  <div>
+                    <div style={{textAlign: 'left'}}>Registrar Paciente</div>
+                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Crear nueva ficha clínica</div>
+                  </div>
+                </button>
+
+                <button className={styles.actionButton}>
+                  <FaClipboardList size={20} color="#4f46e5"/>
+                  <div>
+                    <div style={{textAlign: 'left'}}>Nueva Encuesta</div>
+                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Ingresar datos de formulario</div>
+                  </div>
+                </button>
+             </div>
+          </div>
+
+        </section>
+
+      </main>
     </div>
   );
 }
-
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'white',
-  padding: '2rem',
-  borderRadius: '12px',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-  border: '1px solid #e2e8f0'
-};
-
-const cardTitleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0.5rem',
-  color: '#0f172a'
-};
-
-const actionButtonStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.75rem',
-  backgroundColor: '#4f46e5', 
-  color: 'white',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontWeight: '500'
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  ...actionButtonStyle,
-  backgroundColor: 'white',
-  color: '#4f46e5',
-  border: '1px solid #4f46e5'
-};
