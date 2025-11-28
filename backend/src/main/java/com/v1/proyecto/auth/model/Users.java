@@ -1,6 +1,7 @@
-package com.v1.proyecto.auth.model;
+package com.v1.proyecto.auth.model; // (Asegúrate de que el paquete sea correcto)
 
-import jakarta.persistence.Entity;
+import com.v1.proyecto.encuesta.model.RegistroEncuesta;
+import com.v1.proyecto.auth.model.Token;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,14 +11,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "user")
 
@@ -25,7 +26,7 @@ public class Users implements Serializable, UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Integer id;
 
     @Column(nullable = false)
     private String name;
@@ -33,39 +34,55 @@ public class Users implements Serializable, UserDetails {
     @Column(nullable = false)
     private String lastname;
 
-    private String phone_number;
-    private String address;
-
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Role role;
 
+    private String phone_number;
+    private String address;
+
+    // --- CAMPOS PARA 2FA ---
+    @Column(name = "mfa_enabled")
+    private boolean mfaEnabled;
+
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "verification_code_expires_at")
+    private LocalDateTime verificationCodeExpiresAt;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = true;
+
+    // --- CAMPOS PARA RECUPERAR CONTRASEÑA ---
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
+    // --- RELACIONES ---
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
 
-    @Column(nullable = false)
-    private boolean enabled;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Devuelve una lista con la autoridad (rol) del usuario
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
-    public String getUsername() {
-        return this.email;
+    public String getPassword() {
+        return password;
     }
 
     @Override
-    public String getPassword() {
-        return this.password;
+    public String getUsername() {
+        return email;
     }
 
     @Override
@@ -87,5 +104,4 @@ public class Users implements Serializable, UserDetails {
     public boolean isEnabled() {
         return this.enabled;
     }
-
 }

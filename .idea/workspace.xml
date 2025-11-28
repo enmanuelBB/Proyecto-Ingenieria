@@ -5,11 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9133d3f9-b9c8-4c4c-86f5-66586babd51e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/TrustedDevice.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/repository/TrustedDeviceRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/User/Services/UserServices.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/User/Services/UserServices.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/User/controllers/EditController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/User/controllers/EditController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/User/dto/UsersDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/User/dto/UsersDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/controller/PacienteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/controller/PacienteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/AuthRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/AuthRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/VerificationRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/dto/VerificationRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/service/AuthService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,6 +139,8 @@
       <workItem from="1762018526432" duration="5504000" />
       <workItem from="1762048851491" duration="720000" />
       <workItem from="1762116254559" duration="7566000" />
+      <workItem from="1763777540259" duration="7791000" />
+      <workItem from="1764077520139" duration="4017000" />
     </task>
     <servers />
   </component>

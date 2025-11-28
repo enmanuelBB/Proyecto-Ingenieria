@@ -11,14 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthRequest {
-
+public class ForgotPasswordRequest {
     @NotBlank(message = "El email es requerido")
-    @Email(message = "Formato de email inválido")
+    @Email
     private String email;
-
-    @NotBlank(message = "La contraseña es requerida")
-    private String password;
-
-    private String deviceId;
 }
