@@ -34,6 +34,7 @@ public class AuthService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
+                .enabled(true)
                 .build();
 
         final Users savedUser = repository.save(user);
@@ -48,9 +49,7 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.email(),
-                        request.password()
-                )
-        );
+                        request.password()));
         final Users user = repository.findByEmail(request.email())
                 .orElseThrow();
         final String accessToken = jwtService.generateToken(user);

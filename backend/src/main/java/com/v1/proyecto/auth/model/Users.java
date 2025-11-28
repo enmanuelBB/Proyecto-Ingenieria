@@ -19,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name="user")
+@Table(name = "user")
 
 public class Users implements Serializable, UserDetails {
 
@@ -27,10 +27,10 @@ public class Users implements Serializable, UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String lastname;
 
     private String phone_number;
@@ -48,6 +48,9 @@ public class Users implements Serializable, UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
+
+    @Column(nullable = false)
+    private boolean enabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -82,7 +85,7 @@ public class Users implements Serializable, UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.enabled;
     }
 
 }

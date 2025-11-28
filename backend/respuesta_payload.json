@@ -1,0 +1,62 @@
+{
+    "idPaciente": 1,
+    "idEncuesta": 1,
+    "respuestas": [
+        {
+            "idPregunta": 1,
+            "valorTexto": "Juan Pérez"
+        },
+        {
+            "idPregunta": 2,
+            "valorTexto": "+56912345678"
+        },
+        {
+            "idPregunta": 3,
+            "valorTexto": "juan.perez@email.com"
+        },
+        {
+            "idPregunta": 4,
+            "valorTexto": "P-001"
+        },
+        {
+            "idPregunta": 5,
+            "idOpcionSeleccionada": 1
+        },
+        {
+            "idPregunta": 6,
+            "valorTexto": "2023-11-27"
+        },
+        {
+            "idPregunta": 7,
+            "valorTexto": "45"
+        },
+        {
+            "idPregunta": 8,
+            "idOpcionSeleccionada": 3
+        },
+        {
+            "idPregunta": 9,
+            "valorTexto": "Chilena"
+        },
+        {
+            "idPregunta": 10,
+            "valorTexto": "Av. Siempre Viva 123"
+        },
+        {
+            "idPregunta": 11,
+            "valorTexto": "Santiago"
+        },
+        {
+            "idPregunta": 12,
+            "valorTexto": "Santiago"
+        },
+        {
+            "idPregunta": 13,
+            "idOpcionSeleccionada": 5
+        },
+        {
+            "idPregunta": 14,
+            "idOpcionSeleccionada": 7
+        }
+    ]
+}

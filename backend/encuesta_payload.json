@@ -1,0 +1,766 @@
+{
+    "titulo": "CRF - Estudio Cáncer Gástrico",
+    "version": "1.0",
+    "preguntas": [
+        {
+            "textoPregunta": "1. Identificación del participante - Nombre completo",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": true
+        },
+        {
+            "textoPregunta": "1. Identificación del participante - Teléfono",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "1. Identificación del participante - Correo electrónico",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "1. Identificación del participante - Código del participante",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": true
+        },
+        {
+            "textoPregunta": "1. Identificación del participante - Grupo",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": true,
+            "opciones": [
+                {
+                    "textoOpcion": "Caso (cáncer gástrico)"
+                },
+                {
+                    "textoOpcion": "Control"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "1. Identificación del participante - Fecha de inclusión",
+            "tipoPregunta": "FECHA",
+            "obligatoria": true
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Edad (años)",
+            "tipoPregunta": "NUMERICO",
+            "obligatoria": true
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Sexo",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": true,
+            "opciones": [
+                {
+                    "textoOpcion": "Hombre"
+                },
+                {
+                    "textoOpcion": "Mujer"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Nacionalidad",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Dirección",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Comuna",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Ciudad",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Zona",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Urbana"
+                },
+                {
+                    "textoOpcion": "Rural"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - ¿Vive usted en esta zona desde hace más de 5 años?",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Nivel educacional",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Básico"
+                },
+                {
+                    "textoOpcion": "Medio"
+                },
+                {
+                    "textoOpcion": "Superior"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Ocupación actual",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Previsión de salud actual",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Fonasa"
+                },
+                {
+                    "textoOpcion": "Isapre"
+                },
+                {
+                    "textoOpcion": "Capredena / Dipreca"
+                },
+                {
+                    "textoOpcion": "Sin previsión"
+                },
+                {
+                    "textoOpcion": "Otra (especificar)"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "2. Datos sociodemográficos - Especificar otra previsión",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Diagnóstico histológico de adenocarcinoma gástrico (solo casos)",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Fecha de diagnóstico (solo casos)",
+            "tipoPregunta": "FECHA",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Antecedentes familiares de cáncer gástrico",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Antecedentes familiares de otros tipos de cáncer",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - ¿Cuál(es)? (Otros tipos de cáncer)",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Otras enfermedades relevantes",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Uso crónico de medicamentos gastrolesivos",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Especificar cuál (medicamento)",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "3. Antecedentes clínicos - Cirugía gástrica previa",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "4. Variables antropométricas - Peso (kg)",
+            "tipoPregunta": "NUMERICO",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "4. Variables antropométricas - Estatura (m)",
+            "tipoPregunta": "NUMERICO",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "4. Variables antropométricas - Índice de masa corporal",
+            "tipoPregunta": "NUMERICO",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "5. Tabaquismo - Estado de tabaquismo",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Nunca fumó"
+                },
+                {
+                    "textoOpcion": "Exfumador"
+                },
+                {
+                    "textoOpcion": "Fumador actual"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "5. Tabaquismo - Cantidad promedio fumada",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "1 – 9 cigarrillos/día (poco)"
+                },
+                {
+                    "textoOpcion": "10 – 19 cigarrillos/día (moderado)"
+                },
+                {
+                    "textoOpcion": "≥ 20 cigarrillos/día (mucho)"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "5. Tabaquismo - Tiempo total fumando",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "<10 años"
+                },
+                {
+                    "textoOpcion": "10 – 20 años"
+                },
+                {
+                    "textoOpcion": ">20 años"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "5. Tabaquismo - Si exfumador: tiempo desde que dejó de fumar",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "<5 años"
+                },
+                {
+                    "textoOpcion": "5 – 10 años"
+                },
+                {
+                    "textoOpcion": ">10 años"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "6. Consumo de alcohol - Estado de consumo",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Nunca"
+                },
+                {
+                    "textoOpcion": "Exconsumidor"
+                },
+                {
+                    "textoOpcion": "Consumidor actual"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "6. Consumo de alcohol - Frecuencia",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Ocasional"
+                },
+                {
+                    "textoOpcion": "Regular"
+                },
+                {
+                    "textoOpcion": "Frecuente"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "6. Consumo de alcohol - Cantidad típica por ocasión",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "1 – 2 tragos (poco)"
+                },
+                {
+                    "textoOpcion": "3 – 4 tragos (moderado)"
+                },
+                {
+                    "textoOpcion": "≥ 5 tragos (mucho)"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "6. Consumo de alcohol - Años de consumo habitual",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "<10 años"
+                },
+                {
+                    "textoOpcion": "10 – 20 años"
+                },
+                {
+                    "textoOpcion": ">20 años"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "6. Consumo de alcohol - Si exconsumidor: tiempo desde que dejó de beber",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "<5 años"
+                },
+                {
+                    "textoOpcion": "5 – 10 años"
+                },
+                {
+                    "textoOpcion": ">10 años"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Consumo de carnes procesadas",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "≤1/sem"
+                },
+                {
+                    "textoOpcion": "2/sem"
+                },
+                {
+                    "textoOpcion": "≥3/sem"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Consumo de alimentos muy salados",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Consumo de frutas y verduras",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "≥5 porciones/día"
+                },
+                {
+                    "textoOpcion": "3–4 porciones/día"
+                },
+                {
+                    "textoOpcion": "≤2 porciones/día"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Consumo frecuente de frituras",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Consumo de alimentos muy condimentados",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Casi nunca / Rara vez"
+                },
+                {
+                    "textoOpcion": "1 a 2 veces por semana"
+                },
+                {
+                    "textoOpcion": "3 o más veces por semana"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Consumo de infusiones muy calientes",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Nunca/Rara vez"
+                },
+                {
+                    "textoOpcion": "1–2/sem"
+                },
+                {
+                    "textoOpcion": "≥3/sem"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Exposición ocupacional a pesticidas",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Exposición a otros compuestos químicos",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - ¿Cuál(es)? (Otros químicos)",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Humo de leña en el hogar",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Nunca/Rara vez"
+                },
+                {
+                    "textoOpcion": "Estacional"
+                },
+                {
+                    "textoOpcion": "Diario"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Fuente principal de agua",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Red pública"
+                },
+                {
+                    "textoOpcion": "Pozo"
+                },
+                {
+                    "textoOpcion": "Camión aljibe"
+                },
+                {
+                    "textoOpcion": "Otra"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Especificar otra fuente de agua",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "7. Factores dietarios - Tratamiento del agua en casa",
+            "tipoPregunta": "SELECCION_MULTIPLE",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Ninguno"
+                },
+                {
+                    "textoOpcion": "Hervir"
+                },
+                {
+                    "textoOpcion": "Filtro"
+                },
+                {
+                    "textoOpcion": "Cloro"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - Resultado del examen actual",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Positivo"
+                },
+                {
+                    "textoOpcion": "Negativo"
+                },
+                {
+                    "textoOpcion": "Desconocido"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - ¿Ha tenido resultado POSITIVO en el pasado?",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                },
+                {
+                    "textoOpcion": "No recuerda"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - Año aproximado y tipo de examen (pasado)",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "8. H. pylori - ¿Recibió tratamiento para erradicación?",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                },
+                {
+                    "textoOpcion": "No recuerda"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - Año y esquema (tratamiento)",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "8. H. pylori - Tipo de examen realizado",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Test de aliento"
+                },
+                {
+                    "textoOpcion": "Antígeno en deposiciones"
+                },
+                {
+                    "textoOpcion": "Serología (IgG)"
+                },
+                {
+                    "textoOpcion": "Test rápido de ureasa"
+                },
+                {
+                    "textoOpcion": "Histología / Biopsia"
+                },
+                {
+                    "textoOpcion": "Otro"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - Especificar otro tipo de examen",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "8. H. pylori - ¿Hace cuánto tiempo se realizó el test?",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "<1 año"
+                },
+                {
+                    "textoOpcion": "1–5 años"
+                },
+                {
+                    "textoOpcion": ">5 años"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - Uso de antibióticos/IBP previos al test",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                },
+                {
+                    "textoOpcion": "No recuerda"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - ¿Ha repetido el examen posteriormente?",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Sí"
+                },
+                {
+                    "textoOpcion": "No"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "8. H. pylori - Fecha y resultado del examen más reciente",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "9. Histopatología - Tipo histológico",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Intestinal"
+                },
+                {
+                    "textoOpcion": "Difuso"
+                },
+                {
+                    "textoOpcion": "Mixto"
+                },
+                {
+                    "textoOpcion": "Otro"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "9. Histopatología - Especificar otro tipo histológico",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        },
+        {
+            "textoPregunta": "9. Histopatología - Localización tumoral",
+            "tipoPregunta": "SELECCION_UNICA",
+            "obligatoria": false,
+            "opciones": [
+                {
+                    "textoOpcion": "Cardias"
+                },
+                {
+                    "textoOpcion": "Cuerpo"
+                },
+                {
+                    "textoOpcion": "Antro"
+                },
+                {
+                    "textoOpcion": "Difuso"
+                }
+            ]
+        },
+        {
+            "textoPregunta": "9. Histopatología - Estadio clínico (TNM)",
+            "tipoPregunta": "TEXTO_LIBRE",
+            "obligatoria": false
+        }
+    ]
+}

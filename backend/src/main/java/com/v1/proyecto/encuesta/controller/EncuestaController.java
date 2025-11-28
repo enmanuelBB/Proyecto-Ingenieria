@@ -3,6 +3,11 @@ package com.v1.proyecto.encuesta.controller;
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.encuesta.dto.*;
 import com.v1.proyecto.encuesta.service.EncuestaService;
+import com.v1.proyecto.encuesta.service.ExportService;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,8 +22,9 @@ import org.springframework.web.bind.annotation.*;
 public class EncuestaController {
 
     private final EncuestaService encuestaService;
+    private final ExportService exportService;
 
-    //---ENCUESTA--
+    // ---ENCUESTA--
 
     /**
      * CREAR ENCUESTA URL: POST /api/v1/encuestas
@@ -26,8 +32,7 @@ public class EncuestaController {
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EncuestaResponseDto> createEncuesta(
-            @Valid @RequestBody EncuestaCreateDto encuestaDto
-    ) {
+            @Valid @RequestBody EncuestaCreateDto encuestaDto) {
         EncuestaResponseDto encuestaCreada = encuestaService.createEncuestaCompleta(encuestaDto);
         return new ResponseEntity<>(encuestaCreada, HttpStatus.CREATED);
     }
@@ -56,9 +61,10 @@ public class EncuestaController {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
     }
+
     /**
-     *solo actualiza el nombre y la version de la encuesta
-     *actualizar encuesta URL: PUT /api/v1/encuestas/{id}
+     * solo actualiza el nombre y la version de la encuesta
+     * actualizar encuesta URL: PUT /api/v1/encuestas/{id}
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -70,10 +76,10 @@ public class EncuestaController {
         return ResponseEntity.ok(encuestaActualizada); // Devuelve 200 OK
     }
 
-    //---PREGUNTA---
+    // ---PREGUNTA---
 
     /**
-     *actualizar pregunta URL: PUT /api/v1/encuestas/preguntas/{id}
+     * actualizar pregunta URL: PUT /api/v1/encuestas/preguntas/{id}
      */
     @PutMapping("/preguntas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -86,14 +92,13 @@ public class EncuestaController {
     }
 
     /**
-     *añade pregunta a una encuesta URL: POST /api/v1/encuestas/preguntas
+     * añade pregunta a una encuesta URL: POST /api/v1/encuestas/preguntas
      */
     @PostMapping("/{idEncuesta}/preguntas")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PreguntaDto> addPreguntaToEncuesta(
-            @PathVariable (name= "idEncuesta") Integer idEncuesta,
-            @Valid @RequestBody PreguntaCreateDto preguntaDto
-    ) {
+            @PathVariable(name = "idEncuesta") Integer idEncuesta,
+            @Valid @RequestBody PreguntaCreateDto preguntaDto) {
         PreguntaDto nuevaPregunta = encuestaService.addPreguntaToEncuesta(idEncuesta, preguntaDto);
         return new ResponseEntity<>(nuevaPregunta, HttpStatus.CREATED);
     }
@@ -106,25 +111,23 @@ public class EncuestaController {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<RegistroResponseDto> saveRegistroEncuesta(
             @Valid @RequestBody RegistroRequestDto registroDto,
-            @AuthenticationPrincipal Users user
-    ) {
+            @AuthenticationPrincipal Users user) {
         if (user == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        
+
         RegistroResponseDto respuesta = encuestaService.saveRegistro(registroDto, user);
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         // TODO: Manejar excepciones
     }
 
     /**
-     *elimina una pregunta URL: DELETE /api/v1/encuestas/preguntas/{id}
+     * elimina una pregunta URL: DELETE /api/v1/encuestas/preguntas/{id}
      */
     @DeleteMapping("/preguntas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deletePregunta(
-            @PathVariable (name= "id") Integer idPregunta
-    ) {
+            @PathVariable(name = "id") Integer idPregunta) {
         try {
             encuestaService.deletePregunta(idPregunta);
             return ResponseEntity.noContent().build(); // 204 (Éxito)
@@ -135,13 +138,12 @@ public class EncuestaController {
     }
 
     /**
-     *elimina una respuesta URL: DELETE /api/v1/encuestas/respuestas/{id}
+     * elimina una respuesta URL: DELETE /api/v1/encuestas/respuestas/{id}
      */
     @DeleteMapping("/respuestas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteRespuesta(
-            @PathVariable (name= "id") Integer idRespuesta
-    ) {
+            @PathVariable(name = "id") Integer idRespuesta) {
         try {
             encuestaService.deleteRespuesta(idRespuesta);
             return ResponseEntity.noContent().build(); // 204 No Content (Éxito)
@@ -158,7 +160,7 @@ public class EncuestaController {
     @PutMapping("/respuestas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> updateRespuesta(
-            @PathVariable (name= "id") Integer idRespuesta,
+            @PathVariable(name = "id") Integer idRespuesta,
             @RequestBody RespuestaUpdateDto dto) {
         try {
             RespuestaDetalladaDto respuestaActualizada = encuestaService.updateRespuesta(idRespuesta, dto);
@@ -171,5 +173,54 @@ public class EncuestaController {
             // Captura "Respuesta no encontrada" o "Opción no encontrada"
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // 404 Not Found
         }
+    }
+
+    /**
+     * EXPORTAR ENCUESTA A EXCEL
+     * URL: GET /api/v1/encuestas/{id}/export/excel
+     */
+    @GetMapping("/{id}/export/excel")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Resource> exportarExcel(@PathVariable(name = "id") Integer id) throws java.io.IOException {
+        String filename = "encuesta_" + id + ".xlsx";
+        InputStreamResource file = new InputStreamResource(exportService.generateExcel(id));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(
+                        MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(file);
+    }
+
+    /**
+     * EXPORTAR ENCUESTA A PDF
+     * URL: GET /api/v1/encuestas/{id}/export/pdf
+     */
+    @GetMapping("/{id}/export/pdf")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Resource> exportarPdf(@PathVariable(name = "id") Integer id) {
+        String filename = "encuesta_" + id + ".pdf";
+        InputStreamResource file = new InputStreamResource(exportService.generatePdf(id));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(file);
+    }
+
+    /**
+     * EXPORTAR ENCUESTA A CSV (SDATA)
+     * URL: GET /api/v1/encuestas/{id}/export/csv
+     */
+    @GetMapping("/{id}/export/csv")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Resource> exportarCsv(@PathVariable(name = "id") Integer id) {
+        String filename = "encuesta_" + id + ".csv";
+        InputStreamResource file = new InputStreamResource(exportService.generateCsv(id));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(file);
     }
 }
