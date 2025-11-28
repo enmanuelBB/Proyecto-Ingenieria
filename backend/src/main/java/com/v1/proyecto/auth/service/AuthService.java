@@ -42,6 +42,8 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
+                .enabled(true)
+                .mfaEnabled(request.isMfaEnabled()) // Usamos el valor del DTO para MFA
                 .build();
 
         final Users savedUser = repository.save(user);
@@ -56,15 +58,49 @@ public class AuthService {
                 .build();
     }
 
-    // --- LOGIN (CON DISPOSITIVOS DE CONFIANZA) ---
+ // --- LOGIN (CON DISPOSITIVOS DE CONFIANZA OBLIGATORIO) ---
     public TokenResponse authenticate(final AuthRequest request) {
-        // 1. Autenticar credenciales (usuario/pass)
+        // 1. Autenticar credenciales
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
-                        request.getPassword()));
+                        request.getPassword()
+                )
+        );
         final Users user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+
+        // 2. VERIFICACIÓN DE DISPOSITIVO (Para TODOS los usuarios)
+        // Si el frontend manda un deviceId, verificamos si es confiable.
+        if (request.getDeviceId() != null) {
+            var deviceOpt = trustedDeviceRepository.findByUserAndDeviceId(user, request.getDeviceId());
+
+            // Si NO existe el dispositivo o ha expirado -> ENVIAR CÓDIGO
+            if (deviceOpt.isEmpty() || deviceOpt.get().getExpiresAt().isBefore(LocalDateTime.now())) {
+                
+                // Generar código
+                String code = String.format("%06d", new Random().nextInt(999999));
+                user.setVerificationCode(code);
+                user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+                repository.save(user);
+
+                // Enviar correo
+                emailService.sendEmail(
+                        user.getEmail(),
+                        "Nuevo Inicio de Sesión Detectado",
+                        "Hola " + user.getName() + ",\n\n" +
+                        "Estamos intentando iniciar sesión desde un nuevo dispositivo.\n" +
+                        "Tu código de verificación es: " + code
+                );
+
+                // Retornamos mfaEnabled = true para que el frontend pida el código
+                return TokenResponse.builder()
+                        .mfaEnabled(true)
+                        .build();
+            }
+        }
+
+        // 3. Si el dispositivo YA ES CONFIABLE (o no envió ID), generamos tokens
         final String accessToken = jwtService.generateToken(user);
         final String refreshToken = jwtService.generateRefreshToken(user);
 
@@ -78,36 +114,41 @@ public class AuthService {
                 .build();
     }
 
-    // --- VERIFICACIÓN DE CÓDIGO (2FA) ---
-    public TokenResponse verifyCode(VerificationRequest request) {
-        Users user = repository.findByEmail(request.getEmail())
+    // --- VERIFICAR CÓDIGO (Y GUARDAR DISPOSITIVO) ---
+    @Transactional
+    public TokenResponse verifyCode(final VerificationRequest request) {
+        final Users user = repository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Validar código y expiración
-        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(request.getCode())) {
-            throw new RuntimeException("Código de verificación inválido");
+        if (user.getVerificationCode() == null || user.getVerificationCodeExpiresAt() == null) {
+            throw new RuntimeException("No hay una solicitud de verificación pendiente.");
         }
 
-        if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("El código de verificación ha expirado");
+        if (LocalDateTime.now().isAfter(user.getVerificationCodeExpiresAt())) {
+            throw new RuntimeException("El código ha expirado.");
         }
 
-        // 2. Limpiar código usado
+        if (!user.getVerificationCode().equals(request.getCode())) {
+            throw new RuntimeException("Código incorrecto.");
+        }
+
+        // Limpiar código usado
         user.setVerificationCode(null);
         user.setVerificationCodeExpiresAt(null);
         repository.save(user);
 
-        // 3. (Opcional) Registrar dispositivo de confianza
+        // --- NUEVO: Guardar dispositivo de confianza ---
         if (request.isRememberDevice() && request.getDeviceId() != null) {
             TrustedDevice device = TrustedDevice.builder()
                     .user(user)
                     .deviceId(request.getDeviceId())
-                    .expiresAt(LocalDateTime.now().plusDays(30))
+                    .expiresAt(LocalDateTime.now().plusDays(30)) // Recordar por 30 días
                     .build();
+
             trustedDeviceRepository.save(device);
         }
 
-        // 4. Generar tokens finales
+        // Generar tokens
         final String accessToken = jwtService.generateToken(user);
         final String refreshToken = jwtService.generateRefreshToken(user);
 
@@ -121,14 +162,12 @@ public class AuthService {
                 .build();
     }
 
-    // recuperacion de contraseña
+    //recuperacion de contraseña
 
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
-        // 1. Buscar usuario por email. Nota: En producción, es mejor devolver siempre
-        // OK
-        // para no revelar qué emails están registrados. Aquí lanzamos excepción para
-        // debug.
+        // 1. Buscar usuario por email. Nota: En producción, es mejor devolver siempre OK
+        // para no revelar qué emails están registrados. Aquí lanzamos excepción para debug.
         Users user = repository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ese email"));
 
@@ -140,8 +179,7 @@ public class AuthService {
         repository.save(user);
 
         // 3. Construir el enlace y enviar correo
-        // **IMPORTANTE:** Ajusta la URL base (http://localhost:8081) a la de tu
-        // Frontend
+        // **IMPORTANTE:** Ajusta la URL base (http://localhost:8081) a la de tu Frontend
         String link = "http://localhost:8081/reset-password?token=" + token;
 
         emailService.sendEmail(
@@ -150,12 +188,12 @@ public class AuthService {
                 "Hola " + user.getName() + ",\n\n" +
                         "Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace:\n" +
                         link + "\n\n" +
-                        "Este enlace es válido solo por 30 minutos.");
+                        "Este enlace es válido solo por 30 minutos."
+        );
     }
 
     /**
      * Completa el proceso de restablecimiento de contraseña usando el token.
-     * 
      * @param request contiene el token y la nueva contraseña.
      */
     @Transactional
@@ -182,6 +220,9 @@ public class AuthService {
 
         repository.save(user);
     }
+
+
+
 
     // --- Métodos Auxiliares (Sin cambios) ---
     private void saveUserToken(Users user, String jwtToken) {
@@ -224,8 +265,7 @@ public class AuthService {
             return null;
         }
 
-        final String accessToken = jwtService.generateToken(user); // Corregido: antes generaba un refresh token de
-                                                                   // nuevo.
+        final String accessToken = jwtService.generateToken(user); // Corregido: antes generaba un refresh token de nuevo.
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
 

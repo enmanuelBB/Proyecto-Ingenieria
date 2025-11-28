@@ -21,11 +21,51 @@ public class PacienteService {
     // --- Métodos de Mapeo (NUEVOS) ---
     private Paciente convertToEntity(PacienteRequestDto dto) {
         return Paciente.builder()
+                // --- 1. Identificación ---
                 .rut(dto.getRut())
                 .nombre(dto.getNombre())
                 .apellidos(dto.getApellidos())
-                .sexo(dto.getSexo())
+                .telefono(dto.getTelefono())
+                .email(dto.getEmail())
+                .codigoParticipante(dto.getCodigoParticipante())
+                .grupo(dto.getGrupo())
+                .fechaInclusion(dto.getFechaInclusion())
+
+                // --- 2. Sociodemográficos ---
                 .fechaNacimiento(dto.getFechaNacimiento())
+                .sexo(dto.getSexo())
+                .nacionalidad(dto.getNacionalidad())
+                .direccion(dto.getDireccion())
+                .comuna(dto.getComuna())
+                .ciudad(dto.getCiudad())
+                .zona(dto.getZona())
+                .viveZonaMas5Anios(dto.getViveZonaMas5Anios())
+                .nivelEducacional(dto.getNivelEducacional())
+                .ocupacion(dto.getOcupacion())
+                .prevision(dto.getPrevision())
+
+                // --- 3. Antecedentes Clínicos ---
+                .diagnosticoCancer(dto.getDiagnosticoCancer())
+                .fechaDiagnostico(dto.getFechaDiagnostico())
+                .antecedentesFamCancerGastrico(dto.getAntecedentesFamCancerGastrico())
+                .antecedentesFamOtrosCancer(dto.getAntecedentesFamOtrosCancer())
+                .detalleOtrosCancer(dto.getDetalleOtrosCancer())
+                .enfermedadesRelevantes(dto.getEnfermedadesRelevantes())
+                .usoCronicoMedicamentos(dto.getUsoCronicoMedicamentos())
+                .cirugiaGastricaPrevia(dto.getCirugiaGastricaPrevia())
+
+                // --- 4. Antropometría ---
+                .peso(dto.getPeso())
+                .estatura(dto.getEstatura())
+                // Calculamos IMC automáticamente si ambos datos están presentes
+                .imc((dto.getPeso() != null && dto.getEstatura() != null && dto.getEstatura() > 0)
+                        ? dto.getPeso() / (dto.getEstatura() * dto.getEstatura())
+                        : null)
+
+                // --- 9. Histopatología ---
+                .tipoHistologico(dto.getTipoHistologico())
+                .localizacionTumoral(dto.getLocalizacionTumoral())
+                .estadioTNM(dto.getEstadioTNM())
                 .build();
     }
 
