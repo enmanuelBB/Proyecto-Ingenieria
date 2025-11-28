@@ -11,6 +11,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
+
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -47,7 +49,8 @@ public class Users implements Serializable, UserDetails {
 
     // --- CAMPOS PARA 2FA ---
     @Column(name = "mfa_enabled")
-    private boolean mfaEnabled;
+    @Builder.Default
+    private Boolean mfaEnabled = false;
 
     @Column(name = "verification_code")
     private String verificationCode;

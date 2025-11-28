@@ -61,10 +61,53 @@ public class AuthService {
         // 1. Autenticar credenciales (usuario/pass)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()));
-        final Users user = repository.findByEmail(request.email())
+                        request.getEmail(),
+                        request.getPassword()));
+        final Users user = repository.findByEmail(request.getEmail())
                 .orElseThrow();
+        final String accessToken = jwtService.generateToken(user);
+        final String refreshToken = jwtService.generateRefreshToken(user);
+
+        revokeAllUserTokens(user);
+        saveUserToken(user, accessToken);
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .mfaEnabled(false)
+                .build();
+    }
+
+    // --- VERIFICACIÓN DE CÓDIGO (2FA) ---
+    public TokenResponse verifyCode(VerificationRequest request) {
+        Users user = repository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Validar código y expiración
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(request.getCode())) {
+            throw new RuntimeException("Código de verificación inválido");
+        }
+
+        if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("El código de verificación ha expirado");
+        }
+
+        // 2. Limpiar código usado
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiresAt(null);
+        repository.save(user);
+
+        // 3. (Opcional) Registrar dispositivo de confianza
+        if (request.isRememberDevice() && request.getDeviceId() != null) {
+            TrustedDevice device = TrustedDevice.builder()
+                    .user(user)
+                    .deviceId(request.getDeviceId())
+                    .expiresAt(LocalDateTime.now().plusDays(30))
+                    .build();
+            trustedDeviceRepository.save(device);
+        }
+
+        // 4. Generar tokens finales
         final String accessToken = jwtService.generateToken(user);
         final String refreshToken = jwtService.generateRefreshToken(user);
 
