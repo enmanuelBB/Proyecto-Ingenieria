@@ -1,14 +1,12 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import styles from './dashboard.module.css';
+import Sidebar from '../components/Sidebar'; // Importamos el componente
 
-
-import { FaUserInjured, FaClipboardList, FaFileExport, FaSignOutAlt, FaPlus, FaSearch, FaUserPlus } from 'react-icons/fa';
-
+// Iconos para el contenido principal
+import { FaUserInjured, FaClipboardList, FaPlus, FaUserPlus } from 'react-icons/fa';
 
 interface Paciente {
   idPaciente: number;
@@ -27,7 +25,6 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0 });
 
   useEffect(() => {
-    // 1. Seguridad: Verificar Token
     const token = localStorage.getItem('accessToken');
     const savedUser = localStorage.getItem('userEmail');
 
@@ -37,25 +34,17 @@ export default function DashboardPage() {
     }
     setUser(savedUser || "Colaborador");
 
-    // 2. Cargar Datos Reales
     const fetchData = async () => {
       try {
-        // Petición a Pacientes
         const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (resPacientes.ok) {
           const dataPacientes: Paciente[] = await resPacientes.json();
-          // Mostramos solo los últimos 5 pacientes en la tabla (invirtiendo el array)
           setPacientes(dataPacientes.slice(-5).reverse()); 
-          
-          // Calculamos estadísticas simples
           setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
         }
-        
-       
-
       } catch (error) {
         console.error("Error cargando dashboard:", error);
       } finally {
@@ -66,63 +55,25 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-const handleLogout = () => {
-    
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userEmail'); 
-    
   
-    router.push('/');
-  };
 
   return (
     <div className={styles.dashboardContainer}>
       
-      {/* --- SIDEBAR --- */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} />
-          <span className={styles.sidebarTitle}>Ingeniería Vital</span>
-        </div>
-
-        <nav className={styles.nav}>
-          <div className={`${styles.navItem} ${styles.navItemActive}`}>
-            <FaClipboardList /> Dashboard
-          </div>
-          <div className={styles.navItem} onClick={() => alert("Ir a lista completa de pacientes")}>
-            <FaUserInjured /> Pacientes
-          </div>
-          <div className={styles.navItem}>
-            <FaSearch /> Encuestas
-          </div>
-          <div className={styles.navItem}>
-            <FaFileExport /> Exportar Datos
-          </div>
-        </nav>
-
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <FaSignOutAlt /> Cerrar Sesión
-        </button>
-      </aside>
+      {/* --- USAMOS EL COMPONENTE SIDEBAR --- */}
+      <Sidebar />
 
       {/* --- CONTENIDO PRINCIPAL --- */}
       <main className={styles.mainContent}>
         
-        {/* Header Superior */}
         <header className={styles.header}>
           <div className={styles.welcomeText}>
             <h1>Hola, {user} 👋</h1>
             <p>Aquí tienes un resumen de la actividad del estudio.</p>
           </div>
-          <div style={{display: 'flex', gap: '10px'}}>
-             {/* Aquí podrías poner un avatar o notificaciones */}
-          </div>
         </header>
 
-        {/* Tarjetas de Estadísticas */}
         <section className={styles.statsGrid}>
-          {/* Card 1: Pacientes */}
           <div className={styles.statCard}>
             <div className={`${styles.statIconBox} ${styles.iconBlue}`}>
               <FaUserInjured />
@@ -133,18 +84,16 @@ const handleLogout = () => {
             </div>
           </div>
 
-          {/* Card 2: Encuestas (Mockeado por ahora) */}
           <div className={styles.statCard}>
             <div className={`${styles.statIconBox} ${styles.iconPurple}`}>
               <FaClipboardList />
             </div>
             <div className={styles.statInfo}>
               <h3>Encuestas Completas</h3>
-              <p>0</p> {/* Conectar con backend cuando esté listo */}
+              <p>0</p> 
             </div>
           </div>
 
-          {/* Card 3: Pendientes */}
           <div className={styles.statCard}>
             <div className={`${styles.statIconBox} ${styles.iconGreen}`}>
               <FaPlus />
@@ -156,14 +105,17 @@ const handleLogout = () => {
           </div>
         </section>
 
-        {/* Grid Inferior: Tabla y Acciones */}
         <section className={styles.sectionGrid}>
-          
-          {/* Tabla de Pacientes Recientes */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
-              <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer'}}>Ver todos</button>
+              {/* Este botón ahora lleva a la página de pacientes */}
+              <button 
+                onClick={() => router.push('/dashboard/pacientes')}
+                style={{color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer'}}
+              >
+                Ver todos
+              </button>
             </div>
             
             <table className={styles.table}>
@@ -194,14 +146,13 @@ const handleLogout = () => {
             </table>
           </div>
 
-          {/* Acciones Rápidas */}
           <div>
              <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>Gestión Rápida</h3>
                 </div>
                 
-                <button className={styles.actionButton}>
+                <button className={styles.actionButton} onClick={() => router.push('/dashboard/pacientes/nuevo')}>
                   <FaUserPlus size={20} color="#4f46e5"/>
                   <div>
                     <div style={{textAlign: 'left'}}>Registrar Paciente</div>
@@ -218,9 +169,7 @@ const handleLogout = () => {
                 </button>
              </div>
           </div>
-
         </section>
-
       </main>
     </div>
   );

@@ -1,37 +1,32 @@
-
+// Ubicación: frontend/app/components/PacienteForm.tsx
 "use client";
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './PacienteForm.module.css';
 
-// --- FORMATO RUT  ---
+
 const formatRut = (value: string) => {
+
   let cleanValue = value.replace(/[^0-9kK]/g, "").toUpperCase();
-  if (cleanValue.length > 9) cleanValue = cleanValue.slice(0, 9);
+
+ 
+  if (cleanValue.length > 9) {
+    cleanValue = cleanValue.slice(0, 9);
+  }
+
+
   if (cleanValue.length < 2) return cleanValue;
+
+
   const body = cleanValue.slice(0, -1);
   const dv = cleanValue.slice(-1);
+
+
   const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+
   return `${formattedBody}-${dv}`;
-};
-
-
-const formatPhone = (value: string) => {
-  // 1. Dejar solo números
-  const numbers = value.replace(/\D/g, "");
-
-  // 2. Limitar a 9 dígitos (formato móvil)
-  const limited = numbers.slice(0, 9);
-
-  // 3. Aplicar espacios (9 XXXX XXXX)
-  if (limited.length > 5) {
-    return `${limited.slice(0, 1)} ${limited.slice(1, 5)} ${limited.slice(5)}`;
-  }
-  if (limited.length > 1) {
-    return `${limited.slice(0, 1)} ${limited.slice(1)}`;
-  }
-  return limited;
 };
 
 export default function PacienteForm() {
@@ -54,20 +49,17 @@ export default function PacienteForm() {
     estatura: ''
   });
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    // FORMATO RUT
+    
     if (name === 'rut') {
-        setFormData(prev => ({ ...prev, [name]: formatRut(value) }));
-        return;
+        const formatted = formatRut(value);
+        setFormData(prev => ({ ...prev, [name]: formatted }));
+        return; 
     }
 
-    // NUEVO: FORMATO TELÉFONO
-    if (name === 'telefono') {
-        setFormData(prev => ({ ...prev, [name]: formatPhone(value) }));
-        return;
-    }
 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -83,12 +75,10 @@ export default function PacienteForm() {
         return;
     }
 
-  
-    const cleanTelefono = formData.telefono.replace(/\s/g, '');
-
+    
     const payload = {
         ...formData,
-        telefono: cleanTelefono, 
+      
         peso: parseFloat(formData.peso),
         estatura: parseFloat(formData.estatura)
     };
@@ -105,7 +95,7 @@ export default function PacienteForm() {
 
       if (response.ok) {
         alert('¡Paciente registrado exitosamente!');
-        router.push('/dashboard/pacientes'); // Volver a la lista
+        router.push('/dashboard');
       } else {
         const errData = await response.text();
         setError(`Error al guardar: ${errData || response.statusText}`);
@@ -173,19 +163,7 @@ export default function PacienteForm() {
 
         <div className={styles.formGroup}>
           <label className={styles.label}>Teléfono</label>
-          <div style={{position: 'relative'}}>
-            {/* Prefijo visual +56 */}
-            <span style={{position:'absolute', left:'10px', top:'12px', color:'#64748b', fontSize:'0.9rem'}}>+56</span>
-            <input 
-                className={styles.input} 
-                name="telefono" 
-                value={formData.telefono} 
-                onChange={handleChange} 
-                placeholder="9 1234 5678" 
-                style={{paddingLeft: '45px'}} 
-                maxLength={11} 
-            />
-          </div>
+          <input className={styles.input} name="telefono" value={formData.telefono} onChange={handleChange} placeholder="+56 9..." />
         </div>
 
         <div className={styles.formGroup}>
