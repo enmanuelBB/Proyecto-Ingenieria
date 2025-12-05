@@ -180,7 +180,7 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}/export/excel
      */
     @GetMapping("/{id}/export/excel")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<Resource> exportarExcel(@PathVariable(name = "id") Integer id) throws java.io.IOException {
         String filename = "encuesta_" + id + ".xlsx";
         InputStreamResource file = new InputStreamResource(exportService.generateExcel(id));
@@ -197,7 +197,7 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}/export/pdf
      */
     @GetMapping("/{id}/export/pdf")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<Resource> exportarPdf(@PathVariable(name = "id") Integer id) {
         String filename = "encuesta_" + id + ".pdf";
         InputStreamResource file = new InputStreamResource(exportService.generatePdf(id));
@@ -213,7 +213,7 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}/export/csv
      */
     @GetMapping("/{id}/export/csv")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<Resource> exportarCsv(@PathVariable(name = "id") Integer id) {
         String filename = "encuesta_" + id + ".csv";
         InputStreamResource file = new InputStreamResource(exportService.generateCsv(id));

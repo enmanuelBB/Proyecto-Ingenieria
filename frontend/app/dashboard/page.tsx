@@ -48,13 +48,13 @@ export default function DashboardPage() {
         if (resPacientes.ok) {
           const dataPacientes: Paciente[] = await resPacientes.json();
           // Mostramos solo los últimos 5 pacientes en la tabla (invirtiendo el array)
-          setPacientes(dataPacientes.slice(-5).reverse()); 
-          
+          setPacientes(dataPacientes.slice(-5).reverse());
+
           // Calculamos estadísticas simples
           setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
         }
-        
-       
+
+
 
       } catch (error) {
         console.error("Error cargando dashboard:", error);
@@ -66,19 +66,19 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-const handleLogout = () => {
-    
+  const handleLogout = () => {
+
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userEmail'); 
-    
-  
+    localStorage.removeItem('userEmail');
+
+
     router.push('/');
   };
 
   return (
     <div className={styles.dashboardContainer}>
-      
+
       {/* --- SIDEBAR --- */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
@@ -96,7 +96,7 @@ const handleLogout = () => {
           <div className={styles.navItem}>
             <FaSearch /> Encuestas
           </div>
-          <div className={styles.navItem}>
+          <div className={styles.navItem} onClick={() => router.push('/exportar-datos')}>
             <FaFileExport /> Exportar Datos
           </div>
         </nav>
@@ -108,15 +108,15 @@ const handleLogout = () => {
 
       {/* --- CONTENIDO PRINCIPAL --- */}
       <main className={styles.mainContent}>
-        
+
         {/* Header Superior */}
         <header className={styles.header}>
           <div className={styles.welcomeText}>
             <h1>Hola, {user} 👋</h1>
             <p>Aquí tienes un resumen de la actividad del estudio.</p>
           </div>
-          <div style={{display: 'flex', gap: '10px'}}>
-             {/* Aquí podrías poner un avatar o notificaciones */}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {/* Aquí podrías poner un avatar o notificaciones */}
           </div>
         </header>
 
@@ -158,14 +158,14 @@ const handleLogout = () => {
 
         {/* Grid Inferior: Tabla y Acciones */}
         <section className={styles.sectionGrid}>
-          
+
           {/* Tabla de Pacientes Recientes */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
-              <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer'}}>Ver todos</button>
+              <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}>Ver todos</button>
             </div>
-            
+
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -180,15 +180,15 @@ const handleLogout = () => {
                 ) : pacientes.length > 0 ? (
                   pacientes.map((p) => (
                     <tr key={p.idPaciente}>
-                      <td style={{fontWeight: '500'}}>{p.nombre} {p.apellidos}</td>
+                      <td style={{ fontWeight: '500' }}>{p.nombre} {p.apellidos}</td>
                       <td>{p.rut}</td>
                       <td>
-                        <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor:'pointer'}}>Ver Ficha</button>
+                        <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}>Ver Ficha</button>
                       </td>
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={3} style={{textAlign: 'center', padding: '2rem'}}>No hay registros recientes.</td></tr>
+                  <tr><td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>No hay registros recientes.</td></tr>
                 )}
               </tbody>
             </table>
@@ -196,27 +196,27 @@ const handleLogout = () => {
 
           {/* Acciones Rápidas */}
           <div>
-             <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>Gestión Rápida</h3>
-                </div>
-                
-                <button className={styles.actionButton}>
-                  <FaUserPlus size={20} color="#4f46e5"/>
-                  <div>
-                    <div style={{textAlign: 'left'}}>Registrar Paciente</div>
-                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Crear nueva ficha clínica</div>
-                  </div>
-                </button>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.cardTitle}>Gestión Rápida</h3>
+              </div>
 
-                <button className={styles.actionButton}>
-                  <FaClipboardList size={20} color="#4f46e5"/>
-                  <div>
-                    <div style={{textAlign: 'left'}}>Nueva Encuesta</div>
-                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Ingresar datos de formulario</div>
-                  </div>
-                </button>
-             </div>
+              <button className={styles.actionButton}>
+                <FaUserPlus size={20} color="#4f46e5" />
+                <div>
+                  <div style={{ textAlign: 'left' }}>Registrar Paciente</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Crear nueva ficha clínica</div>
+                </div>
+              </button>
+
+              <button className={styles.actionButton}>
+                <FaClipboardList size={20} color="#4f46e5" />
+                <div>
+                  <div style={{ textAlign: 'left' }}>Nueva Encuesta</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Ingresar datos de formulario</div>
+                </div>
+              </button>
+            </div>
           </div>
 
         </section>
