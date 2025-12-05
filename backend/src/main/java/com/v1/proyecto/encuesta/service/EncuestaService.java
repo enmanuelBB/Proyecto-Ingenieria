@@ -66,7 +66,8 @@ public class EncuestaService {
         for (Integer idObligatoria : preguntasObligatoriasIds) {
             if (!preguntasRespondidasIds.contains(idObligatoria)) {
                 // (En un escenario real, también deberías chequear la lógica de salto aquí)
-                throw new IllegalArgumentException("Respuesta faltante para la pregunta obligatoria ID: " + idObligatoria);
+                throw new IllegalArgumentException(
+                        "Respuesta faltante para la pregunta obligatoria ID: " + idObligatoria);
             }
         }
         // --- FIN DE LA VALIDACIÓN ---
@@ -125,13 +126,12 @@ public class EncuestaService {
 
                         if (preguntaDto.getOpciones() != null) {
                             List<OpcionRespuesta> opciones = preguntaDto.getOpciones().stream()
-                                    .map(opcionDto ->
-                                            OpcionRespuesta.builder()
-                                                    .textoOpcion(opcionDto.getTextoOpcion())
-                                                    .valorDicotomizado(opcionDto.getValorDicotomizado())
-                                                    .pregunta(pregunta)
-                                                    .build()
-                                    ).collect(Collectors.toList());
+                                    .map(opcionDto -> OpcionRespuesta.builder()
+                                            .textoOpcion(opcionDto.getTextoOpcion())
+                                            .valorDicotomizado(opcionDto.getValorDicotomizado())
+                                            .pregunta(pregunta)
+                                            .build())
+                                    .collect(Collectors.toList());
                             pregunta.setOpciones(opciones);
                         }
                         return pregunta;
@@ -158,13 +158,12 @@ public class EncuestaService {
 
         if (preguntaDto.getOpciones() != null && !preguntaDto.getOpciones().isEmpty()) {
             List<OpcionRespuesta> opciones = preguntaDto.getOpciones().stream()
-                    .map(opcionDto ->
-                            OpcionRespuesta.builder()
-                                    .textoOpcion(opcionDto.getTextoOpcion())
-                                    .valorDicotomizado(opcionDto.getValorDicotomizado())
-                                    .pregunta(pregunta)
-                                    .build()
-                    ).collect(Collectors.toList());
+                    .map(opcionDto -> OpcionRespuesta.builder()
+                            .textoOpcion(opcionDto.getTextoOpcion())
+                            .valorDicotomizado(opcionDto.getValorDicotomizado())
+                            .pregunta(pregunta)
+                            .build())
+                    .collect(Collectors.toList());
             pregunta.setOpciones(opciones);
         }
         Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
@@ -186,13 +185,12 @@ public class EncuestaService {
 
         if (preguntaDto.getOpciones() != null) {
             List<OpcionRespuesta> nuevasOpciones = preguntaDto.getOpciones().stream()
-                    .map(opcionDto ->
-                            OpcionRespuesta.builder()
-                                    .textoOpcion(opcionDto.getTextoOpcion())
-                                    .valorDicotomizado(opcionDto.getValorDicotomizado())
-                                    .pregunta(pregunta)
-                                    .build()
-                    ).collect(Collectors.toList());
+                    .map(opcionDto -> OpcionRespuesta.builder()
+                            .textoOpcion(opcionDto.getTextoOpcion())
+                            .valorDicotomizado(opcionDto.getValorDicotomizado())
+                            .pregunta(pregunta)
+                            .build())
+                    .collect(Collectors.toList());
             pregunta.getOpciones().addAll(nuevasOpciones);
         }
         Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
@@ -227,7 +225,8 @@ public class EncuestaService {
         }
         encuestaRepository.deleteById(id);
     }
-    //--- FUNCIONALIDAD Encuesta 9: ELIMINAR respuesta---
+
+    // --- FUNCIONALIDAD Encuesta 9: ELIMINAR respuesta---
     @Transactional
     public void deleteRespuesta(Integer idRespuesta) {
 
@@ -263,7 +262,8 @@ public class EncuestaService {
         // Si el DTO trae un ID de opción...
         if (dto.getIdOpcionSeleccionada() != null) {
             OpcionRespuesta nuevaOpcion = opcionRespuestaRepository.findById(dto.getIdOpcionSeleccionada())
-                    .orElseThrow(() -> new RuntimeException("Opción no encontrada con id: " + dto.getIdOpcionSeleccionada()));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Opción no encontrada con id: " + dto.getIdOpcionSeleccionada()));
 
             // Validación: Asegurarse de que la nueva opción pertenezca a la misma pregunta
             if (!nuevaOpcion.getPregunta().getIdPregunta().equals(respuesta.getPregunta().getIdPregunta())) {
@@ -311,9 +311,9 @@ public class EncuestaService {
                 .textoPregunta(pregunta.getTextoPregunta())
                 .tipoPregunta(pregunta.getTipoPregunta())
                 .obligatoria(pregunta.isObligatoria())
-                .opciones(pregunta.getOpciones().stream()
+                .opciones(pregunta.getOpciones() != null ? pregunta.getOpciones().stream()
                         .map(this::mapOpcionToDto)
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toList()) : new ArrayList<>())
                 .build();
     }
 
@@ -337,6 +337,7 @@ public class EncuestaService {
                 .usuarioNombre(registro.getUsuario().getUsername())
                 .build();
     }
+
     private RegistroCompletoResponseDto mapRegistroToCompletoDto(RegistroEncuesta registro) {
         return RegistroCompletoResponseDto.builder()
                 .idRegistro(registro.getIdRegistro())
@@ -369,7 +370,7 @@ public class EncuestaService {
                 .idRespuesta(respuesta.getIdRespuesta())
                 .textoPregunta(respuesta.getPregunta().getTextoPregunta())
                 .respuestaDada(textoRespuesta)
-                .idOpcionSeleccionada(idOpcion) 
+                .idOpcionSeleccionada(idOpcion)
                 .build();
     }
 }

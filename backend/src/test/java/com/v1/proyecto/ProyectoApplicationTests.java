@@ -1,4 +1,4 @@
-package com.v1.tarea1;
+package com.v1.proyecto;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
