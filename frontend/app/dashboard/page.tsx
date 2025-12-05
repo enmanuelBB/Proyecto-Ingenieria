@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -25,6 +24,7 @@ export default function DashboardPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0 });
+  const [defaultSurveyId, setDefaultSurveyId] = useState<number | null>(null);
 
   useEffect(() => {
     // 1. Seguridad: Verificar Token
@@ -54,7 +54,20 @@ export default function DashboardPage() {
           setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
         }
 
+        // Petición para buscar la encuesta por defecto
+        const resEncuestas = await fetch('http://localhost:8080/api/v1/encuestas', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
+        if (resEncuestas.ok) {
+          const encuestas: any[] = await resEncuestas.json();
+          const defaultSurvey = encuestas.find(e => e.titulo.includes("Estudio Cáncer Gástrico"));
+          if (defaultSurvey) {
+            setDefaultSurveyId(defaultSurvey.idEncuesta);
+          } else if (encuestas.length > 0) {
+            setDefaultSurveyId(encuestas[0].idEncuesta);
+          }
+        }
 
       } catch (error) {
         console.error("Error cargando dashboard:", error);
@@ -76,6 +89,14 @@ export default function DashboardPage() {
     router.push('/');
   };
 
+  const handleNewSurvey = () => {
+    if (defaultSurveyId) {
+      router.push(`/responder-encuesta/${defaultSurveyId}`);
+    } else {
+      alert("No se encontró la encuesta por defecto. Por favor contacte al administrador.");
+    }
+  };
+
   return (
     <div className={styles.dashboardContainer}>
 
@@ -93,7 +114,7 @@ export default function DashboardPage() {
           <div className={styles.navItem} onClick={() => alert("Ir a lista completa de pacientes")}>
             <FaUserInjured /> Pacientes
           </div>
-          <div className={styles.navItem}>
+          <div className={styles.navItem} onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}>
             <FaSearch /> Encuestas
           </div>
           <div className={styles.navItem} onClick={() => router.push('/exportar-datos')}>
@@ -209,10 +230,10 @@ export default function DashboardPage() {
                 </div>
               </button>
 
-              <button className={styles.actionButton}>
+              <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}>
                 <FaClipboardList size={20} color="#4f46e5" />
                 <div>
-                  <div style={{ textAlign: 'left' }}>Nueva Encuesta</div>
+                  <div style={{ textAlign: 'left' }}>Responder Encuesta</div>
                   <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Ingresar datos de formulario</div>
                 </div>
               </button>

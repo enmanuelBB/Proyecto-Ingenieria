@@ -250,6 +250,35 @@ public class EncuestaService {
                 .collect(Collectors.toList());
     }
 
+    // --- FUNCIONALIDAD EXTRA: Verificar si usuario respondió ---
+    @Transactional(readOnly = true)
+    public boolean hasUserResponded(Integer idEncuesta, String username) {
+        // En un caso real buscaríamos el usuario por username para tener su ID
+        // Aquí asumimos que el objeto Users tiene el ID accesible o lo buscamos
+        // Para simplificar, buscamos el usuario primero
+        // (Esto requiere que tengas un UserRepository o similar inyectado si no lo
+        // tienes,
+        // pero aquí usamos el contexto de seguridad en el controller, así que mejor
+        // pasar el ID o el objeto User)
+
+        // Mejor opción: pasar el objeto User y sacar el ID.
+        return false; // TEMPORAL, ver abajo corrección
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasUserResponded(Integer idEncuesta, Integer idUsuario) {
+        return registroEncuestaRepository.existsByEncuestaIdEncuestaAndUsuarioId(idEncuesta, idUsuario);
+    }
+
+    // --- FUNCIONALIDAD EXTRA: Listar registros de una encuesta (Admin) ---
+    @Transactional(readOnly = true)
+    public List<RegistroCompletoResponseDto> getRegistrosByEncuesta(Integer idEncuesta) {
+        List<RegistroEncuesta> registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+        return registros.stream()
+                .map(this::mapRegistroToCompletoDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public RespuestaDetalladaDto updateRespuesta(Integer idRespuesta, RespuestaUpdateDto dto) {
 
@@ -372,5 +401,12 @@ public class EncuestaService {
                 .respuestaDada(textoRespuesta)
                 .idOpcionSeleccionada(idOpcion)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EncuestaResponseDto> getAllEncuestas() {
+        return encuestaRepository.findAll().stream()
+                .map(this::mapEncuestaToDto)
+                .collect(Collectors.toList());
     }
 }

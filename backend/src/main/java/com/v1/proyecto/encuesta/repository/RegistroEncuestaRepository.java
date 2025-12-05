@@ -12,4 +12,8 @@ public interface RegistroEncuestaRepository extends JpaRepository<RegistroEncues
     List<RegistroEncuesta> findByPacienteIdPaciente(Integer idPaciente);
 
     List<RegistroEncuesta> findByEncuestaIdEncuesta(Integer idEncuesta);
+
+    List<RegistroEncuesta> findByEncuestaIdEncuestaAndPacienteIdPaciente(Integer idEncuesta, Integer idPaciente);
+
+    boolean existsByEncuestaIdEncuestaAndUsuarioId(Integer idEncuesta, Integer idUsuario);
 }

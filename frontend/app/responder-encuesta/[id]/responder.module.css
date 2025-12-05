@@ -1,0 +1,152 @@
+/* responder.module.css */
+
+.container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9fafb;
+    /* gray-50 */
+    min-height: 100vh;
+}
+
+.card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #111827;
+    /* gray-900 */
+}
+
+.version {
+    font-size: 0.875rem;
+    color: #6b7280;
+    /* gray-500 */
+}
+
+/* Form Groups */
+.formGroup {
+    margin-bottom: 1.5rem;
+}
+
+.label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #374151;
+    /* gray-700 */
+}
+
+.select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    /* gray-300 */
+    border-radius: 0.375rem;
+    background-color: white;
+}
+
+/* Questions */
+.questionBlock {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    /* gray-200 */
+}
+
+.questionBlock:last-child {
+    border-bottom: none;
+}
+
+.questionText {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    /* gray-800 */
+    margin-bottom: 1rem;
+}
+
+.required {
+    color: #ef4444;
+    /* red-500 */
+    margin-left: 0.25rem;
+}
+
+/* Options */
+.radioGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.radioOption {
+    display: flex;
+    align-items: center;
+}
+
+.radioInput {
+    margin-right: 0.5rem;
+}
+
+/* Text Area */
+.textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    min-height: 100px;
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.cancelButton,
+.submitButton {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cancelButton {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+.cancelButton:hover {
+    background-color: #f3f4f6;
+}
+
+.submitButton {
+    background-color: #4f46e5;
+    /* indigo-600 */
+    border: none;
+    color: white;
+}
+
+.submitButton:hover {
+    background-color: #4338ca;
+    /* indigo-700 */
+}
+
+.submitButton:disabled {
+    background-color: #a5b4fc;
+    cursor: not-allowed;
+}

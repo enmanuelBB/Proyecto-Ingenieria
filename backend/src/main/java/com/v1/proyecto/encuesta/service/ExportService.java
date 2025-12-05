@@ -36,10 +36,17 @@ public class ExportService {
     private final RegistroEncuestaRepository registroEncuestaRepository;
 
     @Transactional(readOnly = true)
-    public ByteArrayInputStream generateExcel(Integer idEncuesta) throws IOException {
+    public ByteArrayInputStream generateExcel(Integer idEncuesta, Integer idPaciente) throws IOException {
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
-        List<RegistroEncuesta> registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+
+        List<RegistroEncuesta> registros;
+        if (idPaciente != null) {
+            registros = registroEncuestaRepository.findByEncuestaIdEncuestaAndPacienteIdPaciente(idEncuesta,
+                    idPaciente);
+        } else {
+            registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+        }
         List<Pregunta> preguntas = encuesta.getPreguntas().stream()
                 .sorted(Comparator.comparing(Pregunta::getIdPregunta))
                 .collect(Collectors.toList());
@@ -87,10 +94,17 @@ public class ExportService {
     }
 
     @Transactional(readOnly = true)
-    public ByteArrayInputStream generatePdf(Integer idEncuesta) {
+    public ByteArrayInputStream generatePdf(Integer idEncuesta, Integer idPaciente) {
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
-        List<RegistroEncuesta> registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+
+        List<RegistroEncuesta> registros;
+        if (idPaciente != null) {
+            registros = registroEncuestaRepository.findByEncuestaIdEncuestaAndPacienteIdPaciente(idEncuesta,
+                    idPaciente);
+        } else {
+            registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+        }
         List<Pregunta> preguntas = encuesta.getPreguntas().stream()
                 .sorted(Comparator.comparing(Pregunta::getIdPregunta))
                 .collect(Collectors.toList());
@@ -147,10 +161,17 @@ public class ExportService {
     }
 
     @Transactional(readOnly = true)
-    public ByteArrayInputStream generateCsv(Integer idEncuesta) {
+    public ByteArrayInputStream generateCsv(Integer idEncuesta, Integer idPaciente) {
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
-        List<RegistroEncuesta> registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+
+        List<RegistroEncuesta> registros;
+        if (idPaciente != null) {
+            registros = registroEncuestaRepository.findByEncuestaIdEncuestaAndPacienteIdPaciente(idEncuesta,
+                    idPaciente);
+        } else {
+            registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
+        }
         List<Pregunta> preguntas = encuesta.getPreguntas().stream()
                 .sorted(Comparator.comparing(Pregunta::getIdPregunta))
                 .collect(Collectors.toList());
