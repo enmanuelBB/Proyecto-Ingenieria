@@ -1,227 +1,140 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import styles from './dashboard.module.css';
-
-
-import { FaUserInjured, FaClipboardList, FaFileExport, FaSignOutAlt, FaPlus, FaSearch, FaUserPlus } from 'react-icons/fa';
-
+import Sidebar from '../components/Sidebar';
+import { FaUserPlus, FaSearch } from 'react-icons/fa';
 
 interface Paciente {
-  idPaciente: number;
-  rut: string;
-  nombre: string;
-  apellidos: string;
-  sexo: string;
-  fechaNacimiento: string;
+    idPaciente: number;
+    rut: string;
+    nombre: string;
+    apellidos: string;
+    sexo: string;
+    fechaNacimiento: string;
 }
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<string | null>("Usuario");
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0 });
+export default function PacientesPage() {
+    const router = useRouter();
+    const [pacientes, setPacientes] = useState<Paciente[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    // 1. Seguridad: Verificar Token
-    const token = localStorage.getItem('accessToken');
-    const savedUser = localStorage.getItem('userEmail');
-
-    if (!token) {
-      router.push('/');
-      return;
-    }
-    setUser(savedUser || "Colaborador");
-
-    // 2. Cargar Datos Reales
-    const fetchData = async () => {
-      try {
-        // Petición a Pacientes
-        const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (resPacientes.ok) {
-          const dataPacientes: Paciente[] = await resPacientes.json();
-          // Mostramos solo los últimos 5 pacientes en la tabla (invirtiendo el array)
-          setPacientes(dataPacientes.slice(-5).reverse()); 
-          
-          // Calculamos estadísticas simples
-          setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            router.push('/');
+            return;
         }
-        
-       
 
-      } catch (error) {
-        console.error("Error cargando dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        const fetchPacientes = async () => {
+            try {
+                const response = await fetch('http://localhost:8080/api/v1/pacientes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-    fetchData();
-  }, [router]);
+                if (response.ok) {
+                    const data = await response.json();
+                    setPacientes(data);
+                }
+            } catch (error) {
+                console.error("Error cargando pacientes:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-const handleLogout = () => {
-    
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userEmail'); 
-    
-  
-    router.push('/');
-  };
+        fetchPacientes();
+    }, [router]);
 
-  return (
-    <div className={styles.dashboardContainer}>
-      
-      {/* --- SIDEBAR --- */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} />
-          <span className={styles.sidebarTitle}>Ingeniería Vital</span>
-        </div>
+    const filteredPacientes = pacientes.filter(p =>
+        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.rut.includes(searchTerm)
+    );
 
-        <nav className={styles.nav}>
-          <div className={`${styles.navItem} ${styles.navItemActive}`}>
-            <FaClipboardList /> Dashboard
-          </div>
-          <div className={styles.navItem} onClick={() => alert("Ir a lista completa de pacientes")}>
-            <FaUserInjured /> Pacientes
-          </div>
-          <div className={styles.navItem}>
-            <FaSearch /> Encuestas
-          </div>
-          <div className={styles.navItem}>
-            <FaFileExport /> Exportar Datos
-          </div>
-        </nav>
+    return (
+        <div className={styles.dashboardContainer}>
 
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <FaSignOutAlt /> Cerrar Sesión
-        </button>
-      </aside>
+            <Sidebar />
 
-      {/* --- CONTENIDO PRINCIPAL --- */}
-      <main className={styles.mainContent}>
-        
-        {/* Header Superior */}
-        <header className={styles.header}>
-          <div className={styles.welcomeText}>
-            <h1>Hola, {user} 👋</h1>
-            <p>Aquí tienes un resumen de la actividad del estudio.</p>
-          </div>
-          <div style={{display: 'flex', gap: '10px'}}>
-             {/* Aquí podrías poner un avatar o notificaciones */}
-          </div>
-        </header>
+            <main className={styles.mainContent}>
 
-        {/* Tarjetas de Estadísticas */}
-        <section className={styles.statsGrid}>
-          {/* Card 1: Pacientes */}
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconBox} ${styles.iconBlue}`}>
-              <FaUserInjured />
-            </div>
-            <div className={styles.statInfo}>
-              <h3>Total Pacientes</h3>
-              <p>{loading ? "..." : stats.totalPacientes}</p>
-            </div>
-          </div>
+                <header className={styles.header}>
+                    <div className={styles.welcomeText}>
+                        <h1>Gestión de Pacientes</h1>
+                        <p>Consulta y administra la base de datos de participantes.</p>
+                    </div>
 
-          {/* Card 2: Encuestas (Mockeado por ahora) */}
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconBox} ${styles.iconPurple}`}>
-              <FaClipboardList />
-            </div>
-            <div className={styles.statInfo}>
-              <h3>Encuestas Completas</h3>
-              <p>0</p> {/* Conectar con backend cuando esté listo */}
-            </div>
-          </div>
+                    {/* BOTÓN ACTIVADO */}
+                    <button
+                        className={styles.actionButton}
+                        style={{width: 'auto', backgroundColor: '#4f46e5', color: 'white'}}
+                        onClick={() => router.push('/dashboard/pacientes/nuevo')}
+                    >
+                        <FaUserPlus /> Nuevo Paciente
+                    </button>
 
-          {/* Card 3: Pendientes */}
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconBox} ${styles.iconGreen}`}>
-              <FaPlus />
-            </div>
-            <div className={styles.statInfo}>
-              <h3>Registros Hoy</h3>
-              <p>0</p>
-            </div>
-          </div>
-        </section>
+                </header>
 
-        {/* Grid Inferior: Tabla y Acciones */}
-        <section className={styles.sectionGrid}>
-          
-          {/* Tabla de Pacientes Recientes */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
-              <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer'}}>Ver todos</button>
-            </div>
-            
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>RUT</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={3}>Cargando datos...</td></tr>
-                ) : pacientes.length > 0 ? (
-                  pacientes.map((p) => (
-                    <tr key={p.idPaciente}>
-                      <td style={{fontWeight: '500'}}>{p.nombre} {p.apellidos}</td>
-                      <td>{p.rut}</td>
-                      <td>
-                        <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor:'pointer'}}>Ver Ficha</button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan={3} style={{textAlign: 'center', padding: '2rem'}}>No hay registros recientes.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Acciones Rápidas */}
-          <div>
-             <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>Gestión Rápida</h3>
+                {/* Barra de Búsqueda */}
+                <div style={{marginBottom: '2rem', display: 'flex', gap: '1rem'}}>
+                    <div style={{position: 'relative', width: '100%', maxWidth: '400px'}}>
+                        <FaSearch style={{position: 'absolute', left: '15px', top: '12px', color: '#94a3b8'}}/>
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o RUT..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '0.7rem 1rem 0.7rem 2.5rem',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0',
+                                fontSize: '0.95rem'
+                            }}
+                        />
+                    </div>
                 </div>
-                
-                <button className={styles.actionButton}>
-                  <FaUserPlus size={20} color="#4f46e5"/>
-                  <div>
-                    <div style={{textAlign: 'left'}}>Registrar Paciente</div>
-                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Crear nueva ficha clínica</div>
-                  </div>
-                </button>
 
-                <button className={styles.actionButton}>
-                  <FaClipboardList size={20} color="#4f46e5"/>
-                  <div>
-                    <div style={{textAlign: 'left'}}>Nueva Encuesta</div>
-                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Ingresar datos de formulario</div>
-                  </div>
-                </button>
-             </div>
-          </div>
+                <div className={styles.card}>
+                    <table className={styles.table}>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>RUT</th>
+                            <th>Nombre Completo</th>
+                            <th>Sexo</th>
+                            <th>F. Nacimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {loading ? (
+                            <tr><td colSpan={6} style={{textAlign:'center', padding:'2rem'}}>Cargando pacientes...</td></tr>
+                        ) : filteredPacientes.length > 0 ? (
+                            filteredPacientes.map((p) => (
+                                <tr key={p.idPaciente}>
+                                    <td>{p.idPaciente}</td>
+                                    <td>{p.rut}</td>
+                                    <td style={{fontWeight: '500'}}>{p.nombre} {p.apellidos}</td>
+                                    <td>{p.sexo}</td>
+                                    <td>{new Date(p.fechaNacimiento).toLocaleDateString()}</td>
+                                    <td>
+                                        <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor:'pointer', marginRight: '10px'}}>Editar</button>
+                                        <button style={{color: '#ef4444', background: 'none', border: 'none', cursor:'pointer'}}>Eliminar</button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr><td colSpan={6} style={{textAlign: 'center', padding: '2rem'}}>No se encontraron pacientes.</td></tr>
+                        )}
+                        </tbody>
+                    </table>
+                </div>
 
-        </section>
-
-      </main>
-    </div>
-  );
+            </main>
+        </div>
+    );
 }
