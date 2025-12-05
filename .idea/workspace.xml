@@ -5,11 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9133d3f9-b9c8-4c4c-86f5-66586babd51e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/encuesta_payload.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/respuesta_payload.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/config/DataInitializer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/service/ExportService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/User/Services/UserServicesTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/User/controllers/EditControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/auth/controller/AuthControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/auth/service/AuthServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/auth/service/JwtServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/encuesta/controller/EncuestaControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/encuesta/service/EncuestaServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/encuesta/service/ExportServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/paciente/controller/PacienteControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/paciente/service/PacienteServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/app/components/ExportDataView.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/app/exportar-datos/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/config/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/config/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Users.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/auth/model/Users.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/controller/EncuestaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/controller/EncuestaController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/repository/RegistroEncuestaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/repository/RegistroEncuestaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/service/EncuestaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/encuesta/service/EncuestaService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/dto/PacienteRequestDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/dto/PacienteRequestDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/dto/PacienteResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/dto/PacienteResponseDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/model/Paciente.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/model/Paciente.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/service/PacienteService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/v1/proyecto/paciente/service/PacienteService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/v1/tarea1/ProyectoApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/v1/proyecto/ProyectoApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +77,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "SHELLCHECK.PATH": "I do mind",
     "Spring Boot.ProyectoApplication.executor": "Run",
-    "git-widget-placeholder": "frontend",
+    "git-widget-placeholder": "Merging frontend",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/enman/OneDrive/Escritorio/proyecto ingenieria/Proyecto-Ingenieria",
     "node.js.detected.package.eslint": "true",
@@ -68,6 +89,7 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "MavenSettings",
+    "ts.external.directory.path": "C:\\Users\\enman\\OneDrive\\Escritorio\\proyecto ingenieriaV2\\Proyecto-Ingenieria\\frontend\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -140,6 +162,7 @@
       <workItem from="1762116254559" duration="7566000" />
       <workItem from="1763777540259" duration="7791000" />
       <workItem from="1764077520139" duration="4017000" />
+      <workItem from="1764940760998" duration="463000" />
     </task>
     <servers />
   </component>

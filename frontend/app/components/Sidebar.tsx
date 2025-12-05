@@ -15,7 +15,6 @@ export default function Sidebar() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userEmail');
-    localStorage.removeItem('deviceId');
     router.push('/');
   };
 
