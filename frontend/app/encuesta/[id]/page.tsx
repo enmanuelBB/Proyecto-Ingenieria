@@ -1,10 +1,12 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FaClipboardList, FaUserCheck, FaCheckCircle, FaTimesCircle, FaArrowLeft } from 'react-icons/fa';
+import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser } from 'react-icons/fa';
+import Sidebar from '../../components/Sidebar';
+import styles from './encuesta.module.css';
 
-// Interfaces (Should be in a shared types file, but defining here for now based on what we know)
 interface Encuesta {
     idEncuesta: number;
     titulo: string;
@@ -18,7 +20,7 @@ interface RegistroCompleto {
     paciente: {
         idPaciente: number;
         nombre: string;
-        rut: string; // Assuming 'rut' exists or similar
+        rut: string;
     };
     usuario: {
         username: string;
@@ -39,17 +41,17 @@ export default function EncuestaIntermediatePage() {
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
-        const storedRole = localStorage.getItem('userRole');
+        const storedRole = localStorage.getItem('userRole'); 
 
         if (!token) {
             router.push('/');
             return;
         }
-        setRole(storedRole);
+        setRole(storedRole || 'USER'); 
 
         const fetchData = async () => {
             try {
-                // 1. Fetch Survey Details
+                // 1. Cargar Detalles de Encuesta
                 const surveyRes = await fetch(`http://localhost:8080/api/v1/encuestas/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -58,16 +60,7 @@ export default function EncuestaIntermediatePage() {
                 const surveyData = await surveyRes.json();
                 setEncuesta(surveyData);
 
-                // 2. Fetch User Status (Did I respond?)
-                const statusRes = await fetch(`http://localhost:8080/api/v1/encuestas/${id}/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (statusRes.ok) {
-                    const statusData = await statusRes.json();
-                    setHasResponded(statusData);
-                }
-
-                // 3. If Admin, fetch all responses
+                // 3. Si es ADMIN, cargar todas las respuestas
                 if (storedRole === 'ADMIN') {
                     const regRes = await fetch(`http://localhost:8080/api/v1/encuestas/${id}/registros`, {
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -94,128 +87,157 @@ export default function EncuestaIntermediatePage() {
         router.push(`/responder-encuesta/${id}`);
     };
 
-    if (loading) return <div className="p-8 text-center">Cargando...</div>;
-    if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
-    if (!encuesta) return <div className="p-8">No se encontró la encuesta.</div>;
+    if (loading) return <div className={styles.loading}>Cargando información...</div>;
+    if (error) return <div className={styles.error}>Error: {error}</div>;
+    if (!encuesta) return <div className={styles.error}>No se encontró la encuesta.</div>;
 
     const isAdmin = role === 'ADMIN';
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8 font-sans">
-            <button
-                onClick={() => router.back()}
-                className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-            >
-                <FaArrowLeft className="mr-2" /> Volver
-            </button>
+        <div className={styles.container}>
+            
+            {/* 1. SIDEBAR INTEGRADO */}
+            <Sidebar />
 
-            <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="bg-indigo-600 p-8 text-white">
-                    <h1 className="text-3xl font-bold mb-2">{encuesta.titulo}</h1>
-                    <p className="opacity-90">Gestión y Respuestas</p>
-                    <div className="mt-2 text-sm bg-indigo-500 inline-block px-3 py-1 rounded-full">
-                        Versión: {encuesta.version || '1.0'}
-                    </div>
-                </div>
-
-                <div className="p-8">
-                    {/* ADMIN VIEW */}
-                    {isAdmin && (
-                        <div>
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                                    <FaUserCheck className="mr-2 text-indigo-600" />
-                                    Panel de Administrador
-                                </h2>
-                                <button
-                                    onClick={handleResponder}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors shadow-md"
-                                >
-                                    Responder por Paciente
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                    <div className="text-blue-500 text-sm font-semibold uppercase">Total Respuestas</div>
-                                    <div className="text-3xl font-bold text-gray-800 mt-1">{registros.length}</div>
-                                </div>
-                                {/* Add more stats here if needed */}
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
-                                            <th className="p-3 border-b">ID</th>
-                                            <th className="p-3 border-b">Paciente</th>
-                                            <th className="p-3 border-b">Fecha</th>
-                                            <th className="p-3 border-b">Usuario</th>
-                                            <th className="p-3 border-b">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="text-gray-700 text-sm">
-                                        {registros.map((reg) => (
-                                            <tr key={reg.idRegistro} className="hover:bg-gray-50 border-b last:border-0">
-                                                <td className="p-3">#{reg.idRegistro}</td>
-                                                <td className="p-3 font-medium">{reg.paciente?.nombre || 'N/A'}</td>
-                                                <td className="p-3">{new Date(reg.fechaRealizacion).toLocaleDateString()}</td>
-                                                <td className="p-3">{reg.usuario?.username}</td>
-                                                <td className="p-3">
-                                                    <button className="text-indigo-600 hover:text-indigo-800 mr-2">Ver</button>
-                                                    {/* <button className="text-red-600 hover:text-red-800">Eliminar</button> */}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {registros.length === 0 && (
-                                            <tr>
-                                                <td colSpan={5} className="p-8 text-center text-gray-500">
-                                                    No hay respuestas registradas aún.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+            <main className={styles.mainContent}>
+                
+                {/* Header Superior */}
+                <header className={styles.header}>
+                    <div>
+                        <button 
+                            onClick={() => router.back()} 
+                            style={{background:'none', border:'none', color:'#64748b', cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', marginBottom:'10px', fontSize:'0.9rem'}}
+                        >
+                            <FaArrowLeft /> Volver
+                        </button>
+                        <div className={styles.titleSection}>
+                            <h1>
+                                {encuesta.titulo} 
+                                {encuesta.version && <span className={styles.badge}>v{encuesta.version}</span>}
+                            </h1>
+                            <p className={styles.subtitle}>Gestión y seguimiento de respuestas</p>
                         </div>
-                    )}
+                    </div>
+                    
+                    {/* --- BOTÓN SUPERIOR ELIMINADO --- */}
+                    
+                </header>
 
-                    {/* USER VIEW */}
-                    {!isAdmin && (
-                        <div className="text-center py-10">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4">Estado de tu Encuesta</h2>
+                {/* VISTA DE ADMINISTRADOR */}
+                {isAdmin ? (
+                    <>
+                        {/* Estadísticas Rápidas */}
+                        <section className={styles.statsGrid}>
+                            <div className={styles.statCard}>
+                                <div className={styles.iconBox}>
+                                    <FaUserCheck />
+                                </div>
+                                <div className={styles.statContent}>
+                                    <h3>Total Respuestas</h3>
+                                    <p>{registros.length}</p>
+                                </div>
+                            </div>
+                            
+                            {/* Botón Acción Admin (Opcional: Si quieres que el admin también pueda responder desde aquí) */}
+                             <div className={styles.statCard} style={{cursor: 'pointer'}} onClick={handleResponder}>
+                                <div className={styles.iconBox} style={{backgroundColor: '#e0e7ff', color: '#4f46e5'}}>
+                                    <FaClipboardList />
+                                </div>
+                                <div className={styles.statContent}>
+                                    <h3>Acción Rápida</h3>
+                                    <p style={{fontSize: '1rem', color: '#4f46e5'}}>Responder Encuesta</p>
+                                </div>
+                            </div>
 
+                        </section>
+
+                        {/* Tabla de Registros */}
+                        <div className={styles.card}>
+                            <div className={styles.cardHeader}>
+                                <h3 className={styles.cardTitle}><FaClipboardList color="#4f46e5"/> Registro de Respuestas</h3>
+                            </div>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Paciente</th>
+                                        <th>Fecha</th>
+                                        <th>Usuario</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {registros.length > 0 ? registros.map((reg) => (
+                                        <tr key={reg.idRegistro}>
+                                            <td style={{color:'#64748b'}}>#{reg.idRegistro}</td>
+                                            <td style={{fontWeight:'600', color:'#1e293b'}}>{reg.paciente?.nombre || 'N/A'}</td>
+                                            <td>
+                                                <div style={{display:'flex', alignItems:'center', gap:'5px'}}>
+                                                    <FaRegCalendarAlt color="#94a3b8"/>
+                                                    {new Date(reg.fechaRealizacion).toLocaleDateString()}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{display:'flex', alignItems:'center', gap:'5px'}}>
+                                                    <FaUser color="#94a3b8" size={12}/>
+                                                    {reg.usuario?.username}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button className={styles.btnSecondary} style={{padding:'0.4rem 0.8rem', fontSize:'0.85rem'}}>
+                                                    <FaEye /> Ver
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan={5} style={{textAlign:'center', padding:'3rem', color:'#64748b'}}>
+                                                No hay respuestas registradas aún.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                ) : (
+                    /* VISTA DE USUARIO NORMAL (ESTADO) */
+                    <div className={styles.card}>
+                        <div className={styles.userState}>
                             {hasResponded ? (
-                                <div className="flex flex-col items-center">
-                                    <FaCheckCircle className="text-6xl text-green-500 mb-4" />
-                                    <p className="text-xl text-gray-700 mb-6">
-                                        ¡Ya has completado esta encuesta!
-                                    </p>
-                                    <button
-                                        className="bg-gray-200 text-gray-600 px-6 py-2 rounded-full cursor-not-allowed"
-                                        disabled
-                                    >
-                                        Encuesta Completada
+                                <>
+                                    <div className={`${styles.stateIcon} ${styles.successIcon}`}>
+                                        <FaCheckCircle />
+                                    </div>
+                                    <div className={styles.stateText}>
+                                        <h2>¡Encuesta Completada!</h2>
+                                        <p>Ya has registrado una respuesta para este formulario.</p>
+                                    </div>
+                                    <button className={`${styles.btn} ${styles.btnSecondary}`} disabled>
+                                        Completado
                                     </button>
-                                </div>
+                                </>
                             ) : (
-                                <div className="flex flex-col items-center">
-                                    <FaClipboardList className="text-6xl text-indigo-500 mb-4" />
-                                    <p className="text-xl text-gray-700 mb-6">
-                                        Tienes pendiente responder esta encuesta.
-                                    </p>
-                                    <button
-                                        onClick={handleResponder}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-8 py-3 rounded-full transition-transform transform hover:scale-105 shadow-lg"
-                                    >
-                                        Responder Encuesta Ahora
+                                <>
+                                    <div className={styles.stateIcon}>
+                                        <FaClipboardList />
+                                    </div>
+                                    <div className={styles.stateText}>
+                                        <h2>Disponible para Responder</h2>
+                                        <p>Selecciona un paciente y comienza a llenar el formulario clínico.</p>
+                                    </div>
+                                    
+                                    {/* --- BOTÓN CENTRAL (ÚNICO) --- */}
+                                    <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleResponder}>
+                                        Comenzar Ahora
                                     </button>
-                                </div>
+                                </>
                             )}
                         </div>
-                    )}
-                </div>
-            </div>
+                    </div>
+                )}
+
+            </main>
         </div>
     );
 }
