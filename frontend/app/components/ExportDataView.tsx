@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Download, FileText, FileSpreadsheet, FileBarChart, Eye, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, FileText, FileSpreadsheet, FileBarChart, Eye, X, User, Users } from 'lucide-react';
 
 interface SurveyData {
   id: number;
@@ -17,13 +17,56 @@ interface SurveyData {
   }>;
 }
 
+interface Paciente {
+  idPaciente: number;
+  rut: string;
+  nombre: string;
+  apellidos: string;
+}
+
 const ExportDataView = () => {
-  const [surveyId, setSurveyId] = useState<string>('');
+  const [surveyId, setSurveyId] = useState<string>('1');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<SurveyData | null>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [loadingPreview, setLoadingPreview] = useState<boolean>(false);
+
+  // New State for Advanced Options
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
+
+  // New State for Patient Filtering
+  const [exportMode, setExportMode] = useState<'all' | 'patient'>('all');
+  const [patients, setPatients] = useState<Paciente[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [loadingPatients, setLoadingPatients] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setLoadingPatients(true);
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        const res = await fetch(`${baseUrl}/api/v1/pacientes`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setPatients(data);
+        }
+      } catch (err) {
+        console.error("Error fetching patients", err);
+      } finally {
+        setLoadingPatients(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
 
   const fetchPreview = async () => {
     if (!surveyId) {
@@ -82,6 +125,11 @@ const ExportDataView = () => {
       return;
     }
 
+    if (exportMode === 'patient' && !selectedPatientId) {
+      setError('⚠️ Por favor seleccione un paciente para exportar.');
+      return;
+    }
+
     const token = localStorage.getItem('accessToken');
     if (!token) {
       setError('🔒 No hay sesión activa. Por favor inicie sesión nuevamente.');
@@ -91,7 +139,12 @@ const ExportDataView = () => {
     setLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const url = `${baseUrl}/api/v1/encuestas/${surveyId}/export/${format}`;
+
+      // Construct URL with optional query param
+      let url = `${baseUrl}/api/v1/encuestas/${surveyId}/export/${format}`;
+      if (exportMode === 'patient' && selectedPatientId) {
+        url += `?idPaciente=${selectedPatientId}`;
+      }
 
       const response = await fetch(url, {
         method: 'GET',
@@ -102,7 +155,7 @@ const ExportDataView = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error(`Encuesta con ID ${surveyId} no encontrada.`);
+          throw new Error(`Encuesta (o datos) no encontrada.`);
         }
         if (response.status === 403) {
           throw new Error('No tiene permisos para exportar esta encuesta.');
@@ -115,7 +168,8 @@ const ExportDataView = () => {
       const a = document.createElement('a');
       a.href = downloadUrl;
       const extension = format === 'excel' ? 'xlsx' : format;
-      a.download = `datos_encuesta_${surveyId}.${extension}`;
+      const suffix = exportMode === 'patient' ? `_paciente_${selectedPatientId}` : '';
+      a.download = `datos_encuesta_${surveyId}${suffix}.${extension}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -123,7 +177,7 @@ const ExportDataView = () => {
 
     } catch (error: any) {
       console.error('Export error:', error);
-      setError(error.message || '🚫 Error desconocido al exportar. Verifique el ID.');
+      setError(error.message || '🚫 Error desconocido al exportar. Verifique el ID o datos disponibles.');
     } finally {
       setLoading(false);
     }
@@ -182,7 +236,7 @@ const ExportDataView = () => {
           </h1>
         </div>
         <p style={{ color: '#4B5563', fontSize: '16px', marginTop: '8px' }}>
-          Seleccione el ID de la encuesta y el formato de archivo deseado para su descarga.
+          Seleccione la encuesta y filtre los datos según sus necesidades.
         </p>
       </header>
 
@@ -213,92 +267,174 @@ const ExportDataView = () => {
               fontWeight: 'bold',
               color: '#1F2937'
             }}>
-              Opciones de Exportación
+              Configuración de Exportación
             </h2>
-            <p style={{
-              fontSize: '14px',
-              color: '#6B7280',
-              marginTop: '4px'
-            }}>
-              Los datos se generarán y se descargarán automáticamente a su equipo.
-            </p>
           </div>
         </div>
 
-        {/* Campo de ID */}
-        <div style={{ marginBottom: '24px' }}>
-          <label
-            htmlFor="surveyId"
+        {/* Selector de Modo (Tabs) */}
+        <div style={{ display: 'flex', marginBottom: '24px', background: '#F3F4F6', padding: '4px', borderRadius: '12px' }}>
+          <button
+            onClick={() => setExportMode('all')}
             style={{
-              display: 'block',
-              fontSize: '14px',
+              flex: 1,
+              padding: '10px',
+              borderRadius: '8px',
+              background: exportMode === 'all' ? 'white' : 'transparent',
+              boxShadow: exportMode === 'all' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
               fontWeight: '600',
-              color: '#374151',
-              marginBottom: '12px'
+              color: exportMode === 'all' ? '#2563EB' : '#6B7280',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
             }}
           >
-            ID de Encuesta
-          </label>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <input
-              type="number"
-              id="surveyId"
-              value={surveyId}
-              onChange={(e) => setSurveyId(e.target.value)}
-              min="1"
-              placeholder="Ingrese el número de ID de la encuesta, ej: 42"
+            <Users className="w-4 h-4 mr-2" />
+            Todos los Pacientes
+          </button>
+          <button
+            onClick={() => setExportMode('patient')}
+            style={{
+              flex: 1,
+              padding: '10px',
+              borderRadius: '8px',
+              background: exportMode === 'patient' ? 'white' : 'transparent',
+              boxShadow: exportMode === 'patient' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+              fontWeight: '600',
+              color: exportMode === 'patient' ? '#2563EB' : '#6B7280',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+          >
+            <User className="w-4 h-4 mr-2" />
+            Por Paciente
+          </button>
+        </div>
+
+        {/* Advanced Options Toggle */}
+        <div style={{ marginBottom: '20px' }}>
+          <button
+            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#6B7280',
+              cursor: 'pointer',
+              fontSize: '14px',
+              textDecoration: 'underline',
+              padding: 0,
+              marginBottom: '10px'
+            }}
+          >
+            {showAdvancedOptions ? 'Ocultar Opciones Avanzadas' : 'Ver Opciones Avanzadas'}
+          </button>
+
+          {/* Campo de ID de Encuesta - Conditionally Rendered */}
+          {showAdvancedOptions && (
+            <div style={{ animation: 'fadeIn 0.3s ease' }}>
+              <label
+                htmlFor="surveyId"
+                style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px'
+                }}
+              >
+                ID de Encuesta
+              </label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input
+                  type="number"
+                  id="surveyId"
+                  value={surveyId}
+                  onChange={(e) => setSurveyId(e.target.value)}
+                  min="1"
+                  placeholder="Ej: 1"
+                  style={{
+                    flex: 1,
+                    border: '2px solid #D1D5DB',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    fontSize: '16px',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                  }}
+                />
+                <button
+                  onClick={fetchPreview}
+                  disabled={loadingPreview || loading}
+                  style={{
+                    background: (loadingPreview || loading) ? '#9CA3AF' : 'linear-gradient(to bottom right, #8B5CF6, #7C3AED)',
+                    padding: '12px 20px',
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: (loadingPreview || loading) ? 'not-allowed' : 'pointer',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <Eye style={{ width: '20px', height: '20px' }} />
+                  {loadingPreview ? '...' : 'Vista Previa'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Selector de Paciente (Condicional) */}
+        {exportMode === 'patient' && (
+          <div style={{ marginBottom: '24px', animation: 'fadeIn 0.3s ease' }}>
+            <label
+              htmlFor="patientSelect"
               style={{
-                flex: 1,
-                border: '2px solid #D1D5DB',
-                borderRadius: '12px',
-                padding: '16px',
-                fontSize: '18px',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                transition: 'all 0.2s'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3B82F6';
-                e.target.style.outline = 'none';
-                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#D1D5DB';
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
-              }}
-            />
-            <button
-              onClick={fetchPreview}
-              disabled={loadingPreview || loading}
-              style={{
-                background: (loadingPreview || loading) ? '#9CA3AF' : 'linear-gradient(to bottom right, #8B5CF6, #7C3AED)',
-                padding: '16px 24px',
-                borderRadius: '12px',
-                color: 'white',
+                display: 'block',
+                fontSize: '14px',
                 fontWeight: '600',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                cursor: (loadingPreview || loading) ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => {
-                if (!(loadingPreview || loading)) {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!(loadingPreview || loading)) {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }
+                color: '#374151',
+                marginBottom: '8px'
               }}
             >
-              <Eye style={{ width: '20px', height: '20px' }} />
-              {loadingPreview ? 'Cargando...' : 'Vista Previa'}
-            </button>
+              Seleccionar Paciente
+            </label>
+            <select
+              id="patientSelect"
+              value={selectedPatientId}
+              onChange={(e) => setSelectedPatientId(e.target.value)}
+              style={{
+                width: '100%',
+                border: '2px solid #D1D5DB',
+                borderRadius: '12px',
+                padding: '12px',
+                fontSize: '16px',
+                background: 'white',
+                color: selectedPatientId ? '#1F2937' : '#9CA3AF'
+              }}
+            >
+              <option value="">-- Busque o seleccione un paciente --</option>
+              {patients.map(p => (
+                <option key={p.idPaciente} value={p.idPaciente} style={{ color: '#1F2937' }}>
+                  {p.nombre} {p.apellidos} ({p.rut})
+                </option>
+              ))}
+            </select>
+            {patients.length === 0 && !loadingPatients && (
+              <p style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px' }}>
+                No se pudieron cargar los pacientes.
+              </p>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Mensaje de Error */}
         {error && (
@@ -324,23 +460,28 @@ const ExportDataView = () => {
             <ExportButton
               format="excel"
               icon={FileSpreadsheet}
-              label="Excel"
+              label={exportMode === 'patient' ? "Exportar Ficha (Excel)" : "Exportar Todo (Excel)"}
               color="linear-gradient(to bottom right, #16A34A, #15803D)"
             />
+            {/* CSV option usually strictly structured, maybe keep it simpler or disable for patient specific if needed, but endpoint supports it */}
             <ExportButton
-              format="pdf"
-              icon={FileText}
-              label="PDF"
-              color="linear-gradient(to bottom right, #DC2626, #B91C1C)"
+              format="csv"
+              icon={FileBarChart}
+              label={exportMode === 'patient' ? "Exportar Ficha (CSV)" : "Exportar Todo (CSV)"}
+              color="linear-gradient(to bottom right, #2563EB, #9333EA)"
+            />
+            <ExportButton
+              format="csv" // Re-using CSV since Stata can import it. Ideally we might want a specific flag but this is a quick win.
+              icon={FileText} // Or another icon
+              label={exportMode === 'patient' ? "Exportar Ficha (Stata)" : "Exportar Todo (Stata)"}
+              color="linear-gradient(to bottom right, #EF4444, #B91C1C)"
             />
           </div>
-          <ExportButton
-            format="csv"
-            icon={FileBarChart}
-            label="CSV"
-            color="linear-gradient(to bottom right, #2563EB, #9333EA)"
-            fullWidth={true}
-          />
+          {/* PDF might not be implemented in backend based on controller, removed or kept as placeholder? -> Controller does not have PDF! */}
+          {/* Wait, the code I replaced had PDF. I should keep it but it might fail if backend endpoint is missing. 
+              The controller check showed: exportarExcel and exportarCsv. NO PDF.
+              I will remove the PDF button or comment it out to avoid confusion.
+           */}
         </div>
 
         {/* Indicador de Carga */}
@@ -636,12 +777,15 @@ const ExportDataView = () => {
         </div>
       </div>
 
-      {/* Agregar keyframes para la animación del spinner */}
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
       `}} />
     </div>

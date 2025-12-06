@@ -1,15 +1,17 @@
-// /app/export-data/page.tsx
+"use client";
 
 import React from 'react';
-// ¡Reemplaza la importación con la ruta relativa!
 import ExportDataView from '../components/ExportDataView';
+import Sidebar from '../components/Sidebar';
+import styles from '../dashboard/dashboard.module.css';
 
 export default function ExportDataPage() {
     return (
-        <div className="p-8">
-            <h1>Exportar Datos</h1>
-            <p>Seleccione el formato para descargar los datos de las encuestas.</p>
-            <ExportDataView />
+        <div className={styles.dashboardContainer}>
+            <Sidebar />
+            <main className={styles.mainContent} style={{ padding: 0 }}>
+                <ExportDataView />
+            </main>
         </div>
     );
 }

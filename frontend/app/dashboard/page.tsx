@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './dashboard.module.css';
 import Sidebar from '../components/Sidebar';
-import { FaUserPlus, FaSearch } from 'react-icons/fa';
+import { FaUserPlus, FaSearch, FaClipboardList, FaUserInjured, FaFileExport, FaSignOutAlt, FaPlus } from 'react-icons/fa';
 
 interface Paciente {
   idPaciente: number;
@@ -30,9 +30,10 @@ export default function DashboardPage() {
       return;
     }
 
-    const fetchPacientes = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/v1/pacientes', {
+        // Petición a Pacientes
+        const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -45,7 +46,20 @@ export default function DashboardPage() {
           setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
         }
 
+        // Petición a Encuestas (para obtener la default)
+        const resEncuestas = await fetch('http://localhost:8080/api/v1/encuestas', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
+        if (resEncuestas.ok) {
+          const encuestas: any[] = await resEncuestas.json();
+          const defaultSurvey = encuestas.find(e => e.titulo.includes("Estudio Cáncer Gástrico"));
+          if (defaultSurvey) {
+            setDefaultSurveyId(defaultSurvey.idEncuesta);
+          } else if (encuestas.length > 0) {
+            setDefaultSurveyId(encuestas[0].idEncuesta);
+          }
+        }
 
       } catch (error) {
         console.error("Error cargando dashboard:", error);
@@ -54,7 +68,7 @@ export default function DashboardPage() {
       }
     };
 
-    fetchPacientes();
+    fetchData();
   }, [router]);
 
   const handleLogout = () => {
@@ -73,7 +87,7 @@ export default function DashboardPage() {
       {/* --- SIDEBAR --- */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} />
+          <img src="/logo-vital3.png" alt="Logo" width={30} height={30} />
           <span className={styles.sidebarTitle}>Ingeniería Vital</span>
         </div>
 
@@ -81,13 +95,13 @@ export default function DashboardPage() {
           <div className={`${styles.navItem} ${styles.navItemActive}`}>
             <FaClipboardList /> Dashboard
           </div>
-          <div className={styles.navItem} onClick={() => alert("Ir a lista completa de pacientes")}>
+          <div className={styles.navItem} onClick={() => router.push('/dashboard/pacientes')}>
             <FaUserInjured /> Pacientes
           </div>
-          <div className={styles.navItem}>
+          <div className={styles.navItem} onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}>
             <FaSearch /> Encuestas
           </div>
-          <div className={styles.navItem}>
+          <div className={styles.navItem} onClick={() => router.push('/exportar-datos')}>
             <FaFileExport /> Exportar Datos
           </div>
         </nav>
@@ -149,7 +163,7 @@ export default function DashboardPage() {
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
-              <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}>Ver todos</button>
+              <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => router.push('/dashboard/pacientes')}>Ver todos</button>
             </div>
 
             <table className={styles.table}>
@@ -186,7 +200,7 @@ export default function DashboardPage() {
                 <h3 className={styles.cardTitle}>Gestión Rápida</h3>
               </div>
 
-              <button className={styles.actionButton}>
+              <button className={styles.actionButton} onClick={() => router.push('/dashboard/pacientes/nuevo')}>
                 <FaUserPlus size={20} color="#4f46e5" />
                 <div>
                   <div style={{ textAlign: 'left' }}>Registrar Paciente</div>
