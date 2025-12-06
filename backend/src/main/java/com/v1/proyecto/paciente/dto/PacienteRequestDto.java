@@ -39,8 +39,6 @@ public class PacienteRequestDto {
 
     @NotBlank(message = "El grupo (Caso/Control) es obligatorio")
     private String grupo;
-
-    @NotNull(message = "La fecha de inclusión es obligatoria")
     private Date fechaInclusion;
 
     // --- 2. DATOS SOCIODEMOGRÁFICOS ---
@@ -67,7 +65,7 @@ public class PacienteRequestDto {
     // --- 3. ANTECEDENTES CLÍNICOS ---
 
     private Boolean diagnosticoCancer; // Solo casos
-    private Date fechaDiagnostico;     // Solo casos
+    private Date fechaDiagnostico; // Solo casos
 
     private Boolean antecedentesFamCancerGastrico;
     private Boolean antecedentesFamOtrosCancer;
@@ -87,11 +85,12 @@ public class PacienteRequestDto {
     @NotNull(message = "La estatura es obligatoria")
     private Double estatura;
 
-    // (El IMC lo calculamos en el front o en el servicio, no es necesario recibirlo)
+    // (El IMC lo calculamos en el front o en el servicio, no es necesario
+    // recibirlo)
 
     // --- 9. HISTOPATOLOGÍA (Solo Casos) ---
 
-    private String tipoHistologico;      // Intestinal, Difuso, Mixto...
-    private String localizacionTumoral;  // Cardias, Cuerpo, Antro...
+    private String tipoHistologico; // Intestinal, Difuso, Mixto...
+    private String localizacionTumoral; // Cardias, Cuerpo, Antro...
     private String estadioTNM;
 }

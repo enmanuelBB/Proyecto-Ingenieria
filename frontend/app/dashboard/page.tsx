@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0 });
+  const [defaultSurveyId, setDefaultSurveyId] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -42,9 +43,15 @@ export default function DashboardPage() {
 
         if (resPacientes.ok) {
           const dataPacientes: Paciente[] = await resPacientes.json();
-          setPacientes(dataPacientes.slice(-5).reverse()); 
+          // Mostramos solo los últimos 5 pacientes en la tabla (invirtiendo el array)
+          setPacientes(dataPacientes.slice(-5).reverse());
+
+          // Calculamos estadísticas simples
           setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
         }
+
+
+
       } catch (error) {
         console.error("Error cargando dashboard:", error);
       } finally {
@@ -55,21 +62,57 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-  
+  const handleLogout = () => {
+
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userEmail');
+
+
+    router.push('/');
+  };
 
   return (
     <div className={styles.dashboardContainer}>
-      
-      {/* --- USAMOS EL COMPONENTE SIDEBAR --- */}
-      <Sidebar />
+
+      {/* --- SIDEBAR --- */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarHeader}>
+          <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} />
+          <span className={styles.sidebarTitle}>Ingeniería Vital</span>
+        </div>
+
+        <nav className={styles.nav}>
+          <div className={`${styles.navItem} ${styles.navItemActive}`}>
+            <FaClipboardList /> Dashboard
+          </div>
+          <div className={styles.navItem} onClick={() => alert("Ir a lista completa de pacientes")}>
+            <FaUserInjured /> Pacientes
+          </div>
+          <div className={styles.navItem}>
+            <FaSearch /> Encuestas
+          </div>
+          <div className={styles.navItem}>
+            <FaFileExport /> Exportar Datos
+          </div>
+        </nav>
+
+        <button onClick={handleLogout} className={styles.logoutButton}>
+          <FaSignOutAlt /> Cerrar Sesión
+        </button>
+      </aside>
 
       {/* --- CONTENIDO PRINCIPAL --- */}
       <main className={styles.mainContent}>
-        
+
+        {/* Header Superior */}
         <header className={styles.header}>
           <div className={styles.welcomeText}>
             <h1>Hola, {user} 👋</h1>
             <p>Aquí tienes un resumen de la actividad del estudio.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {/* Aquí podrías poner un avatar o notificaciones */}
           </div>
         </header>
 
@@ -90,7 +133,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.statInfo}>
               <h3>Encuestas Completas</h3>
-              <p>0</p> 
+              <p>0</p>
             </div>
           </div>
 
@@ -106,18 +149,14 @@ export default function DashboardPage() {
         </section>
 
         <section className={styles.sectionGrid}>
+
+          {/* Tabla de Pacientes Recientes */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
-              {/* Este botón ahora lleva a la página de pacientes */}
-              <button 
-                onClick={() => router.push('/dashboard/pacientes')}
-                style={{color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer'}}
-              >
-                Ver todos
-              </button>
+              <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}>Ver todos</button>
             </div>
-            
+
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -132,42 +171,42 @@ export default function DashboardPage() {
                 ) : pacientes.length > 0 ? (
                   pacientes.map((p) => (
                     <tr key={p.idPaciente}>
-                      <td style={{fontWeight: '500'}}>{p.nombre} {p.apellidos}</td>
+                      <td style={{ fontWeight: '500' }}>{p.nombre} {p.apellidos}</td>
                       <td>{p.rut}</td>
                       <td>
-                        <button style={{color: '#4f46e5', background: 'none', border: 'none', cursor:'pointer'}}>Ver Ficha</button>
+                        <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}>Ver Ficha</button>
                       </td>
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={3} style={{textAlign: 'center', padding: '2rem'}}>No hay registros recientes.</td></tr>
+                  <tr><td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>No hay registros recientes.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
 
           <div>
-             <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>Gestión Rápida</h3>
-                </div>
-                
-                <button className={styles.actionButton} onClick={() => router.push('/dashboard/pacientes/nuevo')}>
-                  <FaUserPlus size={20} color="#4f46e5"/>
-                  <div>
-                    <div style={{textAlign: 'left'}}>Registrar Paciente</div>
-                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Crear nueva ficha clínica</div>
-                  </div>
-                </button>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.cardTitle}>Gestión Rápida</h3>
+              </div>
 
-                <button className={styles.actionButton}>
-                  <FaClipboardList size={20} color="#4f46e5"/>
-                  <div>
-                    <div style={{textAlign: 'left'}}>Nueva Encuesta</div>
-                    <div style={{fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal'}}>Ingresar datos de formulario</div>
-                  </div>
-                </button>
-             </div>
+              <button className={styles.actionButton}>
+                <FaUserPlus size={20} color="#4f46e5" />
+                <div>
+                  <div style={{ textAlign: 'left' }}>Registrar Paciente</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Crear nueva ficha clínica</div>
+                </div>
+              </button>
+
+              <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}>
+                <FaClipboardList size={20} color="#4f46e5" />
+                <div>
+                  <div style={{ textAlign: 'left' }}>Responder Encuesta</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Ingresar datos de formulario</div>
+                </div>
+              </button>
+            </div>
           </div>
         </section>
       </main>

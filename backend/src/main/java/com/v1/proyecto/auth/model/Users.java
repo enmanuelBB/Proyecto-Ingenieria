@@ -11,6 +11,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
+
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -21,13 +23,17 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "user")
-public class Users implements UserDetails {
+
+public class Users implements Serializable, UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String lastname;
 
     @Column(unique = true)
@@ -43,7 +49,8 @@ public class Users implements UserDetails {
 
     // --- CAMPOS PARA 2FA ---
     @Column(name = "mfa_enabled")
-    private boolean mfaEnabled;
+    @Builder.Default
+    private Boolean mfaEnabled = false;
 
     @Column(name = "verification_code")
     private String verificationCode;
@@ -65,8 +72,6 @@ public class Users implements UserDetails {
     // --- RELACIONES ---
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
-
-    // --- MÉTODOS DE UserDetails ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
