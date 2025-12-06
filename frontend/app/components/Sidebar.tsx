@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import React from 'react';
 import Image from 'next/image';
@@ -9,7 +9,28 @@ import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt } 
 
 export default function Sidebar() {
     const router = useRouter();
-    const pathname = usePathname(); // Para saber en qué página estamos y marcarla activa
+    const pathname = usePathname();
+    const [defaultSurveyId, setDefaultSurveyId] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        fetch('http://localhost:8080/api/v1/encuestas', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.ok ? res.json() : [])
+            .then((encuestas: any[]) => {
+                // Logic to find the default survey (same as Dashboard)
+                const defaultSurvey = encuestas.find(e => e.titulo.includes("Estudio Cáncer Gástrico"));
+                if (defaultSurvey) {
+                    setDefaultSurveyId(defaultSurvey.idEncuesta);
+                } else if (encuestas.length > 0) {
+                    setDefaultSurveyId(encuestas[0].idEncuesta);
+                }
+            })
+            .catch(err => console.error("Error fetching surveys associated to Sidebar:", err));
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
@@ -34,7 +55,7 @@ export default function Sidebar() {
                     <FaClipboardList /> Dashboard
                 </Link>
 
-                {/* Enlace a Pacientes (NUEVO) */}
+                {/* Enlace a Pacientes */}
                 <Link
                     href="/dashboard/pacientes"
                     className={`${styles.navItem} ${pathname === '/dashboard/pacientes' ? styles.navItemActive : ''}`}
@@ -42,12 +63,21 @@ export default function Sidebar() {
                     <FaUserInjured /> Pacientes
                 </Link>
 
-                <div className={styles.navItem}>
+                {/* Enlace a Encuestas (Dinámico) */}
+                <div
+                    className={`${styles.navItem} ${pathname.startsWith('/encuesta') ? styles.navItemActive : ''}`}
+                    onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}
+                    style={{ cursor: defaultSurveyId ? 'pointer' : 'wait', opacity: defaultSurveyId ? 1 : 0.7 }}
+                >
                     <FaSearch /> Encuestas
                 </div>
-                    <div className={styles.navItem} onClick={() => router.push('/exportar-datos')}>
+
+                <Link
+                    href="/exportar-datos"
+                    className={`${styles.navItem} ${pathname === '/exportar-datos' ? styles.navItemActive : ''}`}
+                >
                     <FaFileExport /> Exportar Datos
-                </div>
+                </Link>
             </nav>
 
             <button onClick={handleLogout} className={styles.logoutButton}>

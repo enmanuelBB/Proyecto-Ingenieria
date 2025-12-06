@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<string | null>("Usuario");
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0 });
+  const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0, registrosHoy: 0 });
   const [defaultSurveyId, setDefaultSurveyId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -32,34 +32,63 @@ export default function DashboardPage() {
 
     const fetchData = async () => {
       try {
-        // Petición a Pacientes
+        // 1. Petición a Pacientes (se mantiene igual)
         const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
+        let totalPacientesLen = 0;
         if (resPacientes.ok) {
           const dataPacientes: Paciente[] = await resPacientes.json();
-          // Mostramos solo los últimos 5 pacientes en la tabla (invirtiendo el array)
           setPacientes(dataPacientes.slice(-5).reverse());
-
-          // Calculamos estadísticas simples
-          setStats(prev => ({ ...prev, totalPacientes: dataPacientes.length }));
+          totalPacientesLen = dataPacientes.length;
         }
 
-        // Petición a Encuestas (para obtener la default)
+        // 2. Petición a Encuestas (para obtener la default) y luego sus registros
         const resEncuestas = await fetch('http://localhost:8080/api/v1/encuestas', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
+        let surveyIdToUse: number | null = null;
+
         if (resEncuestas.ok) {
           const encuestas: any[] = await resEncuestas.json();
           const defaultSurvey = encuestas.find(e => e.titulo.includes("Estudio Cáncer Gástrico"));
+
           if (defaultSurvey) {
-            setDefaultSurveyId(defaultSurvey.idEncuesta);
+            surveyIdToUse = defaultSurvey.idEncuesta;
+            setDefaultSurveyId(surveyIdToUse);
           } else if (encuestas.length > 0) {
-            setDefaultSurveyId(encuestas[0].idEncuesta);
+            surveyIdToUse = encuestas[0].idEncuesta;
+            setDefaultSurveyId(surveyIdToUse);
           }
         }
+
+        // 3. Obtener Estadísticas Reales si tenemos una encuesta ID
+        let totalEncuestasLen = 0;
+        let registrosHoyLen = 0;
+
+        if (surveyIdToUse) {
+          const resRegistros = await fetch(`http://localhost:8080/api/v1/encuestas/${surveyIdToUse}/registros`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (resRegistros.ok) {
+            const registros: any[] = await resRegistros.json();
+            totalEncuestasLen = registros.length;
+
+            // Calcular registros de HOY
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            registrosHoyLen = registros.filter(r => r.fechaRealizacion.startsWith(today)).length;
+          }
+        }
+
+        // Actualizar estado final
+        setStats({
+          totalPacientes: totalPacientesLen,
+          totalEncuestas: totalEncuestasLen,
+          registrosHoy: registrosHoyLen
+        });
 
       } catch (error) {
         console.error("Error cargando dashboard:", error);
@@ -142,7 +171,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.statInfo}>
               <h3>Encuestas Completas</h3>
-              <p>0</p>
+              <p>{loading ? "..." : stats.totalEncuestas}</p>
             </div>
           </div>
 
@@ -152,7 +181,7 @@ export default function DashboardPage() {
             </div>
             <div className={styles.statInfo}>
               <h3>Registros Hoy</h3>
-              <p>0</p>
+              <p>{loading ? "..." : (stats as any).registrosHoy || 0}</p>
             </div>
           </div>
         </section>

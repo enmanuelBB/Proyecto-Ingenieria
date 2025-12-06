@@ -110,6 +110,17 @@ public class EncuestaController {
     }
 
     /**
+     * Obtener todos los registros (respuestas) de una encuesta específica.
+     * URL: GET /api/v1/encuestas/{id}/registros
+     */
+    @GetMapping("/{id}/registros")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<java.util.List<RegistroCompletoResponseDto>> getRegistrosByEncuesta(
+            @PathVariable(name = "id") Integer idEncuesta) {
+        return ResponseEntity.ok(encuestaService.getRegistrosByEncuesta(idEncuesta));
+    }
+
+    /**
      * Endpoint para GUARDAR las respuestas de una encuesta completada.
      * URL: POST /api/v1/encuestas/registro
      */
