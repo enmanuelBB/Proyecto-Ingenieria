@@ -1,74 +1,24 @@
-
 "use client";
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './PacienteForm.module.css';
+import styles from './PacienteForm.module.css'; // Reusing existing styles for consistency
 
-// --- FORMATO RUT  ---
-const formatRut = (value: string) => {
-  let cleanValue = value.replace(/[^0-9kK]/g, "").toUpperCase();
-  if (cleanValue.length > 9) cleanValue = cleanValue.slice(0, 9);
-  if (cleanValue.length < 2) return cleanValue;
-  const body = cleanValue.slice(0, -1);
-  const dv = cleanValue.slice(-1);
-  const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${formattedBody}-${dv}`;
-};
-
-
-const formatPhone = (value: string) => {
-  // 1. Dejar solo números
-  const numbers = value.replace(/\D/g, "");
-
-  // 2. Limitar a 9 dígitos (formato móvil)
-  const limited = numbers.slice(0, 9);
-
-  // 3. Aplicar espacios (9 XXXX XXXX)
-  if (limited.length > 5) {
-    return `${limited.slice(0, 1)} ${limited.slice(1, 5)} ${limited.slice(5)}`;
-  }
-  if (limited.length > 1) {
-    return `${limited.slice(0, 1)} ${limited.slice(1)}`;
-  }
-  return limited;
-};
-
-export default function PacienteForm() {
+export default function RegisterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    rut: '',
-    nombre: '',
-    apellidos: '',
-    sexo: '',
-    fechaNacimiento: '',
-    telefono: '',
+    name: '',
+    lastname: '',
     email: '',
-    direccion: '',
-    grupo: 'CASO',
-    fechaInclusion: new Date().toISOString().split('T')[0],
-    peso: '',
-    estatura: ''
+    password: '',
+    confirmPassword: ''
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    // FORMATO RUT
-    if (name === 'rut') {
-        setFormData(prev => ({ ...prev, [name]: formatRut(value) }));
-        return;
-    }
-
-    // NUEVO: FORMATO TELÉFONO
-    if (name === 'telefono') {
-        setFormData(prev => ({ ...prev, [name]: formatPhone(value) }));
-        return;
-    }
-
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -77,38 +27,43 @@ export default function PacienteForm() {
     setIsLoading(true);
     setError(null);
 
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-        router.push('/');
-        return;
+    // Basic Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      setIsLoading(false);
+      return;
     }
 
-  
-    const cleanTelefono = formData.telefono.replace(/\s/g, '');
-
     const payload = {
-        ...formData,
-        telefono: cleanTelefono, 
-        peso: parseFloat(formData.peso),
-        estatura: parseFloat(formData.estatura)
+      name: formData.name,
+      lastname: formData.lastname,
+      email: formData.email,
+      password: formData.password
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/pacientes', {
+      const response = await fetch('http://localhost:8080/auth/register', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        alert('¡Paciente registrado exitosamente!');
-        router.push('/dashboard/pacientes'); // Volver a la lista
+        alert('¡Cuenta creada exitosamente! Por favor inicia sesión.');
+        router.push('/'); // Redirect to Login
       } else {
-        const errData = await response.text();
-        setError(`Error al guardar: ${errData || response.statusText}`);
+        // Try to parse error message
+        try {
+          const errorData = await response.json();
+          // Assuming backend returns standard Spring Boot error structure or custom token response with error
+          // Adjust based on your AuthController error handling
+          setError(`Error al registrar: ${errorData.message || 'Datos inválidos'}`);
+        } catch {
+          const errorText = await response.text();
+          setError(`Error al registrar: ${errorText || response.statusText}`);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -119,109 +74,95 @@ export default function PacienteForm() {
   };
 
   return (
-    <form className={styles.formContainer} onSubmit={handleSubmit}>
-      <div className={styles.formGrid}>
-        
-        <h3 className={styles.sectionTitle}>Identificación del Paciente</h3>
-        
-        <div className={styles.formGroup}>
-          <label className={styles.label}>RUT *</label>
-          <input 
-            className={styles.input} 
-            name="rut" 
-            value={formData.rut} 
-            onChange={handleChange} 
-            required 
-            placeholder="12.345.678-9" 
-            maxLength={12} 
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-            <label className={styles.label}>Grupo de Estudio *</label>
-            <select className={styles.select} name="grupo" value={formData.grupo} onChange={handleChange} required>
-                <option value="CASO">Caso (Paciente)</option>
-                <option value="CONTROL">Control</option>
-            </select>
-        </div>
+    <form className={styles.formContainer} onSubmit={handleSubmit} style={{ maxWidth: '450px', margin: '0 auto' }}>
+      <div className={styles.formGrid} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+        <h3 className={styles.sectionTitle} style={{ textAlign: 'center' }}>Registrar Usuario</h3>
 
         <div className={styles.formGroup}>
           <label className={styles.label}>Nombres *</label>
-          <input className={styles.input} name="nombre" value={formData.nombre} onChange={handleChange} required />
+          <input
+            className={styles.input}
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            placeholder="Ej: Juan"
+          />
         </div>
 
         <div className={styles.formGroup}>
           <label className={styles.label}>Apellidos *</label>
-          <input className={styles.input} name="apellidos" value={formData.apellidos} onChange={handleChange} required />
+          <input
+            className={styles.input}
+            name="lastname"
+            value={formData.lastname}
+            onChange={handleChange}
+            required
+            placeholder="Ej: Pérez"
+          />
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>Fecha de Nacimiento *</label>
-          <input type="date" className={styles.input} name="fechaNacimiento" value={formData.fechaNacimiento} onChange={handleChange} required />
+          <label className={styles.label}>Correo Electrónico *</label>
+          <input
+            type="email"
+            className={styles.input}
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            placeholder="juan.perez@ejemplo.com"
+          />
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>Sexo *</label>
-          <select className={styles.select} name="sexo" value={formData.sexo} onChange={handleChange} required>
-            <option value="">Seleccione...</option>
-            <option value="Masculino">Masculino</option>
-            <option value="Femenino">Femenino</option>
-          </select>
-        </div>
-
-        <h3 className={styles.sectionTitle}>Datos de Contacto</h3>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Teléfono</label>
-          <div style={{position: 'relative'}}>
-            {/* Prefijo visual +56 */}
-            <span style={{position:'absolute', left:'10px', top:'12px', color:'#64748b', fontSize:'0.9rem'}}>+56</span>
-            <input 
-                className={styles.input} 
-                name="telefono" 
-                value={formData.telefono} 
-                onChange={handleChange} 
-                placeholder="9 1234 5678" 
-                style={{paddingLeft: '45px'}} 
-                maxLength={11} 
-            />
-          </div>
+          <label className={styles.label}>Contraseña *</label>
+          <input
+            type="password"
+            className={styles.input}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            placeholder="******"
+            minLength={6}
+          />
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>Email</label>
-          <input type="email" className={styles.input} name="email" value={formData.email} onChange={handleChange} />
-        </div>
-        
-        <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-          <label className={styles.label}>Dirección</label>
-          <input className={styles.input} name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Número, Comuna" />
-        </div>
-
-        <h3 className={styles.sectionTitle}>Datos Clínicos Iniciales</h3>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Fecha de Inclusión *</label>
-          <input type="date" className={styles.input} name="fechaInclusion" value={formData.fechaInclusion} onChange={handleChange} required />
+          <label className={styles.label}>Confirmar Contraseña *</label>
+          <input
+            type="password"
+            className={styles.input}
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            placeholder="******"
+          />
         </div>
 
-        <div className={styles.formGroup}></div>
+        {error && <div className={styles.errorMsg} style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>{error}</div>}
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Peso (kg) *</label>
-          <input type="number" step="0.1" className={styles.input} name="peso" value={formData.peso} onChange={handleChange} required placeholder="Ej: 70.5" />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Estatura (mts) *</label>
-          <input type="number" step="0.01" className={styles.input} name="estatura" value={formData.estatura} onChange={handleChange} required placeholder="Ej: 1.75" />
-        </div>
-
-        {error && <div className={styles.errorMsg}>{error}</div>}
-
-        <button type="submit" className={styles.submitButton} disabled={isLoading}>
-          {isLoading ? 'Guardando...' : 'Registrar Paciente'}
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isLoading}
+          style={{ marginTop: '20px' }}
+        >
+          {isLoading ? 'Registrando...' : 'Crear Cuenta'}
         </button>
+
+        <div style={{ textAlign: 'center', marginTop: '15px' }}>
+          <span style={{ fontSize: '0.9rem', color: '#666' }}>¿Ya tienes cuenta? </span>
+          <span
+            onClick={() => router.push('/')}
+            style={{ color: '#007bff', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            Inicia Sesión
+          </span>
+        </div>
 
       </div>
     </form>
