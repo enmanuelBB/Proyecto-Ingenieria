@@ -3,10 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './dashboard.module.css';
-import Sidebar from '../components/Sidebar'; // Importamos el componente
-
-// Iconos para el contenido principal
-import { FaUserInjured, FaClipboardList, FaPlus, FaUserPlus } from 'react-icons/fa';
+import Sidebar from '../components/Sidebar';
+import { FaUserPlus, FaSearch } from 'react-icons/fa';
 
 interface Paciente {
   idPaciente: number;
@@ -27,17 +25,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
-    const savedUser = localStorage.getItem('userEmail');
-
     if (!token) {
       router.push('/');
       return;
     }
-    setUser(savedUser || "Colaborador");
 
-    const fetchData = async () => {
+    const fetchPacientes = async () => {
       try {
-        const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
+        const response = await fetch('http://localhost:8080/api/v1/pacientes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -59,7 +54,7 @@ export default function DashboardPage() {
       }
     };
 
-    fetchData();
+    fetchPacientes();
   }, [router]);
 
   const handleLogout = () => {
