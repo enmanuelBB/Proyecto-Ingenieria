@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './dashboard.module.css';
 import Sidebar from '../components/Sidebar';
-import { FaUserPlus, FaSearch, FaClipboardList, FaUserInjured, FaFileExport, FaSignOutAlt, FaPlus } from 'react-icons/fa';
+import { FaUserPlus, FaClipboardList, FaUserInjured, FaEdit, FaPlus } from 'react-icons/fa';
 
 interface Paciente {
   idPaciente: number;
@@ -18,6 +18,7 @@ interface Paciente {
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<string | null>("Usuario");
+  const [role, setRole] = useState<string | null>(null);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0, registrosHoy: 0 });
@@ -28,6 +29,30 @@ export default function DashboardPage() {
     if (!token) {
       router.push('/');
       return;
+    }
+
+    // Decodificar Token para obtener nombre y rol
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const decoded = JSON.parse(jsonPayload);
+      if (decoded.name) {
+        setUser(decoded.name);
+      }
+      if (decoded.authorities && Array.isArray(decoded.authorities)) {
+        // Asumiendo que authorities es [{authority: "ROLE_ADMIN"}, ...] o similar
+        // Si es simple string o array de strings, ajustar.
+        // Backend suele mandar: [{authority: 'ADMIN'}] o strings directos.
+        // Vamos a mostrar el primer rol encontrado si es lista compleja.
+        const r = decoded.authorities[0]?.authority || decoded.authorities[0] || "";
+        setRole(r.replace("ROLE_", ""));
+      }
+    } catch (e) {
+      console.error("Error decodificando token", e);
     }
 
     const fetchData = async () => {
@@ -53,7 +78,7 @@ export default function DashboardPage() {
 
         if (resEncuestas.ok) {
           const encuestas: any[] = await resEncuestas.json();
-          const defaultSurvey = encuestas.find(e => e.titulo.includes("Estudio Cáncer Gástrico"));
+          const defaultSurvey = encuestas.find((e: any) => e.titulo.includes("Estudio Cáncer Gástrico"));
 
           if (defaultSurvey) {
             surveyIdToUse = defaultSurvey.idEncuesta;
@@ -79,7 +104,7 @@ export default function DashboardPage() {
 
             // Calcular registros de HOY
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-            registrosHoyLen = registros.filter(r => r.fechaRealizacion.startsWith(today)).length;
+            registrosHoyLen = registros.filter((r: any) => r.fechaRealizacion.startsWith(today)).length;
           }
         }
 
@@ -100,45 +125,14 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-  const handleLogout = () => {
 
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userEmail');
-
-
-    router.push('/');
-  };
 
   return (
     <div className={styles.dashboardContainer}>
 
       {/* --- SIDEBAR --- */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <img src="/logo-vital3.png" alt="Logo" width={30} height={30} />
-          <span className={styles.sidebarTitle}>Ingeniería Vital</span>
-        </div>
-
-        <nav className={styles.nav}>
-          <div className={`${styles.navItem} ${styles.navItemActive}`}>
-            <FaClipboardList /> Dashboard
-          </div>
-          <div className={styles.navItem} onClick={() => router.push('/dashboard/pacientes')}>
-            <FaUserInjured /> Pacientes
-          </div>
-          <div className={styles.navItem} onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}>
-            <FaSearch /> Encuestas
-          </div>
-          <div className={styles.navItem} onClick={() => router.push('/exportar-datos')}>
-            <FaFileExport /> Exportar Datos
-          </div>
-        </nav>
-
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <FaSignOutAlt /> Cerrar Sesión
-        </button>
-      </aside>
+      {/* --- SIDEBAR --- */}
+      <Sidebar />
 
       {/* --- CONTENIDO PRINCIPAL --- */}
       <main className={styles.mainContent}>
@@ -146,7 +140,7 @@ export default function DashboardPage() {
         {/* Header Superior */}
         <header className={styles.header}>
           <div className={styles.welcomeText}>
-            <h1>Hola, {user} 👋</h1>
+            <h1>Hola, {user} {role && <span style={{ fontSize: '0.6em', color: '#666', opacity: 0.8, verticalAlign: 'middle', border: '1px solid #ccc', borderRadius: '4px', padding: '2px 6px' }}> {role}</span>} 👋</h1>
             <p>Aquí tienes un resumen de la actividad del estudio.</p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -212,7 +206,12 @@ export default function DashboardPage() {
                       <td style={{ fontWeight: '500' }}>{p.nombre} {p.apellidos}</td>
                       <td>{p.rut}</td>
                       <td>
-                        <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}>Ver Ficha</button>
+                        <button
+                          style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}
+                          onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
+                        >
+                          Ver Ficha
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -242,6 +241,15 @@ export default function DashboardPage() {
                 <div>
                   <div style={{ textAlign: 'left' }}>Responder Encuesta</div>
                   <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Ingresar datos de formulario</div>
+                </div>
+              </button>
+
+              {/* Botón añadido: Personalizar Formulario */}
+              <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/dashboard/constructor/${defaultSurveyId}`)}>
+                <FaEdit size={20} color="#8b5cf6" />
+                <div>
+                  <div style={{ textAlign: 'left' }}>Personalizar Formulario</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Editar variables y preguntas</div>
                 </div>
               </button>
             </div>

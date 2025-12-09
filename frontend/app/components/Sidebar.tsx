@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link'; // Importante para navegar
 import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
-import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt } from 'react-icons/fa';
+import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt } from 'react-icons/fa';
 
 export default function Sidebar() {
     const router = useRouter();
@@ -77,6 +77,13 @@ export default function Sidebar() {
                     className={`${styles.navItem} ${pathname === '/exportar-datos' ? styles.navItemActive : ''}`}
                 >
                     <FaFileExport /> Exportar Datos
+                </Link>
+
+                <Link
+                    href="/dashboard/auditoria"
+                    className={`${styles.navItem} ${pathname === '/dashboard/auditoria' ? styles.navItemActive : ''}`}
+                >
+                    <FaShieldAlt /> Auditoría
                 </Link>
             </nav>
 
