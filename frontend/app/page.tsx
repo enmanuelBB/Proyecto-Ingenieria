@@ -1,37 +1,16 @@
 // Ubicación: app/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
-
+import { FaDatabase, FaShieldAlt, FaChartBar } from 'react-icons/fa'; 
 
 import DynamicHeroText from './components/DynamicHeroText';
 import LoginPanel from './components/LoginPanel';
 
-
-// Componente para simular la carga (Skeleton)
-const SkeletonCard = () => (
-  <div className={styles.skeletonCard}>
-    <div className={styles.skeletonLine} style={{ width: '80%', height: '20px' }}></div>
-    <div className={styles.skeletonLine} style={{ width: '100%', height: '40px' }}></div>
-    <div className={styles.skeletonLine} style={{ width: '100%', height: '40px' }}></div>
-    <div className={styles.skeletonLine} style={{ width: '100%', height: '40px', marginTop: '2rem' }}></div>
-  </div>
-);
-
-
 export default function LoginPage() {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    // Simula la carga de datos (1.5 segundos)
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 1500); 
-    return () => clearTimeout(timer); 
-  }, []);
 
   return (
     <main className={styles.mainContainer}>
@@ -45,7 +24,6 @@ export default function LoginPage() {
             width={35} 
             height={35}
           />
-     
           Ingeniería Vital <span className={styles.logoDot}>•</span>
         </Link>
         <div className={styles.navLinks}>
@@ -58,25 +36,26 @@ export default function LoginPage() {
       {/* Hero Section Principal */}
       <section className={styles.heroSection}>
         
-        {/* Lado Izquierdo: Mensaje */}
+        {/* --- COLUMNA IZQUIERDA --- */}
         <div className={`${styles.heroText} ${styles.fadeInUp}`}>
           <h1>Sistema Central de <br/>Registro de Pacientes</h1>
           
+          {/* Texto que cambia solo */}
           <DynamicHeroText /> 
           
+          {/* Botón Principal */}
           <Link href="/features" className={styles.mainCta}>Explorar Funciones</Link>
           
-   
+  
+
         </div>
 
-        {/* Lado Derecho: Formulario o Skeleton */}
+        {/* --- COLUMNA DERECHA --- */}
         <div className={`${styles.loginPanel} ${styles.fadeInRight}`}>
           <LoginPanel />
         </div>
 
       </section>
-      
- 
       
     </main>
   );
