@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './audit.module.css';
 import { FaEdit, FaShieldAlt, FaExclamationTriangle, FaDoorOpen, FaSearch, FaArrowRight } from 'react-icons/fa';
-import Sidebar from '../../components/Sidebar';
 
 interface RegistroLog {
     idRegistro: number;
@@ -148,154 +147,148 @@ export default function AuditPage() {
     const chartData = [5, 12, 8, 15, 20, 10, stats.modificaciones > 20 ? 20 : stats.modificaciones];
 
     return (
-        <div className={styles.container}>
-            <Sidebar />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                {/* HEADER */}
-                <div className={styles.header}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <h1 className={styles.title}>Auditoría</h1>
-                            <p style={{ color: '#64748b' }}>Registro de seguridad y trazabilidad del sistema</p>
-                        </div>
-                        {/* Period Selector */}
-                        <div>
-                            <select
-                                className={styles.select}
-                                value={period}
-                                onChange={(e) => setPeriod(e.target.value)}
-                                style={{ width: '200px' }}
-                            >
-                                <option value="24h">Últimas 24 Horas</option>
-                                <option value="7d">Últimos 7 Días</option>
-                                <option value="30d">Últimos 30 Días</option>
-                            </select>
-                        </div>
+        <>
+            {/* HEADER */}
+            <div className={styles.header}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1 className={styles.title}>Auditoría</h1>
+                        <p style={{ color: '#64748b' }}>Registro de seguridad y trazabilidad del sistema</p>
                     </div>
-                </div>
-
-                <div className={styles.mainContent}>
-
-                    {/* KPI CARDS */}
-                    <section className={styles.statsGrid}>
-                        {/* Accesos */}
-                        <div className={`${styles.statCard} ${styles.cardBlue}`}>
-                            <div>
-                                <span className={styles.statLabel}>Accesos Únicos</span>
-                                <div className={styles.statValue}>{stats.accesos}</div>
-                                <div className={styles.statSub}>Usuarios activos en el periodo</div>
-                            </div>
-                        </div>
-
-                        {/* Modificaciones */}
-                        <div className={`${styles.statCard} ${styles.cardGreen}`}>
-                            <div>
-                                <span className={styles.statLabel}>Modificaciones</span>
-                                <div className={styles.statValue}>{stats.modificaciones}</div>
-                                <div className={styles.statSub}>Registros guardados</div>
-                            </div>
-                        </div>
-
-                        {/* Alertas */}
-                        <div className={`${styles.statCard} ${styles.cardYellow}`}>
-                            <div>
-                                <span className={styles.statLabel}>Alertas</span>
-                                <div className={styles.statValue}>{stats.alertas}</div>
-                                <div className={styles.statSub}>Intentos fallidos</div>
-                            </div>
-                        </div>
-
-                        {/* Cierres */}
-                        <div className={`${styles.statCard} ${styles.cardRed}`}>
-                            <div>
-                                <span className={styles.statLabel}>Cierres de Sesión</span>
-                                <div className={styles.statValue}>{stats.cierres}</div>
-                                <div className={styles.statSub}>Manuales</div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* CONTENT SPLIT */}
-                    <div className={styles.contentGrid}>
-
-                        {/* LISTA DE ACTIVIDAD (Filtered) */}
-                        <div className={styles.timelineCard}>
-                            <div className={styles.sectionHeader}>
-                                <h3 className={styles.sectionTitle}>Registro de Actividad Reciente</h3>
-                                <div style={{ display: 'flex', gap: '5px' }}>
-                                    {/* Paginación simple visual */}
-                                </div>
-                            </div>
-
-                            <div className={styles.eventList}>
-                                {loading ? (
-                                    <p>Cargando auditoría...</p>
-                                ) : filteredLogs.length === 0 ? (
-                                    <p>No hay actividad registrada en este periodo.</p>
-                                ) : (
-                                    filteredLogs.slice(0, 8).map((log) => { // Mostrar solo 8
-                                        const f = formatDate(log.fechaRealizacion);
-                                        return (
-                                            <div key={log.idRegistro} className={styles.eventItem}>
-                                                <div className={styles.eventIcon}>
-                                                    <FaEdit />
-                                                </div>
-                                                <div className={styles.eventBody}>
-                                                    <div className={styles.eventTitle}>ACTUALIZAR en Respuesta</div>
-                                                    <div className={styles.eventDesc}>
-                                                        Se guardó respuesta para el paciente <strong>{log.nombrePaciente}</strong>.
-                                                        <br />
-                                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Usuario: {log.usuarioNombre || 'Sistema'}</span>
-                                                    </div>
-                                                </div>
-                                                <div className={styles.eventTime}>
-                                                    <div style={{ fontWeight: 'bold' }}>{f.time}</div>
-                                                    <div>{f.date}</div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-
-                        {/* FILTROS Y CHART */}
-                        <div>
-                            <div className={styles.filterCard}>
-                                <h3 className={styles.sectionTitle} style={{ marginBottom: '1rem' }}>Filtros Avanzados</h3>
-
-                                <div className={styles.filterGroup}>
-                                    <label className={styles.label}>Usuario</label>
-                                    <select className={styles.select}><option>Todos los usuarios</option></select>
-                                </div>
-
-                                <div className={styles.filterGroup}>
-                                    <label className={styles.label}>Tipo de Evento</label>
-                                    <select className={styles.select}><option>Todos los eventos</option></select>
-                                </div>
-
-                                <button className={styles.searchBtn}>
-                                    <FaSearch /> Buscar Eventos
-                                </button>
-
-                                {/* CHART SIMPLE */}
-                                <div className={styles.chartContainer}>
-                                    <div className={styles.chartTitle}>Actividad Semanal</div>
-                                    <div className={styles.barChart}>
-                                        {chartData.map((val, idx) => (
-                                            <div key={idx} className={styles.barCol}>
-                                                <div className={styles.bar} style={{ height: `${Math.min(val * 4, 100)}%` }}></div>
-                                                <div className={styles.barLabel}>D{idx + 1}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                    {/* Period Selector */}
+                    <div>
+                        <select
+                            className={styles.select}
+                            value={period}
+                            onChange={(e) => setPeriod(e.target.value)}
+                            style={{ width: '200px' }}
+                        >
+                            <option value="24h">Últimas 24 Horas</option>
+                            <option value="7d">Últimos 7 Días</option>
+                            <option value="30d">Últimos 30 Días</option>
+                        </select>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* KPI CARDS */}
+            <section className={styles.statsGrid}>
+                {/* Accesos */}
+                <div className={`${styles.statCard} ${styles.cardBlue}`}>
+                    <div>
+                        <span className={styles.statLabel}>Accesos Únicos</span>
+                        <div className={styles.statValue}>{stats.accesos}</div>
+                        <div className={styles.statSub}>Usuarios activos en el periodo</div>
+                    </div>
+                </div>
+
+                {/* Modificaciones */}
+                <div className={`${styles.statCard} ${styles.cardGreen}`}>
+                    <div>
+                        <span className={styles.statLabel}>Modificaciones</span>
+                        <div className={styles.statValue}>{stats.modificaciones}</div>
+                        <div className={styles.statSub}>Registros guardados</div>
+                    </div>
+                </div>
+
+                {/* Alertas */}
+                <div className={`${styles.statCard} ${styles.cardYellow}`}>
+                    <div>
+                        <span className={styles.statLabel}>Alertas</span>
+                        <div className={styles.statValue}>{stats.alertas}</div>
+                        <div className={styles.statSub}>Intentos fallidos</div>
+                    </div>
+                </div>
+
+                {/* Cierres */}
+                <div className={`${styles.statCard} ${styles.cardRed}`}>
+                    <div>
+                        <span className={styles.statLabel}>Cierres de Sesión</span>
+                        <div className={styles.statValue}>{stats.cierres}</div>
+                        <div className={styles.statSub}>Manuales</div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CONTENT SPLIT */}
+            <div className={styles.contentGrid}>
+
+                {/* LISTA DE ACTIVIDAD (Filtered) */}
+                <div className={styles.timelineCard}>
+                    <div className={styles.sectionHeader}>
+                        <h3 className={styles.sectionTitle}>Registro de Actividad Reciente</h3>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            {/* Paginación simple visual */}
+                        </div>
+                    </div>
+
+                    <div className={styles.eventList}>
+                        {loading ? (
+                            <p>Cargando auditoría...</p>
+                        ) : filteredLogs.length === 0 ? (
+                            <p>No hay actividad registrada en este periodo.</p>
+                        ) : (
+                            filteredLogs.slice(0, 8).map((log) => { // Mostrar solo 8
+                                const f = formatDate(log.fechaRealizacion);
+                                return (
+                                    <div key={log.idRegistro} className={styles.eventItem}>
+                                        <div className={styles.eventIcon}>
+                                            <FaEdit />
+                                        </div>
+                                        <div className={styles.eventBody}>
+                                            <div className={styles.eventTitle}>ACTUALIZAR en Respuesta</div>
+                                            <div className={styles.eventDesc}>
+                                                Se guardó respuesta para el paciente <strong>{log.nombrePaciente}</strong>.
+                                                <br />
+                                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Usuario: {log.usuarioNombre || 'Sistema'}</span>
+                                            </div>
+                                        </div>
+                                        <div className={styles.eventTime}>
+                                            <div style={{ fontWeight: 'bold' }}>{f.time}</div>
+                                            <div>{f.date}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                {/* FILTROS Y CHART */}
+                <div>
+                    <div className={styles.filterCard}>
+                        <h3 className={styles.sectionTitle} style={{ marginBottom: '1rem' }}>Filtros Avanzados</h3>
+
+                        <div className={styles.filterGroup}>
+                            <label className={styles.label}>Usuario</label>
+                            <select className={styles.select}><option>Todos los usuarios</option></select>
+                        </div>
+
+                        <div className={styles.filterGroup}>
+                            <label className={styles.label}>Tipo de Evento</label>
+                            <select className={styles.select}><option>Todos los eventos</option></select>
+                        </div>
+
+                        <button className={styles.searchBtn}>
+                            <FaSearch /> Buscar Eventos
+                        </button>
+
+                        {/* CHART SIMPLE */}
+                        <div className={styles.chartContainer}>
+                            <div className={styles.chartTitle}>Actividad Semanal</div>
+                            <div className={styles.barChart}>
+                                {chartData.map((val, idx) => (
+                                    <div key={idx} className={styles.barCol}>
+                                        <div className={styles.bar} style={{ height: `${Math.min(val * 4, 100)}%` }}></div>
+                                        <div className={styles.barLabel}>D{idx + 1}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </>
     );
 }

@@ -7,8 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<Users, Long> {
+public interface UserRepository extends JpaRepository<Users, Integer> {
     Optional<Users> findByEmail(String email);
-    //metodo buscar por el token de recuperación
+
+    // metodo buscar por el token de recuperación
     Optional<Users> findByResetToken(String resetToken);
 }

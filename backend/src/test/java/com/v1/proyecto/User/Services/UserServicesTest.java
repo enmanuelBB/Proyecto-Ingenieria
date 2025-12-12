@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,9 +63,9 @@ class UserServicesTest {
 
     @Test
     void getUserById_ShouldReturnUser_WhenUserExists() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
-        Optional<UsersDto> result = userServices.getUserById(1L);
+        Optional<UsersDto> result = userServices.getUserById(1);
 
         assertTrue(result.isPresent());
         assertEquals(user.getEmail(), result.get().getEmail());
@@ -72,19 +73,19 @@ class UserServicesTest {
 
     @Test
     void getUserById_ShouldReturnEmpty_WhenUserDoesNotExist() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1)).thenReturn(Optional.empty());
 
-        Optional<UsersDto> result = userServices.getUserById(1L);
+        Optional<UsersDto> result = userServices.getUserById(1);
 
         assertFalse(result.isPresent());
     }
 
     @Test
     void updateUser_ShouldReturnTrue_WhenUserExists() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(userRepository.save(any(Users.class))).thenReturn(user);
 
-        boolean result = userServices.updateUser(1L, userDto);
+        boolean result = userServices.updateUser(1, userDto);
 
         assertTrue(result);
         verify(userRepository).save(user);
@@ -92,9 +93,9 @@ class UserServicesTest {
 
     @Test
     void updateUser_ShouldReturnFalse_WhenUserDoesNotExist() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1)).thenReturn(Optional.empty());
 
-        boolean result = userServices.updateUser(1L, userDto);
+        boolean result = userServices.updateUser(1, userDto);
 
         assertFalse(result);
         verify(userRepository, never()).save(any(Users.class));
@@ -102,21 +103,21 @@ class UserServicesTest {
 
     @Test
     void deleteUser_ShouldReturnTrue_WhenUserExists() {
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.existsById(1)).thenReturn(true);
 
-        boolean result = userServices.deleteUser(1L);
+        boolean result = userServices.deleteUser(1);
 
         assertTrue(result);
-        verify(userRepository).deleteById(1L);
+        verify(userRepository).deleteById(1);
     }
 
     @Test
     void deleteUser_ShouldReturnFalse_WhenUserDoesNotExist() {
-        when(userRepository.existsById(1L)).thenReturn(false);
+        when(userRepository.existsById(1)).thenReturn(false);
 
-        boolean result = userServices.deleteUser(1L);
+        boolean result = userServices.deleteUser(1);
 
         assertFalse(result);
-        verify(userRepository, never()).deleteById(anyLong());
+        verify(userRepository, never()).deleteById(anyInt());
     }
 }
