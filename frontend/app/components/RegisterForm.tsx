@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 import styles from './PacienteForm.module.css'; // Reusing existing styles for consistency
 
 export default function RegisterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // error state is no longer needed for rendering, Swal handles it
+  // const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -25,11 +27,16 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    // setError(null);
 
     // Basic Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Las contraseñas no coinciden.',
+        confirmButtonColor: '#3085d6',
+      });
       setIsLoading(false);
       return;
     }
@@ -51,23 +58,38 @@ export default function RegisterForm() {
       });
 
       if (response.ok) {
-        alert('¡Cuenta creada exitosamente! Por favor inicia sesión.');
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Cuenta creada!',
+          text: 'Tu cuenta ha sido creada exitosamente. Por favor inicia sesión.',
+          confirmButtonColor: '#3085d6',
+        });
         router.push('/'); // Redirect to Login
       } else {
         // Try to parse error message
+        let errorMsg = 'Error al registrar';
         try {
           const errorData = await response.json();
-          // Assuming backend returns standard Spring Boot error structure or custom token response with error
-          // Adjust based on your AuthController error handling
-          setError(`Error al registrar: ${errorData.message || 'Datos inválidos'}`);
+          errorMsg = `Error al registrar: ${errorData.message || 'Datos inválidos'}`;
         } catch {
           const errorText = await response.text();
-          setError(`Error al registrar: ${errorText || response.statusText}`);
+          errorMsg = `Error al registrar: ${errorText || response.statusText}`;
         }
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMsg,
+          confirmButtonColor: '#d33',
+        });
       }
     } catch (err) {
       console.error(err);
-      setError('Error de conexión con el servidor.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Conexión',
+        text: 'No se pudo conectar con el servidor.',
+        confirmButtonColor: '#d33',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -142,8 +164,6 @@ export default function RegisterForm() {
             placeholder="******"
           />
         </div>
-
-        {error && <div className={styles.errorMsg} style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>{error}</div>}
 
         <button
           type="submit"
