@@ -59,7 +59,7 @@ export default function Sidebar() {
                     title={isCollapsed ? "Dashboard" : ""}
                 >
                     <FaClipboardList size={20} style={{ minWidth: '20px' }} />
-                    {!isCollapsed && "Dashboard"}
+                    {!isCollapsed && <span className={styles.linkText}>Dashboard</span>}
                 </Link>
 
                 {/* Enlace a Pacientes */}
@@ -69,7 +69,7 @@ export default function Sidebar() {
                     title={isCollapsed ? "Pacientes" : ""}
                 >
                     <FaUserInjured size={20} style={{ minWidth: '20px' }} />
-                    {!isCollapsed && "Pacientes"}
+                    {!isCollapsed && <span className={styles.linkText}>Pacientes</span>}
                 </Link>
 
                 {/* Enlace a Encuestas (Dinámico) */}
@@ -80,7 +80,7 @@ export default function Sidebar() {
                     title={isCollapsed ? "Encuestas" : ""}
                 >
                     <FaSearch size={20} style={{ minWidth: '20px' }} />
-                    {!isCollapsed && "Encuestas"}
+                    {!isCollapsed && <span className={styles.linkText}>Encuestas</span>}
                 </div>
 
                 <Link
@@ -89,7 +89,7 @@ export default function Sidebar() {
                     title={isCollapsed ? "Exportar Datos" : ""}
                 >
                     <FaFileExport size={20} style={{ minWidth: '20px' }} />
-                    {!isCollapsed && "Exportar Datos"}
+                    {!isCollapsed && <span className={styles.linkText}>Exportar Datos</span>}
                 </Link>
 
                 <Link
@@ -98,13 +98,13 @@ export default function Sidebar() {
                     title={isCollapsed ? "Auditoría" : ""}
                 >
                     <FaShieldAlt size={20} style={{ minWidth: '20px' }} />
-                    {!isCollapsed && "Auditoría"}
+                    {!isCollapsed && <span className={styles.linkText}>Auditoría</span>}
                 </Link>
             </nav>
 
             <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
                 <FaSignOutAlt size={20} style={{ minWidth: '20px' }} />
-                {!isCollapsed && "Cerrar Sesión"}
+                {!isCollapsed && <span className={styles.linkText}>Cerrar Sesión</span>}
             </button>
         </aside>
     );
