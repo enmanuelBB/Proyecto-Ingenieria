@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
 import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
+import Swal from 'sweetalert2';
 
 export default function Sidebar() {
     const router = useRouter();
@@ -53,7 +54,14 @@ export default function Sidebar() {
             .catch(err => console.error("Error fetching surveys associated to Sidebar:", err));
     }, []);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await Swal.fire({
+            title: 'Cerrando sesión...',
+            text: 'Has cerrado sesión exitosamente.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('userEmail');
