@@ -21,7 +21,7 @@ public class EditController {
 
     private final UserServices userServices;
 
-    //mostrar todos los usuarios
+    // mostrar todos los usuarios
     @GetMapping("")
     public ResponseEntity<List<UsersDto>> getAllUsers() {
         try {
@@ -32,9 +32,9 @@ public class EditController {
         }
     }
 
-    //obtener usuario por id
+    // obtener usuario por id
     @GetMapping("/{id}")
-    public ResponseEntity<UsersDto> getUserById(@PathVariable (name= "id") Long id) {
+    public ResponseEntity<UsersDto> getUserById(@PathVariable(name = "id") Integer id) {
         try {
             Optional<UsersDto> user = userServices.getUserById(id);
             if (user.isPresent()) {
@@ -47,9 +47,9 @@ public class EditController {
         }
     }
 
-    //actualizar
+    // actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable (name= "id") Long id, @RequestBody UsersDto dto) {
+    public ResponseEntity<String> updateUser(@PathVariable(name = "id") Integer id, @RequestBody UsersDto dto) {
         try {
             boolean updated = userServices.updateUser(id, dto);
             if (updated) {
@@ -64,9 +64,9 @@ public class EditController {
         }
     }
 
-    //eliminar usuario por id
+    // eliminar usuario por id
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable (name= "id") Long id) {
+    public ResponseEntity<String> deleteUser(@PathVariable(name = "id") Integer id) {
         try {
             boolean deleted = userServices.deleteUser(id);
             if (deleted) {

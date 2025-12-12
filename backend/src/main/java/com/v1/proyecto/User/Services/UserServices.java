@@ -1,4 +1,5 @@
 package com.v1.proyecto.User.Services;
+
 import com.v1.proyecto.auth.model.Users;
 import com.v1.proyecto.User.dto.UsersDto;
 import com.v1.proyecto.auth.repository.UserRepository;
@@ -10,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 
 @Service
 @RequiredArgsConstructor
@@ -29,13 +29,13 @@ public class UserServices {
     }
 
     @Transactional(readOnly = true)
-    public Optional<UsersDto> getUserById(Long id) {
+    public Optional<UsersDto> getUserById(Integer id) {
         return userRepository.findById(id)
                 .map(this::mapToDto); // Convierte el Users a UsersDto
     }
 
     @Transactional
-    public boolean updateUser(Long id, UsersDto dto) {
+    public boolean updateUser(Integer id, UsersDto dto) {
         Optional<Users> userOptional = userRepository.findById(id);
 
         if (userOptional.isPresent()) {
@@ -45,6 +45,14 @@ public class UserServices {
             user.setPhone_number(dto.getPhone_number());
             user.setAddress(dto.getAddress());
             user.setEmail(dto.getEmail());
+            // Nuevo: Actualizar rol si se envía
+            if (dto.getRole() != null) {
+                try {
+                    user.setRole(com.v1.proyecto.auth.model.Role.valueOf(dto.getRole()));
+                } catch (IllegalArgumentException e) {
+                    // Ignorar rol inválido o lanzar excepción
+                }
+            }
             userRepository.save(user);
             return true;
         }
@@ -52,7 +60,7 @@ public class UserServices {
     }
 
     @Transactional
-    public boolean deleteUser(Long id) {
+    public boolean deleteUser(Integer id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
@@ -62,11 +70,13 @@ public class UserServices {
 
     private UsersDto mapToDto(Users user) {
         return UsersDto.builder()
+                .id(user.getId())
                 .name(user.getName())
                 .lastname(user.getLastname())
                 .phone_number(user.getPhone_number())
                 .address(user.getAddress())
                 .email(user.getEmail())
+                .role(user.getRole().name())
                 .build();
     }
 }

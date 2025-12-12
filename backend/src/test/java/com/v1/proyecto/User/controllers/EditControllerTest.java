@@ -59,7 +59,7 @@ class EditControllerTest {
 
     @Test
     void getUserById_ShouldReturnOk_WhenUserExists() throws Exception {
-        when(userServices.getUserById(1L)).thenReturn(Optional.of(userDto));
+        when(userServices.getUserById(1)).thenReturn(Optional.of(userDto));
 
         mockMvc.perform(get("/api/v1/user/1"))
                 .andExpect(status().isOk())
@@ -68,7 +68,7 @@ class EditControllerTest {
 
     @Test
     void getUserById_ShouldReturnNotFound_WhenUserDoesNotExist() throws Exception {
-        when(userServices.getUserById(1L)).thenReturn(Optional.empty());
+        when(userServices.getUserById(1)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/user/1"))
                 .andExpect(status().isNotFound());
@@ -76,7 +76,7 @@ class EditControllerTest {
 
     @Test
     void updateUser_ShouldReturnOk_WhenUserExists() throws Exception {
-        when(userServices.updateUser(eq(1L), any(UsersDto.class))).thenReturn(true);
+        when(userServices.updateUser(eq(1), any(UsersDto.class))).thenReturn(true);
 
         mockMvc.perform(put("/api/v1/user/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +87,7 @@ class EditControllerTest {
 
     @Test
     void updateUser_ShouldReturnNotFound_WhenUserDoesNotExist() throws Exception {
-        when(userServices.updateUser(eq(1L), any(UsersDto.class))).thenReturn(false);
+        when(userServices.updateUser(eq(1), any(UsersDto.class))).thenReturn(false);
 
         mockMvc.perform(put("/api/v1/user/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -97,7 +97,7 @@ class EditControllerTest {
 
     @Test
     void deleteUser_ShouldReturnOk_WhenUserExists() throws Exception {
-        when(userServices.deleteUser(1L)).thenReturn(true);
+        when(userServices.deleteUser(1)).thenReturn(true);
 
         mockMvc.perform(delete("/api/v1/user/1"))
                 .andExpect(status().isOk())
@@ -106,7 +106,7 @@ class EditControllerTest {
 
     @Test
     void deleteUser_ShouldReturnNotFound_WhenUserDoesNotExist() throws Exception {
-        when(userServices.deleteUser(1L)).thenReturn(false);
+        when(userServices.deleteUser(1)).thenReturn(false);
 
         mockMvc.perform(delete("/api/v1/user/1"))
                 .andExpect(status().isNotFound());
