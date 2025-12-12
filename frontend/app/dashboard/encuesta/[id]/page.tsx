@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser, FaEdit } from 'react-icons/fa';
+import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser, FaEdit, FaExclamationTriangle, FaTrashAlt } from 'react-icons/fa';
 import styles from './encuesta.module.css';
 
 interface Encuesta {
@@ -37,6 +37,7 @@ export default function EncuestaIntermediatePage() {
     const [hasResponded, setHasResponded] = useState<boolean>(false);
     const [registros, setRegistros] = useState<RegistroCompleto[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [totalPacientes, setTotalPacientes] = useState<number>(0);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -59,14 +60,25 @@ export default function EncuestaIntermediatePage() {
                 const surveyData = await surveyRes.json();
                 setEncuesta(surveyData);
 
-                // 3. Si es ADMIN, cargar todas las respuestas
+                // 3. Si es ADMIN, cargar todas las respuestas y pacientes para estadísticas
                 if (storedRole === 'ADMIN') {
-                    const regRes = await fetch(`http://localhost:8080/api/v1/encuestas/${id}/registros`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    const [regRes, pacRes] = await Promise.all([
+                        fetch(`http://localhost:8080/api/v1/encuestas/${id}/registros`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }),
+                        fetch('http://localhost:8080/api/v1/pacientes', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                    ]);
+
                     if (regRes.ok) {
                         const regData = await regRes.json();
                         setRegistros(regData);
+                    }
+
+                    if (pacRes.ok) {
+                        const pacData = await pacRes.json();
+                        setTotalPacientes(pacData.length);
                     }
                 }
 
@@ -126,8 +138,28 @@ export default function EncuestaIntermediatePage() {
                                 <FaUserCheck />
                             </div>
                             <div className={styles.statContent}>
-                                <h3>Total Respuestas</h3>
+                                <h3>Realizadas</h3>
                                 <p>{registros.length}</p>
+                            </div>
+                        </div>
+
+                        <div className={styles.statCard}>
+                            <div className={styles.iconBox} style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>
+                                <FaExclamationTriangle />
+                            </div>
+                            <div className={styles.statContent}>
+                                <h3>Incompletas</h3>
+                                <p>{Math.max(0, totalPacientes - registros.length)}</p>
+                            </div>
+                        </div>
+
+                        <div className={styles.statCard}>
+                            <div className={styles.iconBox} style={{ backgroundColor: '#fef2f2', color: '#ef4444' }}>
+                                <FaTrashAlt />
+                            </div>
+                            <div className={styles.statContent}>
+                                <h3>Eliminadas</h3>
+                                <p>0</p>
                             </div>
                         </div>
 
