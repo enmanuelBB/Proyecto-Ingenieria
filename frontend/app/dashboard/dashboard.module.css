@@ -1,8 +1,7 @@
-
 .dashboardContainer {
   display: flex;
   min-height: 100vh;
-  background-color: #f1f5f9; 
+  background-color: #f1f5f9;
   font-family: 'Inter', sans-serif;
 }
 
@@ -17,21 +16,42 @@
   position: fixed;
   height: 100vh;
   overflow-y: auto;
+  transition: width 0.3s ease;
+  z-index: 50;
+}
+
+.sidebarCollapsed {
+  width: 80px;
+  padding: 1.5rem 0.75rem;
 }
 
 .sidebarHeader {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #f1f5f9;
+  overflow: hidden;
+  white-space: nowrap;
+  justify-content: flex-start;
+  /* Changed to start so icon stays left */
+  height: 60px;
+  /* Fixed height to prevent jumping */
 }
 
 .sidebarTitle {
   font-size: 1.2rem;
   font-weight: 700;
   color: #1e293b;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.sidebarCollapsed .sidebarTitle {
+  opacity: 0;
+  width: 0;
+  display: none;
 }
 
 .nav {
@@ -52,11 +72,19 @@
   transition: all 0.2s;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.navItem:hover, .navItemActive {
-  background-color: #eff6ff; 
-  color: #4f46e5; 
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.navItem:hover,
+.navItemActive {
+  background-color: #eff6ff;
+  color: #4f46e5;
 }
 
 .logoutButton {
@@ -72,17 +100,53 @@
   cursor: pointer;
   font-weight: 600;
   transition: background 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebarCollapsed .logoutButton {
+  justify-content: center;
+  padding: 0.75rem;
 }
 
 .logoutButton:hover {
   background-color: #fee2e2;
 }
 
+/* Toggle Button */
+.toggleButton {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  margin-left: auto;
+  transition: all 0.2s;
+}
+
+.toggleButton:hover {
+  background-color: #f1f5f9;
+  color: #4f46e5;
+}
+
 /* --- CONTENIDO PRINCIPAL --- */
 .mainContent {
   flex: 1;
-  margin-left: 260px; 
+  margin-left: 260px;
   padding: 2.5rem;
+  transition: margin-left 0.3s ease;
+  width: calc(100% - 260px);
+  /* Explicit sizing help */
+}
+
+.mainContentCollapsed {
+  margin-left: 80px;
+  width: calc(100% - 80px);
 }
 
 .header {
@@ -129,11 +193,24 @@
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
+  min-width: 50px;
+  /* Prevent shrinking */
 }
 
-.iconBlue { background-color: #eff6ff; color: #3b82f6; }
-.iconGreen { background-color: #f0fdf4; color: #22c55e; }
-.iconPurple { background-color: #f5f3ff; color: #8b5cf6; }
+.iconBlue {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}
+
+.iconGreen {
+  background-color: #f0fdf4;
+  color: #22c55e;
+}
+
+.iconPurple {
+  background-color: #f5f3ff;
+  color: #8b5cf6;
+}
 
 .statInfo h3 {
   font-size: 0.9rem;
@@ -150,7 +227,7 @@
 /* --- SECCIONES INFERIORES --- */
 .sectionGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr; 
+  grid-template-columns: 2fr 1fr;
   gap: 2rem;
 }
 
@@ -159,7 +236,7 @@
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .cardHeader {
@@ -222,10 +299,24 @@
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
-  .sectionGrid { grid-template-columns: 1fr; }
+  .sectionGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; } 
-  .mainContent { margin-left: 0; padding: 1.5rem; }
+  .sidebar {
+    display: none;
+  }
+
+  .mainContent {
+    margin-left: 0;
+    padding: 1.5rem;
+    width: 100%;
+  }
+
+  .mainContentCollapsed {
+    margin-left: 0;
+    width: 100%;
+  }
 }

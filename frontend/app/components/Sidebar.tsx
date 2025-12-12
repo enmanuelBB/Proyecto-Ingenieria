@@ -5,11 +5,13 @@ import Image from 'next/image';
 import Link from 'next/link'; // Importante para navegar
 import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
-import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt } from 'react-icons/fa';
+import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { useSidebar } from '../context/SidebarContext';
 
 export default function Sidebar() {
     const router = useRouter();
     const pathname = usePathname();
+    const { isCollapsed, toggleSidebar } = useSidebar();
     const [defaultSurveyId, setDefaultSurveyId] = React.useState<number | null>(null);
 
     React.useEffect(() => {
@@ -22,7 +24,7 @@ export default function Sidebar() {
             .then(res => res.ok ? res.json() : [])
             .then((encuestas: any[]) => {
                 // Logic to find the default survey (same as Dashboard)
-                const defaultSurvey = encuestas.find(e => e.titulo.includes("Estudio Cáncer Gástrico"));
+                const defaultSurvey = encuestas.find((e: any) => e.titulo.includes("Estudio Cáncer Gástrico"));
                 if (defaultSurvey) {
                     setDefaultSurveyId(defaultSurvey.idEncuesta);
                 } else if (encuestas.length > 0) {
@@ -40,10 +42,13 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ''}`}>
             <div className={styles.sidebarHeader}>
-                <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} />
+                <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} style={{ minWidth: '30px' }} />
                 <span className={styles.sidebarTitle}>Ingeniería Vital</span>
+                <button onClick={toggleSidebar} className={styles.toggleButton} title={isCollapsed ? "Expandir" : "Colapsar"}>
+                    {isCollapsed ? <FaChevronRight size={12} /> : <FaChevronLeft size={12} />}
+                </button>
             </div>
 
             <nav className={styles.nav}>
@@ -51,44 +56,55 @@ export default function Sidebar() {
                 <Link
                     href="/dashboard"
                     className={`${styles.navItem} ${pathname === '/dashboard' ? styles.navItemActive : ''}`}
+                    title={isCollapsed ? "Dashboard" : ""}
                 >
-                    <FaClipboardList /> Dashboard
+                    <FaClipboardList size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && "Dashboard"}
                 </Link>
 
                 {/* Enlace a Pacientes */}
                 <Link
                     href="/dashboard/pacientes"
-                    className={`${styles.navItem} ${pathname === '/dashboard/pacientes' ? styles.navItemActive : ''}`}
+                    className={`${styles.navItem} ${pathname.startsWith('/dashboard/pacientes') ? styles.navItemActive : ''}`}
+                    title={isCollapsed ? "Pacientes" : ""}
                 >
-                    <FaUserInjured /> Pacientes
+                    <FaUserInjured size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && "Pacientes"}
                 </Link>
 
                 {/* Enlace a Encuestas (Dinámico) */}
                 <div
-                    className={`${styles.navItem} ${pathname.startsWith('/encuesta') ? styles.navItemActive : ''}`}
-                    onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}
+                    className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
+                    onClick={() => defaultSurveyId && router.push(`/dashboard/encuesta/${defaultSurveyId}`)}
                     style={{ cursor: defaultSurveyId ? 'pointer' : 'wait', opacity: defaultSurveyId ? 1 : 0.7 }}
+                    title={isCollapsed ? "Encuestas" : ""}
                 >
-                    <FaSearch /> Encuestas
+                    <FaSearch size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && "Encuestas"}
                 </div>
 
                 <Link
-                    href="/exportar-datos"
-                    className={`${styles.navItem} ${pathname === '/exportar-datos' ? styles.navItemActive : ''}`}
+                    href="/dashboard/exportar-datos"
+                    className={`${styles.navItem} ${pathname === '/dashboard/exportar-datos' ? styles.navItemActive : ''}`}
+                    title={isCollapsed ? "Exportar Datos" : ""}
                 >
-                    <FaFileExport /> Exportar Datos
+                    <FaFileExport size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && "Exportar Datos"}
                 </Link>
 
                 <Link
                     href="/dashboard/auditoria"
                     className={`${styles.navItem} ${pathname === '/dashboard/auditoria' ? styles.navItemActive : ''}`}
+                    title={isCollapsed ? "Auditoría" : ""}
                 >
-                    <FaShieldAlt /> Auditoría
+                    <FaShieldAlt size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && "Auditoría"}
                 </Link>
             </nav>
 
-            <button onClick={handleLogout} className={styles.logoutButton}>
-                <FaSignOutAlt /> Cerrar Sesión
+            <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
+                <FaSignOutAlt size={20} style={{ minWidth: '20px' }} />
+                {!isCollapsed && "Cerrar Sesión"}
             </button>
         </aside>
     );

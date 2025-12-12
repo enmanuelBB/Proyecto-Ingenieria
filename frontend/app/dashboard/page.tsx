@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './dashboard.module.css';
-import Sidebar from '../components/Sidebar';
 import { FaUserPlus, FaClipboardList, FaUserInjured, FaEdit, FaPlus } from 'react-icons/fa';
 
 interface Paciente {
@@ -128,134 +127,125 @@ export default function DashboardPage() {
 
 
   return (
-    <div className={styles.dashboardContainer}>
+    <>
+      {/* Header Superior */}
+      <header className={styles.header}>
+        <div className={styles.welcomeText}>
+          <h1>Hola, {user} {role && <span style={{ fontSize: '0.6em', color: '#666', opacity: 0.8, verticalAlign: 'middle', border: '1px solid #ccc', borderRadius: '4px', padding: '2px 6px' }}> {role}</span>} 👋</h1>
+          <p>Aquí tienes un resumen de la actividad del estudio.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* Aquí podrías poner un avatar o notificaciones */}
+        </div>
+      </header>
 
-      {/* --- SIDEBAR --- */}
-      {/* --- SIDEBAR --- */}
-      <Sidebar />
-
-      {/* --- CONTENIDO PRINCIPAL --- */}
-      <main className={styles.mainContent}>
-
-        {/* Header Superior */}
-        <header className={styles.header}>
-          <div className={styles.welcomeText}>
-            <h1>Hola, {user} {role && <span style={{ fontSize: '0.6em', color: '#666', opacity: 0.8, verticalAlign: 'middle', border: '1px solid #ccc', borderRadius: '4px', padding: '2px 6px' }}> {role}</span>} 👋</h1>
-            <p>Aquí tienes un resumen de la actividad del estudio.</p>
+      <section className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={`${styles.statIconBox} ${styles.iconBlue}`}>
+            <FaUserInjured />
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {/* Aquí podrías poner un avatar o notificaciones */}
+          <div className={styles.statInfo}>
+            <h3>Total Pacientes</h3>
+            <p>{loading ? "..." : stats.totalPacientes}</p>
           </div>
-        </header>
+        </div>
 
-        <section className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconBox} ${styles.iconBlue}`}>
-              <FaUserInjured />
-            </div>
-            <div className={styles.statInfo}>
-              <h3>Total Pacientes</h3>
-              <p>{loading ? "..." : stats.totalPacientes}</p>
-            </div>
+        <div className={styles.statCard}>
+          <div className={`${styles.statIconBox} ${styles.iconPurple}`}>
+            <FaClipboardList />
+          </div>
+          <div className={styles.statInfo}>
+            <h3>Encuestas Completas</h3>
+            <p>{loading ? "..." : stats.totalEncuestas}</p>
+          </div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={`${styles.statIconBox} ${styles.iconGreen}`}>
+            <FaPlus />
+          </div>
+          <div className={styles.statInfo}>
+            <h3>Registros Hoy</h3>
+            <p>{loading ? "..." : (stats as any).registrosHoy || 0}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.sectionGrid}>
+
+        {/* Tabla de Pacientes Recientes */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
+            <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => router.push('/dashboard/pacientes')}>Ver todos</button>
           </div>
 
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconBox} ${styles.iconPurple}`}>
-              <FaClipboardList />
-            </div>
-            <div className={styles.statInfo}>
-              <h3>Encuestas Completas</h3>
-              <p>{loading ? "..." : stats.totalEncuestas}</p>
-            </div>
-          </div>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={3}>Cargando datos...</td></tr>
+              ) : pacientes.length > 0 ? (
+                pacientes.map((p) => (
+                  <tr key={p.idPaciente}>
+                    <td style={{ fontWeight: '500' }}>{p.nombre} {p.apellidos}</td>
+                    <td>{p.rut}</td>
+                    <td>
+                      <button
+                        style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}
+                        onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
+                      >
+                        Ver Ficha
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>No hay registros recientes.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-          <div className={styles.statCard}>
-            <div className={`${styles.statIconBox} ${styles.iconGreen}`}>
-              <FaPlus />
-            </div>
-            <div className={styles.statInfo}>
-              <h3>Registros Hoy</h3>
-              <p>{loading ? "..." : (stats as any).registrosHoy || 0}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.sectionGrid}>
-
-          {/* Tabla de Pacientes Recientes */}
+        <div>
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
-              <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => router.push('/dashboard/pacientes')}>Ver todos</button>
+              <h3 className={styles.cardTitle}>Gestión Rápida</h3>
             </div>
 
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>RUT</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={3}>Cargando datos...</td></tr>
-                ) : pacientes.length > 0 ? (
-                  pacientes.map((p) => (
-                    <tr key={p.idPaciente}>
-                      <td style={{ fontWeight: '500' }}>{p.nombre} {p.apellidos}</td>
-                      <td>{p.rut}</td>
-                      <td>
-                        <button
-                          style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}
-                          onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
-                        >
-                          Ver Ficha
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>No hay registros recientes.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3 className={styles.cardTitle}>Gestión Rápida</h3>
+            <button className={styles.actionButton} onClick={() => router.push('/dashboard/pacientes/nuevo')}>
+              <FaUserPlus size={20} color="#4f46e5" />
+              <div>
+                <div style={{ textAlign: 'left' }}>Registrar Paciente</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Crear nueva ficha clínica</div>
               </div>
+            </button>
 
-              <button className={styles.actionButton} onClick={() => router.push('/dashboard/pacientes/nuevo')}>
-                <FaUserPlus size={20} color="#4f46e5" />
-                <div>
-                  <div style={{ textAlign: 'left' }}>Registrar Paciente</div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Crear nueva ficha clínica</div>
-                </div>
-              </button>
+            <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/dashboard/encuesta/${defaultSurveyId}`)}>
+              <FaClipboardList size={20} color="#4f46e5" />
+              <div>
+                <div style={{ textAlign: 'left' }}>Responder Encuesta</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Ingresar datos de formulario</div>
+              </div>
+            </button>
 
-              <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/encuesta/${defaultSurveyId}`)}>
-                <FaClipboardList size={20} color="#4f46e5" />
-                <div>
-                  <div style={{ textAlign: 'left' }}>Responder Encuesta</div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Ingresar datos de formulario</div>
-                </div>
-              </button>
-
-              {/* Botón añadido: Personalizar Formulario */}
-              <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/dashboard/constructor/${defaultSurveyId}`)}>
-                <FaEdit size={20} color="#8b5cf6" />
-                <div>
-                  <div style={{ textAlign: 'left' }}>Personalizar Formulario</div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Editar variables y preguntas</div>
-                </div>
-              </button>
-            </div>
+            {/* Botón añadido: Personalizar Formulario */}
+            <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/dashboard/constructor/${defaultSurveyId}`)}>
+              <FaEdit size={20} color="#8b5cf6" />
+              <div>
+                <div style={{ textAlign: 'left' }}>Personalizar Formulario</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>Editar variables y preguntas</div>
+              </div>
+            </button>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
+    </>
   );
 }
