@@ -26,6 +26,18 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Manual Validation
+    if (!formData.name || !formData.lastname || !formData.email || !formData.password || !formData.confirmPassword) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos Incompletos',
+        text: 'Por favor, completa todos los campos obligatorios.',
+        confirmButtonColor: '#f39c12'
+      });
+      return;
+    }
+
     setIsLoading(true);
     // setError(null);
 
@@ -96,7 +108,7 @@ export default function RegisterForm() {
   };
 
   return (
-    <form className={styles.formContainer} onSubmit={handleSubmit} style={{ maxWidth: '450px', margin: '0 auto' }}>
+    <form className={styles.formContainer} onSubmit={handleSubmit} noValidate style={{ maxWidth: '450px', margin: '0 auto' }}>
       <div className={styles.formGrid} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
         <h3 className={styles.sectionTitle} style={{ textAlign: 'center' }}>Registrar Usuario</h3>

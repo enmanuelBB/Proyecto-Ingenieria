@@ -67,6 +67,18 @@ export default function PacienteForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Manual Validation
+    if (!formData.rut || !formData.grupo || !formData.nombre || !formData.apellidos || !formData.fechaNacimiento || !formData.sexo || !formData.fechaInclusion || !formData.peso || !formData.estatura) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos Incompletos',
+        text: 'Por favor, completa todos los campos obligatorios marcados con *.',
+        confirmButtonColor: '#f39c12'
+      });
+      return;
+    }
+
     setIsLoading(true);
     // setError(null);
 
@@ -128,7 +140,7 @@ export default function PacienteForm() {
   };
 
   return (
-    <form className={styles.formContainer} onSubmit={handleSubmit}>
+    <form className={styles.formContainer} onSubmit={handleSubmit} noValidate>
       <div className={styles.formGrid}>
 
         <h3 className={styles.sectionTitle}>Identificación del Paciente</h3>
