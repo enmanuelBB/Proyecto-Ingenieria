@@ -117,7 +117,12 @@ export default function PacientesPage() {
                   <td>{p.sexo}</td>
                   <td>{new Date(p.fechaNacimiento).toLocaleDateString()}</td>
                   <td>
-                    <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}>Editar</button>
+                    <button
+                      style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}
+                      onClick={() => router.push(`/dashboard/pacientes/editar/${p.idPaciente}`)}
+                    >
+                      Editar
+                    </button>
                     <button style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
                   </td>
                 </tr>

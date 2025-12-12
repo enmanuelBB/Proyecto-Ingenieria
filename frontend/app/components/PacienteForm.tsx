@@ -57,7 +57,11 @@ const validateRut = (rut: string): boolean => {
   return dv === dvCalculado;
 };
 
-export default function PacienteForm() {
+interface PacienteFormProps {
+  idPaciente?: number;
+}
+
+export default function PacienteForm({ idPaciente }: PacienteFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   // const [error, setError] = useState<string | null>(null);
@@ -80,17 +84,49 @@ export default function PacienteForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
-
+    // ... rest of handler
     if (name === 'rut') {
       const formatted = formatRut(value);
       setFormData(prev => ({ ...prev, [name]: formatted }));
       return;
     }
-
-
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  // Cargar datos si se está editando
+  React.useEffect(() => {
+    if (idPaciente) {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      setIsLoading(true);
+      fetch(`http://localhost:8080/api/v1/pacientes/${idPaciente}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Error al cargar paciente");
+          return res.json();
+        })
+        .then(data => {
+          setFormData({
+            rut: data.rut,
+            nombre: data.nombre,
+            apellidos: data.apellidos,
+            sexo: data.sexo,
+            fechaNacimiento: data.fechaNacimiento,
+            telefono: data.telefono || '',
+            email: data.email || '',
+            direccion: data.direccion || '',
+            grupo: data.grupo || 'CASO',
+            fechaInclusion: data.fechaInclusion || new Date().toISOString().split('T')[0],
+            peso: data.peso || '',
+            estatura: data.estatura || ''
+          });
+        })
+        .catch(err => console.error(err))
+        .finally(() => setIsLoading(false));
+    }
+  }, [idPaciente]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,8 +172,14 @@ export default function PacienteForm() {
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/pacientes', {
-        method: 'POST',
+      const url = idPaciente
+        ? `http://localhost:8080/api/v1/pacientes/${idPaciente}`
+        : 'http://localhost:8080/api/v1/pacientes';
+
+      const method = idPaciente ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -148,8 +190,10 @@ export default function PacienteForm() {
       if (response.ok) {
         await Swal.fire({
           icon: 'success',
-          title: '¡Paciente Registrado!',
-          text: 'El paciente ha sido registrado exitosamente en el sistema.',
+          title: idPaciente ? '¡Paciente Actualizado!' : '¡Paciente Registrado!',
+          text: idPaciente
+            ? 'Los datos han sido guardados correctamente.'
+            : 'El paciente ha sido registrado exitosamente en el sistema.',
           confirmButtonColor: '#3085d6',
         });
         router.push('/dashboard');
@@ -268,7 +312,7 @@ export default function PacienteForm() {
         {/* {error && <div className={styles.errorMsg}>{error}</div>} */}
 
         <button type="submit" className={styles.submitButton} disabled={isLoading}>
-          {isLoading ? 'Guardando...' : 'Registrar Paciente'}
+          {isLoading ? 'Guardando...' : (idPaciente ? 'Guardar Cambios' : 'Registrar Paciente')}
         </button>
 
       </div>
