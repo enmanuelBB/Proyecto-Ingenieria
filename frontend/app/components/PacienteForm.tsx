@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 import styles from './PacienteForm.module.css';
 
 
@@ -10,7 +11,7 @@ const formatRut = (value: string) => {
 
   let cleanValue = value.replace(/[^0-9kK]/g, "").toUpperCase();
 
- 
+
   if (cleanValue.length > 9) {
     cleanValue = cleanValue.slice(0, 9);
   }
@@ -32,7 +33,7 @@ const formatRut = (value: string) => {
 export default function PacienteForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     rut: '',
@@ -53,11 +54,11 @@ export default function PacienteForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    
+
     if (name === 'rut') {
-        const formatted = formatRut(value);
-        setFormData(prev => ({ ...prev, [name]: formatted }));
-        return; 
+      const formatted = formatRut(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      return;
     }
 
 
@@ -67,20 +68,20 @@ export default function PacienteForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    // setError(null);
 
     const token = localStorage.getItem('accessToken');
     if (!token) {
-        router.push('/');
-        return;
+      router.push('/');
+      return;
     }
 
-    
+
     const payload = {
-        ...formData,
-      
-        peso: parseFloat(formData.peso),
-        estatura: parseFloat(formData.estatura)
+      ...formData,
+
+      peso: parseFloat(formData.peso),
+      estatura: parseFloat(formData.estatura)
     };
 
     try {
@@ -94,15 +95,33 @@ export default function PacienteForm() {
       });
 
       if (response.ok) {
-        alert('¡Paciente registrado exitosamente!');
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Paciente Registrado!',
+          text: 'El paciente ha sido registrado exitosamente en el sistema.',
+          confirmButtonColor: '#3085d6',
+        });
         router.push('/dashboard');
       } else {
         const errData = await response.text();
-        setError(`Error al guardar: ${errData || response.statusText}`);
+        const errorMsg = `Error al guardar: ${errData || response.statusText}`;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMsg,
+          confirmButtonColor: '#d33',
+        });
+        // setError(errorMsg);
       }
     } catch (err) {
       console.error(err);
-      setError('Error de conexión con el servidor.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Conexión',
+        text: 'No se pudo conectar con el servidor.',
+        confirmButtonColor: '#d33',
+      });
+      // setError('Error de conexión con el servidor.');
     } finally {
       setIsLoading(false);
     }
@@ -111,28 +130,28 @@ export default function PacienteForm() {
   return (
     <form className={styles.formContainer} onSubmit={handleSubmit}>
       <div className={styles.formGrid}>
-        
+
         <h3 className={styles.sectionTitle}>Identificación del Paciente</h3>
-        
+
         <div className={styles.formGroup}>
           <label className={styles.label}>RUT *</label>
-          <input 
-            className={styles.input} 
-            name="rut" 
-            value={formData.rut} 
-            onChange={handleChange} 
-            required 
-            placeholder="12.345.678-9" 
-            maxLength={12} 
+          <input
+            className={styles.input}
+            name="rut"
+            value={formData.rut}
+            onChange={handleChange}
+            required
+            placeholder="12.345.678-9"
+            maxLength={12}
           />
         </div>
-        
+
         <div className={styles.formGroup}>
-            <label className={styles.label}>Grupo de Estudio *</label>
-            <select className={styles.select} name="grupo" value={formData.grupo} onChange={handleChange} required>
-                <option value="CASO">Caso (Paciente)</option>
-                <option value="CONTROL">Control</option>
-            </select>
+          <label className={styles.label}>Grupo de Estudio *</label>
+          <select className={styles.select} name="grupo" value={formData.grupo} onChange={handleChange} required>
+            <option value="CASO">Caso (Paciente)</option>
+            <option value="CONTROL">Control</option>
+          </select>
         </div>
 
         <div className={styles.formGroup}>
@@ -170,7 +189,7 @@ export default function PacienteForm() {
           <label className={styles.label}>Email</label>
           <input type="email" className={styles.input} name="email" value={formData.email} onChange={handleChange} />
         </div>
-        
+
         <div className={`${styles.formGroup} ${styles.fullWidth}`}>
           <label className={styles.label}>Dirección</label>
           <input className={styles.input} name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Número, Comuna" />
@@ -195,7 +214,7 @@ export default function PacienteForm() {
           <input type="number" step="0.01" className={styles.input} name="estatura" value={formData.estatura} onChange={handleChange} required placeholder="Ej: 1.75" />
         </div>
 
-        {error && <div className={styles.errorMsg}>{error}</div>}
+        {/* {error && <div className={styles.errorMsg}>{error}</div>} */}
 
         <button type="submit" className={styles.submitButton} disabled={isLoading}>
           {isLoading ? 'Guardando...' : 'Registrar Paciente'}
