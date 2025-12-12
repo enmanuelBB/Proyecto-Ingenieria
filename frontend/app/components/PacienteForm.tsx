@@ -30,6 +30,33 @@ const formatRut = (value: string) => {
   return `${formattedBody}-${dv}`;
 };
 
+const validateRut = (rut: string): boolean => {
+  if (!rut) return false;
+  const cleanRut = rut.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (cleanRut.length < 2) return false;
+
+  const body = cleanRut.slice(0, -1);
+  const dv = cleanRut.slice(-1);
+
+  let suma = 0;
+  let multiplo = 2;
+
+  for (let i = body.length - 1; i >= 0; i--) {
+    suma += parseInt(body.charAt(i)) * multiplo;
+    if (multiplo < 7) multiplo += 1;
+    else multiplo = 2;
+  }
+
+  const dvEsperado = 11 - (suma % 11);
+  let dvCalculado = "";
+
+  if (dvEsperado === 11) dvCalculado = "0";
+  else if (dvEsperado === 10) dvCalculado = "K";
+  else dvCalculado = dvEsperado.toString();
+
+  return dv === dvCalculado;
+};
+
 export default function PacienteForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +102,18 @@ export default function PacienteForm() {
         title: 'Campos Incompletos',
         text: 'Por favor, completa todos los campos obligatorios marcados con *.',
         confirmButtonColor: '#f39c12'
+      });
+      return;
+      return;
+    }
+
+    // RUT Validation
+    if (!validateRut(formData.rut)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'RUT Inválido',
+        text: 'El RUT ingresado no es válido. Por favor verifica el dígito verificador.',
+        confirmButtonColor: '#d33'
       });
       return;
     }
