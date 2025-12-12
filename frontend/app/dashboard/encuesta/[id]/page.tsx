@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser } from 'react-icons/fa';
+import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser, FaEdit } from 'react-icons/fa';
 import styles from './encuesta.module.css';
 
 interface Encuesta {
@@ -131,7 +131,6 @@ export default function EncuestaIntermediatePage() {
                             </div>
                         </div>
 
-                        {/* Botón Acción Admin (Opcional: Si quieres que el admin también pueda responder desde aquí) */}
                         <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={handleResponder}>
                             <div className={styles.iconBox} style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }}>
                                 <FaClipboardList />
@@ -139,6 +138,17 @@ export default function EncuestaIntermediatePage() {
                             <div className={styles.statContent}>
                                 <h3>Acción Rápida</h3>
                                 <p style={{ fontSize: '1rem', color: '#4f46e5' }}>Responder Encuesta</p>
+                            </div>
+                        </div>
+
+                        {/* Botón Editar Encuesta */}
+                        <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => router.push(`/dashboard/constructor/${id}`)}>
+                            <div className={styles.iconBox} style={{ backgroundColor: '#f3e8ff', color: '#9333ea' }}>
+                                <FaEdit />
+                            </div>
+                            <div className={styles.statContent}>
+                                <h3>Gestión</h3>
+                                <p style={{ fontSize: '1rem', color: '#9333ea' }}>Editar Estructura</p>
                             </div>
                         </div>
 
