@@ -183,8 +183,8 @@ export default function ResponderEncuestaPage() {
             if (res.ok) {
                 await Swal.fire({
                     icon: 'success',
-                    title: '¡Encuesta Enviada!',
-                    text: 'La encuesta se ha guardado correctamente.',
+                    title: '¡Registro Exitoso!',
+                    text: 'El formulario clínico ha sido guardado y asociado al paciente correctamente.',
                     confirmButtonColor: '#3085d6',
                 });
                 router.push('/dashboard');
