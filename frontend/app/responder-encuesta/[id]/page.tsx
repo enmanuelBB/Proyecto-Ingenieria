@@ -140,7 +140,15 @@ export default function ResponderEncuestaPage() {
                         icon: 'warning',
                         title: 'Pregunta Obligatoria',
                         text: `La pregunta "${pregunta.textoPregunta}" es obligatoria.`,
-                        confirmButtonColor: '#f39c12'
+                        confirmButtonColor: '#f39c12',
+                        willClose: () => {
+                            const element = document.getElementById(`pregunta-${pregunta.idPregunta}`);
+                            if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                element.classList.add(styles.highlightError); // Optional: Add a visual cue
+                                setTimeout(() => element.classList.remove(styles.highlightError), 2000);
+                            }
+                        }
                     });
                     return false;
                 }
@@ -244,7 +252,7 @@ export default function ResponderEncuestaPage() {
 
                     {/* Questions Loop */}
                     {encuesta.preguntas.map((pregunta) => (
-                        <div key={pregunta.idPregunta} className={styles.questionBlock}>
+                        <div key={pregunta.idPregunta} id={`pregunta-${pregunta.idPregunta}`} className={styles.questionBlock}>
                             <p className={styles.questionText}>
                                 {pregunta.textoPregunta}
                                 {pregunta.obligatoria && <span className={styles.required}>*</span>}
