@@ -1,22 +1,21 @@
-/* Existing styles... */
-
 .container {
     padding: 2rem;
-    background-color: #f8fafc;
+    background-color: var(--bg-main); 
     min-height: 100vh;
 }
 
 .card {
-    background: white;
+    background: var(--bg-card); 
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
+    border: 1px solid var(--border-color); 
 }
 
 .header {
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border-color); 
     padding-bottom: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -24,17 +23,18 @@
 .title {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-main); 
     margin-bottom: 0.5rem;
 }
 
 .version {
-    background: #e0e7ff;
-    color: #4f46e5;
+    background: var(--bg-main); 
+    color: var(--primary); 
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 500;
+    border: 1px solid var(--primary);
 }
 
 .formGroup {
@@ -44,29 +44,30 @@
 .label {
     display: block;
     font-weight: 600;
-    color: #334155;
+    color: var(--text-main); 
     margin-bottom: 0.5rem;
 }
 
 .select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--border-color); 
     border-radius: 8px;
-    background-color: white;
+    background-color: var(--bg-input); 
     font-size: 1rem;
+    color: var(--text-main); 
     transition: all 0.2s;
 }
 
 .select:focus {
     outline: none;
-    border-color: #4f46e5;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .questionBlock {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-main); 
+    border: 1px solid var(--border-color); 
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -75,7 +76,7 @@
 
 .questionText {
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-main); 
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
@@ -99,31 +100,34 @@
     padding: 0.5rem;
     border-radius: 6px;
     transition: background-color 0.2s;
+    color: var(--text-main);
 }
 
 .radioOption:hover {
-    background-color: #e0e7ff;
+    background-color: var(--border-color); 
 }
 
 .radioInput {
     width: 1.25rem;
     height: 1.25rem;
-    accent-color: #4f46e5;
+    accent-color: var(--primary);
 }
 
 .textarea {
     width: 100%;
     min-height: 100px;
     padding: 0.75rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--border-color); 
     border-radius: 8px;
     resize: vertical;
     font-family: inherit;
+    background-color: var(--bg-input);
+    color: var(--text-main);
 }
 
 .textarea:focus {
     outline: none;
-    border-color: #4f46e5;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
@@ -133,29 +137,29 @@
     gap: 1rem;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border-color); 
 }
 
 .cancelButton {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     font-weight: 600;
-    background-color: white;
-    border: 1px solid #cbd5e1;
-    color: #64748b;
+    background-color: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .cancelButton:hover {
-    background-color: #f1f5f9;
+    background-color: var(--bg-main); 
 }
 
 .submitButton {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     font-weight: 600;
-    background-color: #4f46e5;
+    background-color: var(--primary);
     color: white;
     border: none;
     cursor: pointer;
@@ -163,7 +167,7 @@
 }
 
 .submitButton:hover {
-    background-color: #4338ca;
+    background-color: var(--primary-hover);
 }
 
 .submitButton:disabled {
@@ -179,7 +183,7 @@
 
 .loading {
     text-align: center;
-    color: #64748b;
+    color: var(--text-muted);
     padding: 2rem;
 }
 
@@ -195,7 +199,7 @@
     }
     100% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-        border-color: #e2e8f0;
+        border-color: var(--border-color);
     }
 }
 

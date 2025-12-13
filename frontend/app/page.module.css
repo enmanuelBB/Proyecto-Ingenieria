@@ -1,9 +1,10 @@
-/* Ubicación: app/page.module.css */
+
 
 /* --- 1. FONDO Y CONTENEDOR PRINCIPAL --- */
 .mainContainer {
   min-height: 100vh;
-  background-color: #f8fafc; /* Fondo muy claro */
+  background-color: var(--bg-main); 
+  transition: background-color 0.3s ease;
 }
 
 /* --- 2. BARRA DE NAVEGACIÓN --- */
@@ -12,22 +13,22 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--bg-card); 
+  border-bottom: 1px solid var(--border-color); 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .logo {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--text-main); 
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
 .logoDot {
-  color: #4f46e5; /* Color de acento */
+  color: var(--primary); 
 }
 
 .navLinks {
@@ -37,12 +38,12 @@
 
 .navLink {
   font-size: 1rem;
-  color: #64748b;
+  color: var(--text-muted); 
   transition: color 0.2s;
 }
 
 .navLink:hover {
-  color: #4f46e5;
+  color: var(--primary);
 }
 
 /* --- 3. HERO SECTION (Layout Principal) --- */
@@ -50,9 +51,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* Aumentamos el padding para llenar el espacio de las features eliminadas */
   padding: 8rem 5rem; 
-  gap: 8rem; /* Mayor separación entre el texto y el login */
+  gap: 8rem;
 }
 
 .heroText {
@@ -62,7 +62,7 @@
 .heroText h1 {
   font-size: 3.5rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--text-main); 
   line-height: 1.2;
   margin-bottom: 1.5rem;
 }
@@ -70,7 +70,7 @@
 /* Estilos para el Texto Dinámico */
 .dynamicText {
   font-size: 1.2rem;
-  color: #64748b;
+  color: var(--text-muted); 
   margin-bottom: 2rem;
   height: 2.5em; 
   position: relative;
@@ -83,7 +83,7 @@
 }
 
 .mainCta {
-  background-color: #4f46e5;
+  background-color: var(--primary); 
   color: white;
   padding: 0.8rem 1.5rem;
   border-radius: 8px;
@@ -96,16 +96,17 @@
 }
 
 .mainCta:hover {
-  background-color: #4338ca;
+  background-color: var(--primary-hover);
 }
 
 /* --- 4. PANEL DE LOGIN (Derecha) --- */
 .loginPanel {
   width: 100%;
   max-width: 450px;
-  background-color: #ffffff;
+  background-color: var(--bg-card); 
   padding: 3rem;
   border-radius: 12px;
+  border: 1px solid var(--border-color); 
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
@@ -116,20 +117,20 @@
 
 .loginHeader h3 {
   font-size: 1.8rem;
-  color: #1e293b;
+  color: var(--text-main); 
   margin-bottom: 0.5rem;
 }
 
 .loginHeader p {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--text-muted); 
 }
 
 /* --- 5. SKELETON (Efecto de Carga) --- */
 @keyframes loading-pulse {
-  0% { background-color: #e2e8f0; }
-  50% { background-color: #f0f4f8; }
-  100% { background-color: #e2e8f0; }
+  0% { background-color: var(--border-color); }
+  50% { background-color: var(--bg-main); }
+  100% { background-color: var(--border-color); }
 }
 
 .skeletonCard {
@@ -153,44 +154,19 @@
 
 /* --- 6. ANIMACIONES DE ENTRADA --- */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-/* Keyframes para el texto dinámico */
 @keyframes textFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Aplicamos las animaciones */
-.fadeInUp {
-  animation: fadeInUp 0.7s ease-out forwards;
-}
-
-.fadeInRight {
-  animation: fadeInRight 0.7s ease-out forwards;
-}
+.fadeInUp { animation: fadeInUp 0.7s ease-out forwards; }
+.fadeInRight { animation: fadeInRight 0.7s ease-out forwards; }
