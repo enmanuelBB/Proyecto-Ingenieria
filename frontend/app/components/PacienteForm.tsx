@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 import styles from './PacienteForm.module.css';
 
 
@@ -10,7 +11,7 @@ const formatRut = (value: string) => {
 
   let cleanValue = value.replace(/[^0-9kK]/g, "").toUpperCase();
 
- 
+
   if (cleanValue.length > 9) {
     cleanValue = cleanValue.slice(0, 9);
   }
@@ -29,10 +30,41 @@ const formatRut = (value: string) => {
   return `${formattedBody}-${dv}`;
 };
 
-export default function PacienteForm() {
+const validateRut = (rut: string): boolean => {
+  if (!rut) return false;
+  const cleanRut = rut.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (cleanRut.length < 2) return false;
+
+  const body = cleanRut.slice(0, -1);
+  const dv = cleanRut.slice(-1);
+
+  let suma = 0;
+  let multiplo = 2;
+
+  for (let i = body.length - 1; i >= 0; i--) {
+    suma += parseInt(body.charAt(i)) * multiplo;
+    if (multiplo < 7) multiplo += 1;
+    else multiplo = 2;
+  }
+
+  const dvEsperado = 11 - (suma % 11);
+  let dvCalculado = "";
+
+  if (dvEsperado === 11) dvCalculado = "0";
+  else if (dvEsperado === 10) dvCalculado = "K";
+  else dvCalculado = dvEsperado.toString();
+
+  return dv === dvCalculado;
+};
+
+interface PacienteFormProps {
+  idPaciente?: number;
+}
+
+export default function PacienteForm({ idPaciente }: PacienteFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     rut: '',
@@ -52,40 +84,102 @@ export default function PacienteForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
-    
+    // ... rest of handler
     if (name === 'rut') {
-        const formatted = formatRut(value);
-        setFormData(prev => ({ ...prev, [name]: formatted }));
-        return; 
+      const formatted = formatRut(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      return;
     }
-
-
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Cargar datos si se está editando
+  React.useEffect(() => {
+    if (idPaciente) {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      setIsLoading(true);
+      fetch(`http://localhost:8080/api/v1/pacientes/${idPaciente}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Error al cargar paciente");
+          return res.json();
+        })
+        .then(data => {
+          setFormData({
+            rut: data.rut,
+            nombre: data.nombre,
+            apellidos: data.apellidos,
+            sexo: data.sexo,
+            fechaNacimiento: data.fechaNacimiento,
+            telefono: data.telefono || '',
+            email: data.email || '',
+            direccion: data.direccion || '',
+            grupo: data.grupo || 'CASO',
+            fechaInclusion: data.fechaInclusion || new Date().toISOString().split('T')[0],
+            peso: data.peso || '',
+            estatura: data.estatura || ''
+          });
+        })
+        .catch(err => console.error(err))
+        .finally(() => setIsLoading(false));
+    }
+  }, [idPaciente]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Manual Validation
+    if (!formData.rut || !formData.grupo || !formData.nombre || !formData.apellidos || !formData.fechaNacimiento || !formData.sexo || !formData.fechaInclusion || !formData.peso || !formData.estatura) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos Incompletos',
+        text: 'Por favor, completa todos los campos obligatorios marcados con *.',
+        confirmButtonColor: '#f39c12'
+      });
+      return;
+      return;
+    }
+
+    // RUT Validation
+    if (!validateRut(formData.rut)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'RUT Inválido',
+        text: 'El RUT ingresado no es válido. Por favor verifica el dígito verificador.',
+        confirmButtonColor: '#d33'
+      });
+      return;
+    }
+
     setIsLoading(true);
-    setError(null);
+    // setError(null);
 
     const token = localStorage.getItem('accessToken');
     if (!token) {
-        router.push('/');
-        return;
+      router.push('/');
+      return;
     }
 
-    
+
     const payload = {
-        ...formData,
-      
-        peso: parseFloat(formData.peso),
-        estatura: parseFloat(formData.estatura)
+      ...formData,
+
+      peso: parseFloat(formData.peso),
+      estatura: parseFloat(formData.estatura)
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/pacientes', {
-        method: 'POST',
+      const url = idPaciente
+        ? `http://localhost:8080/api/v1/pacientes/${idPaciente}`
+        : 'http://localhost:8080/api/v1/pacientes';
+
+      const method = idPaciente ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -94,45 +188,65 @@ export default function PacienteForm() {
       });
 
       if (response.ok) {
-        alert('¡Paciente registrado exitosamente!');
+        await Swal.fire({
+          icon: 'success',
+          title: idPaciente ? '¡Paciente Actualizado!' : '¡Paciente Registrado!',
+          text: idPaciente
+            ? 'Los datos han sido guardados correctamente.'
+            : 'El paciente ha sido registrado exitosamente en el sistema.',
+          confirmButtonColor: '#3085d6',
+        });
         router.push('/dashboard');
       } else {
         const errData = await response.text();
-        setError(`Error al guardar: ${errData || response.statusText}`);
+        const errorMsg = `Error al guardar: ${errData || response.statusText}`;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMsg,
+          confirmButtonColor: '#d33',
+        });
+        // setError(errorMsg);
       }
     } catch (err) {
       console.error(err);
-      setError('Error de conexión con el servidor.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Conexión',
+        text: 'No se pudo conectar con el servidor.',
+        confirmButtonColor: '#d33',
+      });
+      // setError('Error de conexión con el servidor.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form className={styles.formContainer} onSubmit={handleSubmit}>
+    <form className={styles.formContainer} onSubmit={handleSubmit} noValidate>
       <div className={styles.formGrid}>
-        
+
         <h3 className={styles.sectionTitle}>Identificación del Paciente</h3>
-        
+
         <div className={styles.formGroup}>
           <label className={styles.label}>RUT *</label>
-          <input 
-            className={styles.input} 
-            name="rut" 
-            value={formData.rut} 
-            onChange={handleChange} 
-            required 
-            placeholder="12.345.678-9" 
-            maxLength={12} 
+          <input
+            className={styles.input}
+            name="rut"
+            value={formData.rut}
+            onChange={handleChange}
+            required
+            placeholder="12.345.678-9"
+            maxLength={12}
           />
         </div>
-        
+
         <div className={styles.formGroup}>
-            <label className={styles.label}>Grupo de Estudio *</label>
-            <select className={styles.select} name="grupo" value={formData.grupo} onChange={handleChange} required>
-                <option value="CASO">Caso (Paciente)</option>
-                <option value="CONTROL">Control</option>
-            </select>
+          <label className={styles.label}>Grupo de Estudio *</label>
+          <select className={styles.select} name="grupo" value={formData.grupo} onChange={handleChange} required>
+            <option value="CASO">Caso (Paciente)</option>
+            <option value="CONTROL">Control</option>
+          </select>
         </div>
 
         <div className={styles.formGroup}>
@@ -170,7 +284,7 @@ export default function PacienteForm() {
           <label className={styles.label}>Email</label>
           <input type="email" className={styles.input} name="email" value={formData.email} onChange={handleChange} />
         </div>
-        
+
         <div className={`${styles.formGroup} ${styles.fullWidth}`}>
           <label className={styles.label}>Dirección</label>
           <input className={styles.input} name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Número, Comuna" />
@@ -195,10 +309,10 @@ export default function PacienteForm() {
           <input type="number" step="0.01" className={styles.input} name="estatura" value={formData.estatura} onChange={handleChange} required placeholder="Ej: 1.75" />
         </div>
 
-        {error && <div className={styles.errorMsg}>{error}</div>}
+        {/* {error && <div className={styles.errorMsg}>{error}</div>} */}
 
         <button type="submit" className={styles.submitButton} disabled={isLoading}>
-          {isLoading ? 'Guardando...' : 'Registrar Paciente'}
+          {isLoading ? 'Guardando...' : (idPaciente ? 'Guardar Cambios' : 'Registrar Paciente')}
         </button>
 
       </div>

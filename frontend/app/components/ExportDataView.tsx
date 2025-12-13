@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaFileExcel, FaFileCsv, FaFilePdf, FaDownload, FaUser, FaUsers, FaCog, FaExclamationCircle } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 import styles from './ExportDataView.module.css';
 
 interface Paciente {
@@ -17,7 +18,7 @@ const ExportDataView = () => {
   const [surveyId, setSurveyId] = useState<string>('1');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Opciones Avanzadas
   const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
 
@@ -78,7 +79,7 @@ const ExportDataView = () => {
 
       // Construir URL con el ID de encuesta ingresado
       let url = `${baseUrl}/api/v1/encuestas/${surveyId}/export/${format}`;
-      
+
       // Agregar parámetro de paciente si es necesario
       if (exportMode === 'patient' && selectedPatientId) {
         url += `?idPaciente=${selectedPatientId}`;
@@ -107,7 +108,15 @@ const ExportDataView = () => {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      a.remove();
       window.URL.revokeObjectURL(downloadUrl);
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Exportación Exitosa!',
+        text: 'El archivo se ha descargado correctamente en tu dispositivo.',
+        confirmButtonColor: '#3085d6',
+      });
 
     } catch (error: any) {
       console.error('Export error:', error);
@@ -130,10 +139,10 @@ const ExportDataView = () => {
       </header>
 
       <div className={styles.card}>
-        
+
         {/* Toggle Opciones Avanzadas (ID Encuesta) */}
-        <button 
-          className={styles.advancedToggle} 
+        <button
+          className={styles.advancedToggle}
           onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
         >
           <FaCog /> {showAdvancedOptions ? 'Ocultar Opciones Avanzadas' : 'Configurar ID de Encuesta'}
@@ -141,7 +150,7 @@ const ExportDataView = () => {
 
         {showAdvancedOptions && (
           <div className={styles.advancedSection}>
-            <div className={styles.formGroup} style={{marginBottom: 0}}>
+            <div className={styles.formGroup} style={{ marginBottom: 0 }}>
               <label className={styles.label}>ID de Encuesta a Exportar</label>
               <input
                 type="number"
@@ -151,7 +160,7 @@ const ExportDataView = () => {
                 placeholder="Ej: 1"
                 min="1"
               />
-              <p style={{fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem'}}>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
                 Por defecto es "1" (Estudio Cáncer Gástrico). Cambie este valor si desea exportar otra encuesta.
               </p>
             </div>
@@ -204,32 +213,32 @@ const ExportDataView = () => {
         {/* Botones de Acción */}
         <div className={styles.sectionTitle}>Formatos Disponibles</div>
         <div className={styles.exportGrid}>
-          
-          <button 
-            className={styles.exportBtn} 
+
+          <button
+            className={styles.exportBtn}
             onClick={() => handleExport('excel')}
             disabled={loading}
           >
-            <FaFileExcel size={30} color="#16a34a" style={{marginBottom: '10px'}} />
+            <FaFileExcel size={30} color="#16a34a" style={{ marginBottom: '10px' }} />
             Excel (.xlsx)
           </button>
 
-          <button 
-            className={styles.exportBtn} 
+          <button
+            className={styles.exportBtn}
             onClick={() => handleExport('csv')}
             disabled={loading}
           >
-            <FaFileCsv size={30} color="#2563eb" style={{marginBottom: '10px'}} />
+            <FaFileCsv size={30} color="#2563eb" style={{ marginBottom: '10px' }} />
             CSV (Stata)
           </button>
 
-          <button 
-            className={styles.exportBtn} 
+          <button
+            className={styles.exportBtn}
             onClick={() => alert("Función PDF próximamente")}
-            disabled={true} 
-            style={{opacity: 0.5}}
+            disabled={true}
+            style={{ opacity: 0.5 }}
           >
-            <FaFilePdf size={30} color="#dc2626" style={{marginBottom: '10px'}} />
+            <FaFilePdf size={30} color="#dc2626" style={{ marginBottom: '10px' }} />
             PDF (Pronto)
           </button>
 
