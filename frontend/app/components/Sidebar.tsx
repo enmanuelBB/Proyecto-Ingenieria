@@ -2,12 +2,15 @@
 
 import React from 'react';
 import Image from 'next/image';
-import Link from 'next/link'; // Importante para navegar
+import Link from 'next/link'; 
 import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
-import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers } from 'react-icons/fa';
+
+import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers, FaMoon, FaSun } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
 import Swal from 'sweetalert2';
+
+import { useTheme } from '../hooks/useTheme';
 
 export default function Sidebar() {
     const router = useRouter();
@@ -15,6 +18,9 @@ export default function Sidebar() {
     const { isCollapsed, toggleSidebar } = useSidebar();
     const [defaultSurveyId, setDefaultSurveyId] = React.useState<number | null>(null);
     const [role, setRole] = React.useState<string | null>(null);
+    
+    // Usamos el hook de tema
+    const { theme, toggleTheme } = useTheme();
 
     React.useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -43,7 +49,6 @@ export default function Sidebar() {
         })
             .then(res => res.ok ? res.json() : [])
             .then((encuestas: any[]) => {
-                // Logic to find the default survey (same as Dashboard)
                 const defaultSurvey = encuestas.find((e: any) => e.titulo.includes("Estudio Cáncer Gástrico"));
                 if (defaultSurvey) {
                     setDefaultSurveyId(defaultSurvey.idEncuesta);
@@ -138,6 +143,23 @@ export default function Sidebar() {
                         {!isCollapsed && <span className={styles.linkText}>Gestionar Roles</span>}
                     </Link>
                 )}
+
+                {/* --- BOTÓN DE MODO OSCURO --- */}
+                {/* Usamos marginTop: 'auto' para empujarlo al final de la lista de navegación */}
+                <button 
+                    onClick={toggleTheme} 
+                    className={styles.navItem} 
+                    title={isCollapsed ? (theme === 'light' ? "Modo Oscuro" : "Modo Claro") : ""}
+                    style={{ marginTop: 'auto', marginBottom: '0.5rem', background: 'transparent', border: 'none', width: '100%' }}
+                >
+                    {theme === 'light' ? (
+                        <FaMoon size={20} style={{ minWidth: '20px' }} />
+                    ) : (
+                        <FaSun size={20} style={{ minWidth: '20px' }} />
+                    )}
+                    {!isCollapsed && <span className={styles.linkText}>{theme === 'light' ? "Modo Oscuro" : "Modo Claro"}</span>}
+                </button>
+
             </nav>
 
             <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
