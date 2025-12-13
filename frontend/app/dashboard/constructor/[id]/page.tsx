@@ -14,7 +14,7 @@ interface Pregunta {
     textoPregunta: string;
     tipoPregunta: string;
     obligatoria: boolean;
-    opciones: Opcion[]; // Ajustar según DTO real si tiene ID
+    opciones: Opcion[]; 
 }
 
 export default function FormBuilderPage() {
@@ -31,7 +31,7 @@ export default function FormBuilderPage() {
     const [obligatoria, setObligatoria] = useState(false);
 
     // Opciones para Selección Múltiple
-    const [opcionesTxt, setOpcionesTxt] = useState(""); // Manejo simple por separado
+    const [opcionesTxt, setOpcionesTxt] = useState(""); 
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -49,7 +49,6 @@ export default function FormBuilderPage() {
             });
             if (res.ok) {
                 const data = await res.json();
-                // El DTO de encuesta completa tiene lista de preguntas
                 if (data.preguntas) {
                     setPreguntas(data.preguntas);
                 }
@@ -68,19 +67,13 @@ export default function FormBuilderPage() {
         const token = localStorage.getItem('accessToken');
         setSubmitting(true);
 
-        // Preparar Opciones
         let opcionesEnviar: any[] = [];
-        if (tipo === 'SELECCION' || tipo === 'RADIO') { // Ajustar según backend types
+        if (tipo === 'SELECCION' || tipo === 'RADIO') { 
             opcionesEnviar = opcionesTxt.split(',').map(o => ({ textoOpcion: o.trim() })).filter(o => o.textoOpcion.length > 0);
         }
 
-        // Backend espera: textoPregunta, tipoPregunta, opciones, obligatoria
-        // Tipos backend: TEXTO, NUMERO, FECHA, SELECCION_MULTIPLE, SELECCION_UNICA (Asumidos, verificar si falla)
-        // El backend usa strings directos. Vamos a normalizar.
-
-        // Mapeo simple de UI a Backend
         let tipoBackend = tipo;
-        if (tipo === 'SELECCION') tipoBackend = 'SELECCION_UNICA'; // Ejemplo
+        if (tipo === 'SELECCION') tipoBackend = 'SELECCION_UNICA'; 
 
         const payload = {
             textoPregunta: texto,
@@ -100,9 +93,7 @@ export default function FormBuilderPage() {
             });
 
             if (res.ok) {
-                // Recargar lista
                 fetchEncuesta();
-                // Reset form
                 setTexto("");
                 setOpcionesTxt("");
                 setObligatoria(false);
@@ -195,7 +186,7 @@ export default function FormBuilderPage() {
                             {/* Opciones (Solo si es Selección) */}
                             {tipo === 'SELECCION' && (
                                 <div className={styles.optionsContainer}>
-                                    <label className={styles.label} style={{ color: '#64748b' }}>Opciones (separadas por coma)</label>
+                                    <label className={styles.label} style={{ color: 'var(--text-muted)' }}>Opciones (separadas por coma)</label>
                                     <textarea
                                         className={styles.input}
                                         value={opcionesTxt}
@@ -227,10 +218,10 @@ export default function FormBuilderPage() {
                     {/* PANEL DERECHO - LISTA */}
                     <section className={styles.rightPanel}>
                         <div className={styles.listHeader}>
-                            <h3 className={styles.sectionTitle} style={{ color: '#334155' }}>
+                            <h3 className={styles.sectionTitle} style={{ color: 'var(--text-main)' }}>
                                 <FaListUl /> Variables Existentes
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', marginTop: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid #f1f5f9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid var(--border-color)' }}>
                                 <span>Enunciado</span>
                                 <span>Tipo</span>
                                 <span>Oblig.</span>
@@ -240,9 +231,9 @@ export default function FormBuilderPage() {
 
                         <div className={styles.listContent}>
                             {loading ? (
-                                <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Cargando variables...</div>
+                                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando variables...</div>
                             ) : preguntas.length === 0 ? (
-                                <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No hay preguntas configuradas.</div>
+                                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No hay preguntas configuradas.</div>
                             ) : (
                                 preguntas.map((p) => (
                                     <div key={p.idPregunta} className={styles.variableItem}>
@@ -260,7 +251,7 @@ export default function FormBuilderPage() {
                                         </div>
 
                                         <div style={{ flex: 1 }}>
-                                            {p.obligatoria ? <FaCheckCircle color="#22c55e" /> : <span style={{ color: '#cbd5e1' }}>-</span>}
+                                            {p.obligatoria ? <FaCheckCircle color="#22c55e" /> : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                                         </div>
 
                                         <div className={styles.actions} style={{ flex: 1, justifyContent: 'flex-end' }}>

@@ -1,21 +1,16 @@
-
-
-/* Heredamos la estructura base del Dashboard */
 .container {
   display: flex;
   min-height: 100vh;
-  background-color: #f1f5f9;
+  background-color: var(--bg-main); /* Variable */
   font-family: 'Inter', sans-serif;
 }
 
 .mainContent {
   flex: 1;
   padding: 2.5rem;
-  /* Margen izquierdo para no chocar con el Sidebar fijo */
-  margin-left: 260px; 
+  margin-left: 260px;
 }
 
-/* Header */
 .header {
   margin-bottom: 2rem;
   display: flex;
@@ -26,28 +21,28 @@
 .titleSection h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-main); /* Variable */
   margin-bottom: 0.25rem;
 }
 
 .subtitle {
-  color: #64748b;
+  color: var(--text-muted); /* Variable */
   font-size: 1rem;
 }
 
 .badge {
   display: inline-block;
-  background-color: #e0e7ff;
-  color: #4338ca;
+  background-color: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
   font-weight: 600;
   margin-left: 1rem;
   vertical-align: middle;
+  border: 1px solid rgba(79, 70, 229, 0.2);
 }
 
-/* Tarjetas de Estadísticas (Admin) */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -56,11 +51,11 @@
 }
 
 .statCard {
-  background: white;
+  background: var(--bg-card); /* Variable */
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color); /* Variable */
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -70,7 +65,7 @@
   width: 50px;
   height: 50px;
   border-radius: 10px;
-  background-color: #eff6ff;
+  background-color: rgba(59, 130, 246, 0.1); /* Transparente para modo oscuro */
   color: #3b82f6;
   display: flex;
   align-items: center;
@@ -80,7 +75,7 @@
 
 .statContent h3 {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--text-muted); /* Variable */
   font-weight: 500;
   margin-bottom: 0.25rem;
 }
@@ -88,21 +83,20 @@
 .statContent p {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main); /* Variable */
 }
 
-/* Sección Central (Tabla o Estado) */
 .card {
-  background: white;
+  background: var(--bg-card); /* Variable */
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border: 1px solid #e2e8f0;
-  overflow: hidden; /* Para que la tabla no se salga */
+  border: 1px solid var(--border-color); /* Variable */
+  overflow: hidden;
 }
 
 .cardHeader {
   padding: 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -111,13 +105,12 @@
 .cardTitle {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-main); /* Variable */
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* Tabla Estilo Dashboard */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -127,17 +120,17 @@
   text-align: left;
   padding: 1rem 1.5rem;
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--text-muted); /* Variable */
   font-weight: 600;
   text-transform: uppercase;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--bg-main); /* Variable */
+  border-bottom: 1px solid var(--border-color);
 }
 
 .table td {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main); /* Variable */
   font-size: 0.95rem;
 }
 
@@ -146,10 +139,9 @@
 }
 
 .table tr:hover {
-  background-color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Botones */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -164,28 +156,27 @@
 }
 
 .btnPrimary {
-  background-color: #4f46e5;
+  background-color: var(--primary);
   color: white;
   box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
 }
 
 .btnPrimary:hover {
-  background-color: #4338ca;
+  background-color: var(--primary-hover);
   transform: translateY(-1px);
 }
 
 .btnSecondary {
-  background-color: white;
-  border: 1px solid #cbd5e1;
-  color: #64748b;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
 }
 
 .btnSecondary:hover {
-  background-color: #f1f5f9;
-  color: #334155;
+  background-color: var(--bg-main);
+  color: var(--text-main);
 }
 
-/* Vista Usuario (Estado) */
 .userState {
   padding: 4rem 2rem;
   text-align: center;
@@ -197,8 +188,8 @@
 
 .stateIcon {
   font-size: 4rem;
-  color: #4f46e5;
-  background-color: #e0e7ff;
+  color: var(--primary);
+  background-color: rgba(79, 70, 229, 0.1);
   padding: 1.5rem;
   border-radius: 50%;
   margin-bottom: 1rem;
@@ -206,38 +197,37 @@
 
 .successIcon {
   color: #16a34a;
-  background-color: #dcfce7;
+  background-color: rgba(22, 163, 74, 0.1);
 }
 
 .stateText h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-main);
   margin-bottom: 0.5rem;
 }
 
 .stateText p {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 1.1rem;
 }
 
-/* Mensajes de Carga/Error */
 .loading {
   text-align: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .error {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: rgba(254, 226, 226, 0.1);
+  color: #ef4444;
   padding: 1rem;
   border-radius: 8px;
   margin: 2rem;
   text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 @media (max-width: 768px) {
   .mainContent { margin-left: 0; padding: 1rem; }
-  .sidebar { display: none; }
 }

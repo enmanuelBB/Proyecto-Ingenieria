@@ -1,0 +1,68 @@
+
+
+/* Contenedor principal (Usado por styles.container) */
+.container {
+  padding: 2.5rem;
+  background-color: var(--bg-main);
+  min-height: 100vh;
+  transition: background-color 0.3s ease;
+}
+
+/* Título (Usado por styles.title) */
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2rem;
+}
+
+
+
+.card {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.input, .select {
+  width: 100%;
+  padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
+.tableHeader {
+  background-color: var(--bg-main);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: var(--bg-card);
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
