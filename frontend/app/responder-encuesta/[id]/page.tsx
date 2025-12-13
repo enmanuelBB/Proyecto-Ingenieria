@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 import styles from './responder.module.css';
 
 // --- Interfaces based on Backend DTOs ---
@@ -120,7 +121,12 @@ export default function ResponderEncuestaPage() {
     const validateForm = (): boolean => {
         if (!encuesta) return false;
         if (!selectedPacienteId) {
-            alert("Por favor seleccione un paciente.");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selección Requerida',
+                text: 'Por favor seleccione un paciente.',
+                confirmButtonColor: '#f39c12'
+            });
             return false;
         }
 
@@ -130,7 +136,20 @@ export default function ResponderEncuestaPage() {
                 const hasAnswer = respuesta && (respuesta.optionId !== null || (respuesta.text && respuesta.text.trim().length > 0));
 
                 if (!hasAnswer) {
-                    alert(`La pregunta "${pregunta.textoPregunta}" es obligatoria.`);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pregunta Obligatoria',
+                        text: `La pregunta "${pregunta.textoPregunta}" es obligatoria.`,
+                        confirmButtonColor: '#f39c12',
+                        willClose: () => {
+                            const element = document.getElementById(`pregunta-${pregunta.idPregunta}`);
+                            if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                element.classList.add(styles.highlightError); // Optional: Add a visual cue
+                                setTimeout(() => element.classList.remove(styles.highlightError), 2000);
+                            }
+                        }
+                    });
                     return false;
                 }
             }
@@ -170,15 +189,30 @@ export default function ResponderEncuestaPage() {
             });
 
             if (res.ok) {
-                alert("¡Encuesta enviada con éxito!");
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Registro Exitoso!',
+                    text: 'El formulario clínico ha sido guardado y asociado al paciente correctamente.',
+                    confirmButtonColor: '#3085d6',
+                });
                 router.push('/dashboard');
             } else {
                 const errData = await res.text(); // Could be text or json
-                alert("Error al enviar: " + errData);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al enviar',
+                    text: errData || 'Ocurrió un error al enviar la encuesta.',
+                    confirmButtonColor: '#d33',
+                });
             }
         } catch (err) {
             console.error(err);
-            alert("Error de conexión al enviar la encuesta.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Conexión',
+                text: 'No se pudo conectar con el servidor para enviar la encuesta.',
+                confirmButtonColor: '#d33',
+            });
         } finally {
             setSubmitting(false);
         }
@@ -218,7 +252,7 @@ export default function ResponderEncuestaPage() {
 
                     {/* Questions Loop */}
                     {encuesta.preguntas.map((pregunta) => (
-                        <div key={pregunta.idPregunta} className={styles.questionBlock}>
+                        <div key={pregunta.idPregunta} id={`pregunta-${pregunta.idPregunta}`} className={styles.questionBlock}>
                             <p className={styles.questionText}>
                                 {pregunta.textoPregunta}
                                 {pregunta.obligatoria && <span className={styles.required}>*</span>}

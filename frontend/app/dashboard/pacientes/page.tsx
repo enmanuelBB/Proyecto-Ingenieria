@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard.module.css';
 import { FaUserPlus, FaSearch } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
 interface Paciente {
   idPaciente: number;
@@ -53,6 +54,43 @@ export default function PacientesPage() {
     p.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.rut.includes(searchTerm)
   );
+
+  const handleDelete = async (id: number) => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer. Se eliminará el paciente y todos sus registros asociados.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch(`http://localhost:8080/api/v1/pacientes/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          setPacientes(prev => prev.filter(p => p.idPaciente !== id));
+          Swal.fire(
+            '¡Eliminado!',
+            'El paciente ha sido eliminado correctamente.',
+            'success'
+          );
+        } else {
+          Swal.fire('Error', 'No se pudo eliminar el paciente.', 'error');
+        }
+      } catch (error) {
+        console.error(error);
+        Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
+      }
+    }
+  };
 
   return (
     <>
@@ -117,8 +155,18 @@ export default function PacientesPage() {
                   <td>{p.sexo}</td>
                   <td>{new Date(p.fechaNacimiento).toLocaleDateString()}</td>
                   <td>
-                    <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}>Editar</button>
-                    <button style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+                    <button
+                      style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}
+                      onClick={() => router.push(`/dashboard/pacientes/editar/${p.idPaciente}`)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}
+                      onClick={() => handleDelete(p.idPaciente)}
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))
