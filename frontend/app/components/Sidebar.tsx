@@ -5,11 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link'; 
 import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
-
 import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers, FaMoon, FaSun } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
 import Swal from 'sweetalert2';
-
 import { useTheme } from '../hooks/useTheme';
 
 export default function Sidebar() {
@@ -19,7 +17,6 @@ export default function Sidebar() {
     const [defaultSurveyId, setDefaultSurveyId] = React.useState<number | null>(null);
     const [role, setRole] = React.useState<string | null>(null);
     
-    // Usamos el hook de tema
     const { theme, toggleTheme } = useTheme();
 
     React.useEffect(() => {
@@ -75,6 +72,8 @@ export default function Sidebar() {
 
     return (
         <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ''}`}>
+            
+            {/* 1. HEADER (Logo + Título) */}
             <div className={styles.sidebarHeader}>
                 <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} style={{ minWidth: '30px' }} />
                 <span className={styles.sidebarTitle}>Ingeniería Vital</span>
@@ -83,8 +82,8 @@ export default function Sidebar() {
                 </button>
             </div>
 
+            {/* 2. BODY (Navegación con Scroll) */}
             <nav className={styles.nav}>
-                {/* Enlace al Dashboard */}
                 <Link
                     href="/dashboard"
                     className={`${styles.navItem} ${pathname === '/dashboard' ? styles.navItemActive : ''}`}
@@ -94,7 +93,6 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>Dashboard</span>}
                 </Link>
 
-                {/* Enlace a Pacientes */}
                 <Link
                     href="/dashboard/pacientes"
                     className={`${styles.navItem} ${pathname.startsWith('/dashboard/pacientes') ? styles.navItemActive : ''}`}
@@ -104,7 +102,6 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>Pacientes</span>}
                 </Link>
 
-                {/* Enlace a Encuestas (Dinámico) */}
                 <div
                     className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
                     onClick={() => defaultSurveyId && router.push(`/dashboard/encuesta/${defaultSurveyId}`)}
@@ -143,14 +140,15 @@ export default function Sidebar() {
                         {!isCollapsed && <span className={styles.linkText}>Gestionar Roles</span>}
                     </Link>
                 )}
+            </nav>
 
-                {/* --- BOTÓN DE MODO OSCURO --- */}
-                {/* Usamos marginTop: 'auto' para empujarlo al final de la lista de navegación */}
+            {/* 3. FOOTER (Modo Oscuro + Logout) */}
+            <div className={styles.sidebarFooter}>
                 <button 
                     onClick={toggleTheme} 
                     className={styles.navItem} 
                     title={isCollapsed ? (theme === 'light' ? "Modo Oscuro" : "Modo Claro") : ""}
-                    style={{ marginTop: 'auto', marginBottom: '0.5rem', background: 'transparent', border: 'none', width: '100%' }}
+                    style={{ justifyContent: isCollapsed ? 'center' : 'flex-start', background: 'transparent', border: 'none', width: '100%' }}
                 >
                     {theme === 'light' ? (
                         <FaMoon size={20} style={{ minWidth: '20px' }} />
@@ -160,12 +158,11 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>{theme === 'light' ? "Modo Oscuro" : "Modo Claro"}</span>}
                 </button>
 
-            </nav>
-
-            <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
-                <FaSignOutAlt size={20} style={{ minWidth: '20px' }} />
-                {!isCollapsed && <span className={styles.linkText}>Cerrar Sesión</span>}
-            </button>
+                <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
+                    <FaSignOutAlt size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && <span className={styles.linkText}>Cerrar Sesión</span>}
+                </button>
+            </div>
         </aside>
     );
 }

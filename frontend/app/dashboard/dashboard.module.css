@@ -10,39 +10,41 @@
 
 /* --- SIDEBAR --- */
 .sidebar {
-  width: 260px;
+  width: 250px; 
   background-color: var(--bg-card);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: 1.25rem;
   position: fixed;
-  height: 100vh;
-  overflow-y: auto;
+  top: 0;
+  left: 0;
+  height: 100vh; /* Altura completa fija */
   transition: width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
   z-index: 50;
 }
 
 .sidebarCollapsed {
-  width: 80px;
-  padding: 1.5rem 0.75rem;
+  width: 70px; /* Más compacto al colapsar */
+  padding: 1.25rem 0.5rem;
 }
 
+/* HEADER DEL SIDEBAR */
 .sidebarHeader {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 2rem;
   padding-bottom: 1rem;
+  margin-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
   white-space: nowrap;
-  justify-content: flex-start;
   height: 60px;
+  flex-shrink: 0; /* Evita que se encoja */
 }
 
 .sidebarTitle {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
   opacity: 1;
@@ -55,12 +57,25 @@
   display: none;
 }
 
+/* NAVEGACIÓN (SCROLLABLE) */
 .nav {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1;
-  color: var(--text-muted);
+  flex-grow: 1; 
+  overflow-y: auto; 
+  margin-bottom: 1rem;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.nav::-webkit-scrollbar {
+  width: 4px;
+}
+.nav::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
 }
 
 .navItem {
@@ -69,13 +84,14 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  color: var(--text-muted); /* Variable aplicada */
+  color: var(--text-muted);
   text-decoration: none;
   transition: all 0.2s;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
+  min-height: 44px; /* Altura mínima para consistencia */
 }
 
 .sidebarCollapsed .navItem {
@@ -85,25 +101,41 @@
 
 .navItem:hover,
 .navItemActive {
-  background-color: rgba(79, 70, 229, 0.1); /* Transparencia para ambos modos */
+  background-color: rgba(79, 70, 229, 0.1);
   color: var(--primary);
 }
 
+/* FOOTER DEL SIDEBAR  */
+/* Aquí agrupamos Modo Oscuro y Logout */
+.sidebarFooter {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0; 
+}
+
 .logoutButton {
-  margin-top: auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  color: #ef4444; /* Rojo alerta se mantiene */
+  color: #ef4444;
   background: none;
-  border: 1px solid #fee2e2;
+  border: 1px solid transparent; /* Transparente por defecto */
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: all 0.2s;
   white-space: nowrap;
   overflow: hidden;
+  width: 100%;
+}
+
+.logoutButton:hover {
+  background-color: #fee2e2;
+  border-color: #fecaca;
 }
 
 .sidebarCollapsed .logoutButton {
@@ -111,11 +143,7 @@
   padding: 0.75rem;
 }
 
-.logoutButton:hover {
-  background-color: #fee2e2;
-}
-
-/* Toggle Button */
+/* Toggle Button (Flecha colapsar) */
 .toggleButton {
   background: none;
   border: 1px solid var(--border-color);
@@ -139,17 +167,18 @@
 /* --- CONTENIDO PRINCIPAL --- */
 .mainContent {
   flex: 1;
-  margin-left: 260px;
+  margin-left: 250px; /* Coincide con width sidebar */
   padding: 2.5rem;
   transition: margin-left 0.3s ease;
-  width: calc(100% - 260px);
+  width: calc(100% - 250px);
 }
 
 .mainContentCollapsed {
-  margin-left: 80px;
-  width: calc(100% - 80px);
+  margin-left: 70px; /* Coincide con sidebarCollapsed */
+  width: calc(100% - 70px);
 }
 
+/* RESTO DE ESTILOS */
 .header {
   display: flex;
   justify-content: space-between;
@@ -167,7 +196,6 @@
   color: var(--text-muted);
 }
 
-/* --- STATS GRID --- */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -197,20 +225,9 @@
   min-width: 50px;
 }
 
-.iconBlue {
-  background-color: #eff6ff;
-  color: #3b82f6;
-}
-
-.iconGreen {
-  background-color: #f0fdf4;
-  color: #22c55e;
-}
-
-.iconPurple {
-  background-color: #f5f3ff;
-  color: #8b5cf6;
-}
+.iconBlue { background-color: #eff6ff; color: #3b82f6; }
+.iconGreen { background-color: #f0fdf4; color: #22c55e; }
+.iconPurple { background-color: #f5f3ff; color: #8b5cf6; }
 
 .statInfo h3 {
   font-size: 0.9rem;
@@ -224,7 +241,6 @@
   color: var(--text-main);
 }
 
-/* --- SECCIONES INFERIORES --- */
 .sectionGrid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -252,7 +268,6 @@
   color: var(--text-main);
 }
 
-/* TABLA */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -274,7 +289,6 @@
   font-size: 0.95rem;
 }
 
-/* ACCIONES RÁPIDAS */
 .actionButton {
   display: flex;
   align-items: center;
@@ -282,7 +296,7 @@
   width: 100%;
   padding: 1rem;
   margin-bottom: 1rem;
-  background-color: var(--bg-main); /* Contraste ligero contra el bg-card */
+  background-color: var(--bg-main);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   color: var(--text-main);
@@ -299,9 +313,7 @@
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
-  .sectionGrid {
-    grid-template-columns: 1fr;
-  }
+  .sectionGrid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
@@ -309,6 +321,7 @@
     position: fixed;
     bottom: 0;
     left: 0;
+    top: auto; /* Reset top */
     width: 100%;
     height: 70px;
     flex-direction: row;
@@ -320,12 +333,8 @@
     overflow-y: hidden;
   }
 
-  .sidebarHeader {
-    display: none;
-  }
-
-  .toggleButton {
-    display: none;
+  .sidebarHeader, .sidebarFooter {
+    display: none; /* Ocultamos footer en móvil para simplificar */
   }
 
   .nav {
@@ -333,6 +342,7 @@
     justify-content: space-around;
     width: 100%;
     gap: 0;
+    margin-bottom: 0;
   }
 
   .navItem {
@@ -351,13 +361,7 @@
     height: 24px;
   }
 
-  .linkText {
-    display: none;
-  }
-
-  .logoutButton {
-    display: none;
-  }
+  .linkText { display: none; }
 
   .mainContent {
     margin-left: 0;
