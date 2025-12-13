@@ -33,7 +33,11 @@ export default function FormBuilderPage() {
     const [texto, setTexto] = useState("");
     const [tipo, setTipo] = useState("TEXTO"); 
     const [obligatoria, setObligatoria] = useState(false);
-    const [opcionesTxt, setOpcionesTxt] = useState(""); 
+    
+    // MEJORA: Manejo de Opciones como Array
+    const [opcionesLista, setOpcionesLista] = useState<string[]>([]);
+    const [nuevaOpcion, setNuevaOpcion] = useState("");
+    
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -52,7 +56,6 @@ export default function FormBuilderPage() {
             if (res.ok) {
                 const data = await res.json();
                 if (data.preguntas) {
-                    // Ordenamos por ID para mantener orden visual estable
                     const sorted = data.preguntas.sort((a: Pregunta, b: Pregunta) => a.idPregunta - b.idPregunta);
                     setPreguntas(sorted);
                 }
@@ -64,26 +67,60 @@ export default function FormBuilderPage() {
         }
     };
 
+    // --- MANEJO DE OPCIONES ---
+    const handleAddOption = (e?: React.MouseEvent | React.KeyboardEvent) => {
+        if (e) e.preventDefault();
+        const valor = nuevaOpcion.trim();
+        if (!valor) return;
+
+        if (opcionesLista.includes(valor)) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: 'Esa opción ya existe',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            return;
+        }
+
+        setOpcionesLista([...opcionesLista, valor]);
+        setNuevaOpcion("");
+    };
+
+    const handleRemoveOption = (index: number) => {
+        const nuevas = [...opcionesLista];
+        nuevas.splice(index, 1);
+        setOpcionesLista(nuevas);
+    };
+
+    const handleKeyDownOption = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Evita submit del form principal
+            handleAddOption();
+        }
+    };
+
     // --- LÓGICA DE EDICIÓN ---
     const handleEdit = (pregunta: Pregunta) => {
         setEditingId(pregunta.idPregunta);
         setTexto(pregunta.textoPregunta);
         setObligatoria(pregunta.obligatoria);
 
-        // Normalizar el tipo para el Select
         let tipoUI = "TEXTO";
         if (pregunta.tipoPregunta === 'SELECCION_UNICA' || pregunta.tipoPregunta === 'SELECCION_MULTIPLE') {
             tipoUI = 'SELECCION';
         } else {
-            tipoUI = pregunta.tipoPregunta; // NUMERO, FECHA, TEXTO
+            tipoUI = pregunta.tipoPregunta;
         }
         setTipo(tipoUI);
 
-        // Cargar opciones si existen
+        // Cargar opciones en el array
         if (pregunta.opciones && pregunta.opciones.length > 0) {
-            setOpcionesTxt(pregunta.opciones.map(o => o.textoOpcion).join(', '));
+            setOpcionesLista(pregunta.opciones.map(o => o.textoOpcion));
         } else {
-            setOpcionesTxt("");
+            setOpcionesLista([]);
         }
     };
 
@@ -92,20 +129,28 @@ export default function FormBuilderPage() {
         setTexto("");
         setTipo("TEXTO");
         setObligatoria(false);
-        setOpcionesTxt("");
+        setOpcionesLista([]);
+        setNuevaOpcion("");
     };
 
-    // --- GUARDAR (CREAR O ACTUALIZAR) ---
+    // --- GUARDAR ---
     const handleSaveQuestion = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!texto.trim()) return;
 
+        // Validación extra: Si es selección, debe tener opciones
+        if (tipo === 'SELECCION' && opcionesLista.length === 0) {
+            Swal.fire('Atención', 'Debes agregar al menos una opción para este tipo de pregunta.', 'warning');
+            return;
+        }
+
         const token = localStorage.getItem('accessToken');
         setSubmitting(true);
 
+        // Convertir array de strings a array de objetos para el backend
         let opcionesEnviar: any[] = [];
         if (tipo === 'SELECCION') { 
-            opcionesEnviar = opcionesTxt.split(',').map(o => ({ textoOpcion: o.trim() })).filter(o => o.textoOpcion.length > 0);
+            opcionesEnviar = opcionesLista.map(op => ({ textoOpcion: op }));
         }
 
         let tipoBackend = tipo;
@@ -122,7 +167,6 @@ export default function FormBuilderPage() {
             let url = `http://localhost:8080/api/v1/encuestas/${idEncuesta}/preguntas`;
             let method = 'POST';
 
-            // Si estamos editando, cambiamos URL y método
             if (editingId) {
                 url = `http://localhost:8080/api/v1/encuestas/preguntas/${editingId}`;
                 method = 'PUT';
@@ -140,12 +184,12 @@ export default function FormBuilderPage() {
             if (res.ok) {
                 await Swal.fire({
                     icon: 'success',
-                    title: editingId ? 'Pregunta Actualizada' : 'Pregunta Agregada',
+                    title: editingId ? 'Actualizado' : 'Agregado',
                     timer: 1500,
                     showConfirmButton: false
                 });
                 fetchEncuesta();
-                handleCancelEdit(); // Limpia el formulario y estado de edición
+                handleCancelEdit();
             } else {
                 const errText = await res.text();
                 Swal.fire('Error', `No se pudo guardar: ${errText}`, 'error');
@@ -160,13 +204,13 @@ export default function FormBuilderPage() {
 
     const handleDelete = async (idPregunta: number) => {
         const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "No podrás revertir esto",
+            title: '¿Eliminar pregunta?',
+            text: "Esta acción no se puede deshacer",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar',
+            cancelButtonColor: 'var(--bg-input)', // Ajuste tema
+            confirmButtonText: 'Eliminar',
             cancelButtonText: 'Cancelar'
         });
 
@@ -180,14 +224,13 @@ export default function FormBuilderPage() {
             });
             if (res.ok) {
                 setPreguntas(prev => prev.filter(p => p.idPregunta !== idPregunta));
-                Swal.fire('Eliminado', 'La pregunta ha sido eliminada.', 'success');
-                
-                // Si borramos la que estábamos editando, limpiamos el form
-                if (editingId === idPregunta) {
-                    handleCancelEdit();
-                }
-            } else {
-                Swal.fire('Error', 'No se pudo eliminar la pregunta', 'error');
+                if (editingId === idPregunta) handleCancelEdit();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Eliminado',
+                    timer: 1000,
+                    showConfirmButton: false
+                });
             }
         } catch (e) {
             console.error(e);
@@ -245,7 +288,7 @@ export default function FormBuilderPage() {
                                     </select>
                                 </div>
 
-                                {/* Fake Section */}
+                                {/* Sección (Visual) */}
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>Sección</label>
                                     <select className={styles.select} disabled>
@@ -254,17 +297,66 @@ export default function FormBuilderPage() {
                                 </div>
                             </div>
 
-                            {/* Opciones (Solo si es Selección) */}
+                            {/* MEJORA: Lista de Opciones Interactiva */}
                             {tipo === 'SELECCION' && (
                                 <div className={styles.optionsContainer}>
-                                    <label className={styles.label} style={{ color: 'var(--text-muted)' }}>Opciones (separadas por coma)</label>
-                                    <textarea
-                                        className={styles.input}
-                                        value={opcionesTxt}
-                                        onChange={e => setOpcionesTxt(e.target.value)}
-                                        placeholder="Si, No, Tal vez..."
-                                        rows={3}
-                                    />
+                                    <label className={styles.label} style={{ color: 'var(--text-muted)' }}>Configurar Opciones</label>
+                                    
+                                    {/* Input Agregar */}
+                                    <div style={{display:'flex', gap:'0.5rem', marginBottom:'0.5rem'}}>
+                                        <input 
+                                            className={styles.input} 
+                                            value={nuevaOpcion}
+                                            onChange={(e) => setNuevaOpcion(e.target.value)}
+                                            onKeyDown={handleKeyDownOption}
+                                            placeholder="Escribe una opción y presiona Enter"
+                                        />
+                                        <button 
+                                            type="button"
+                                            className={styles.iconBtn} 
+                                            onClick={handleAddOption}
+                                            style={{backgroundColor:'var(--primary)', color:'white', borderRadius:'6px', width:'40px', display:'flex', alignItems:'center', justifyContent:'center'}}
+                                        >
+                                            <FaPlus />
+                                        </button>
+                                    </div>
+
+                                    {/* Lista de Opciones */}
+                                    <div style={{
+                                        display:'flex', 
+                                        flexDirection:'column', 
+                                        gap:'5px', 
+                                        maxHeight:'150px', 
+                                        overflowY:'auto',
+                                        paddingRight:'5px'
+                                    }}>
+                                        {opcionesLista.length === 0 && (
+                                            <span style={{fontSize:'0.8rem', color:'var(--text-muted)', fontStyle:'italic'}}>No hay opciones agregadas.</span>
+                                        )}
+                                        {opcionesLista.map((op, idx) => (
+                                            <div key={idx} style={{
+                                                display:'flex', 
+                                                justifyContent:'space-between', 
+                                                alignItems:'center', 
+                                                backgroundColor:'var(--bg-card)', 
+                                                padding:'6px 10px', 
+                                                borderRadius:'4px', 
+                                                border:'1px solid var(--border-color)',
+                                                fontSize:'0.9rem',
+                                                color: 'var(--text-main)'
+                                            }}>
+                                                <span>{op}</span>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => handleRemoveOption(idx)}
+                                                    style={{background:'none', border:'none', color:'#ef4444', cursor:'pointer'}}
+                                                    title="Eliminar opción"
+                                                >
+                                                    <FaTrash size={12}/>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -287,9 +379,9 @@ export default function FormBuilderPage() {
                                     style={{flex: 1}}
                                 >
                                     {editingId ? (
-                                        <><FaSave style={{marginRight: '5px'}}/> Actualizar</>
+                                        <><FaSave style={{marginRight: '5px'}}/> Actualizar Variable</>
                                     ) : (
-                                        <><FaPlus style={{marginRight: '5px'}}/> Agregar</>
+                                        <><FaPlus style={{marginRight: '5px'}}/> Agregar Variable</>
                                     )}
                                 </button>
 
@@ -298,7 +390,7 @@ export default function FormBuilderPage() {
                                         type="button" 
                                         className={styles.addButton} 
                                         onClick={handleCancelEdit}
-                                        style={{flex: 1, backgroundColor: 'var(--text-muted)', opacity: 0.8}}
+                                        style={{flex: 1, backgroundColor: 'var(--bg-input)', color:'var(--text-main)', border:'1px solid var(--border-color)'}}
                                     >
                                         <FaBan style={{marginRight: '5px'}}/> Cancelar
                                     </button>
@@ -333,9 +425,16 @@ export default function FormBuilderPage() {
                                         <div className={styles.variableInfo} style={{ flex: 3 }}>
                                             <span className={styles.variableCode}>{p.textoPregunta}</span>
                                             {p.opciones && p.opciones.length > 0 && (
-                                                <span className={styles.variableText}>
-                                                    Opciones: {p.opciones.map(o => o.textoOpcion).join(', ')}
-                                                </span>
+                                                <div style={{display:'flex', flexWrap:'wrap', gap:'4px', marginTop:'4px'}}>
+                                                    {p.opciones.slice(0, 3).map((o, i) => (
+                                                        <span key={i} style={{fontSize:'0.7rem', backgroundColor:'var(--bg-input)', padding:'2px 6px', borderRadius:'4px', border:'1px solid var(--border-color)', color:'var(--text-muted)'}}>
+                                                            {o.textoOpcion}
+                                                        </span>
+                                                    ))}
+                                                    {p.opciones.length > 3 && (
+                                                        <span style={{fontSize:'0.7rem', color:'var(--text-muted)', alignSelf:'center'}}>+{p.opciones.length - 3}</span>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
 
