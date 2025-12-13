@@ -1,5 +1,4 @@
 
-
 .dashboardContainer {
   display: flex;
   min-height: 100vh;
@@ -10,7 +9,7 @@
 
 /* --- SIDEBAR --- */
 .sidebar {
-  width: 250px; 
+  width: 250px;
   background-color: var(--bg-card);
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -19,13 +18,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh; /* Altura completa fija */
+  height: 100vh;
   transition: width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
   z-index: 50;
 }
 
 .sidebarCollapsed {
-  width: 70px; /* Más compacto al colapsar */
+  width: 70px;
   padding: 1.25rem 0.5rem;
 }
 
@@ -40,7 +39,7 @@
   overflow: hidden;
   white-space: nowrap;
   height: 60px;
-  flex-shrink: 0; /* Evita que se encoja */
+  flex-shrink: 0;
 }
 
 .sidebarTitle {
@@ -63,9 +62,8 @@
   flex-direction: column;
   gap: 0.5rem;
   flex-grow: 1; 
-  overflow-y: auto; 
+  overflow-y: auto;
   margin-bottom: 1rem;
-
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
 }
@@ -91,7 +89,7 @@
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
-  min-height: 44px; /* Altura mínima para consistencia */
+  min-height: 44px;
 }
 
 .sidebarCollapsed .navItem {
@@ -105,15 +103,15 @@
   color: var(--primary);
 }
 
-/* FOOTER DEL SIDEBAR  */
-/* Aquí agrupamos Modo Oscuro y Logout */
+/* FOOTER DEL SIDEBAR (MODIFICADO) */
 .sidebarFooter {
   border-top: 1px solid var(--border-color);
   padding-top: 1rem;
+  padding-bottom: 4rem; 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .logoutButton {
@@ -123,7 +121,7 @@
   padding: 0.75rem 1rem;
   color: #ef4444;
   background: none;
-  border: 1px solid transparent; /* Transparente por defecto */
+  border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
@@ -143,7 +141,7 @@
   padding: 0.75rem;
 }
 
-/* Toggle Button (Flecha colapsar) */
+/* Toggle Button */
 .toggleButton {
   background: none;
   border: 1px solid var(--border-color);
@@ -167,14 +165,14 @@
 /* --- CONTENIDO PRINCIPAL --- */
 .mainContent {
   flex: 1;
-  margin-left: 250px; /* Coincide con width sidebar */
+  margin-left: 250px;
   padding: 2.5rem;
   transition: margin-left 0.3s ease;
   width: calc(100% - 250px);
 }
 
 .mainContentCollapsed {
-  margin-left: 70px; /* Coincide con sidebarCollapsed */
+  margin-left: 70px;
   width: calc(100% - 70px);
 }
 
@@ -321,7 +319,7 @@
     position: fixed;
     bottom: 0;
     left: 0;
-    top: auto; /* Reset top */
+    top: auto;
     width: 100%;
     height: 70px;
     flex-direction: row;
@@ -334,7 +332,7 @@
   }
 
   .sidebarHeader, .sidebarFooter {
-    display: none; /* Ocultamos footer en móvil para simplificar */
+    display: none;
   }
 
   .nav {
