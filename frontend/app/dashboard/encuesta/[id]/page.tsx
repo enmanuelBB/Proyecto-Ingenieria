@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation'; 
+import { useParams, useRouter } from 'next/navigation';
 import styles from './responder.module.css';
-import { FaArrowLeft, FaPaperPlane, FaUserInjured } from 'react-icons/fa';
+import { FaArrowLeft, FaPaperPlane, FaUserInjured, FaHistory } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 // --- INTERFACES ---
@@ -22,7 +22,7 @@ interface Opcion {
 interface Pregunta {
     idPregunta: number;
     textoPregunta: string;
-    tipoPregunta: string; 
+    tipoPregunta: string;
     obligatoria: boolean;
     opciones: Opcion[];
 }
@@ -36,17 +36,17 @@ interface Encuesta {
 
 export default function ResponderEncuestaPage() {
     const router = useRouter();
-    const params = useParams(); 
-    
-  
+    const params = useParams();
+
+
     const idEncuesta = params?.id ? String(params.id) : null;
 
     const [encuesta, setEncuesta] = useState<Encuesta | null>(null);
-    const [pacientes, setPacientes] = useState<Paciente[]>([]); 
-    const [selectedPaciente, setSelectedPaciente] = useState<string>(""); 
-    
+    const [pacientes, setPacientes] = useState<Paciente[]>([]);
+    const [selectedPaciente, setSelectedPaciente] = useState<string>("");
+
     const [loading, setLoading] = useState(true);
-    const [respuestas, setRespuestas] = useState<{[key: number]: string | number | number[]}>({});
+    const [respuestas, setRespuestas] = useState<{ [key: number]: string | number | number[] }>({});
     const [step, setStep] = useState<'intro' | 'form'>('intro');
 
     // Cargar datos
@@ -66,7 +66,7 @@ export default function ResponderEncuestaPage() {
             });
             if (res.ok) {
                 const data = await res.json();
-                if(data.preguntas) {
+                if (data.preguntas) {
                     data.preguntas.sort((a: Pregunta, b: Pregunta) => a.idPregunta - b.idPregunta);
                 }
                 setEncuesta(data);
@@ -135,7 +135,7 @@ export default function ResponderEncuestaPage() {
         }
 
         const token = localStorage.getItem('accessToken');
-        
+
         // 2. Construcción correcta del Payload
         const respuestasEnviar: any[] = [];
 
@@ -158,7 +158,7 @@ export default function ResponderEncuestaPage() {
         });
 
         const payload = {
-            idEncuesta: parseInt(idEncuesta!), 
+            idEncuesta: parseInt(idEncuesta!),
             idPaciente: parseInt(selectedPaciente),
             respuestas: respuestasEnviar
         };
@@ -190,6 +190,76 @@ export default function ResponderEncuestaPage() {
         }
     };
 
+    const handleSaveDraft = async () => {
+        if (!encuesta) return;
+
+        if (!selectedPaciente) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selección Requerida',
+                text: 'Por favor seleccione un paciente para guardar el borrador.',
+                confirmButtonColor: '#f39c12'
+            });
+            return;
+        }
+
+        const token = localStorage.getItem('accessToken');
+
+        // Construcción del Payload para borrador
+        const respuestasEnviar: any[] = [];
+
+        Object.keys(respuestas).forEach(key => {
+            const idPregunta = parseInt(key);
+            const valor = respuestas[idPregunta];
+            const pregunta = encuesta.preguntas.find(p => p.idPregunta === idPregunta);
+
+            if (!pregunta) return;
+
+            if (pregunta.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
+                valor.forEach(idOp => {
+                    respuestasEnviar.push({ idPregunta: idPregunta, idOpcionSeleccionada: idOp });
+                });
+            } else if (pregunta.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
+                respuestasEnviar.push({ idPregunta: idPregunta, idOpcionSeleccionada: valor });
+            } else {
+                respuestasEnviar.push({ idPregunta: idPregunta, valorTexto: String(valor) });
+            }
+        });
+
+        const payload = {
+            idEncuesta: parseInt(idEncuesta!),
+            idPaciente: parseInt(selectedPaciente),
+            respuestas: respuestasEnviar,
+            esBorrador: true // IMPORTANTE: Marca como borrador
+        };
+
+        try {
+            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Borrador Guardado',
+                    text: 'Puedes continuar editando esta encuesta más tarde desde la sección de Borradores.',
+                    confirmButtonColor: '#3498db',
+                });
+                router.push('/borradores');
+            } else {
+                const txt = await res.text();
+                Swal.fire('Error', `No se pudo guardar el borrador: ${txt}`, 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Fallo de conexión al guardar borrador.', 'error');
+        }
+    };
+
     if (!idEncuesta || loading) return <div className={styles.loading}>Cargando...</div>;
     if (!encuesta) return <div className={styles.error}>Encuesta no encontrada.</div>;
 
@@ -200,16 +270,16 @@ export default function ResponderEncuestaPage() {
                     <button onClick={() => router.back()} className={styles.backButton}><FaArrowLeft /> Volver</button>
                     <div className={styles.iconBig}>📝</div>
                     <h1 className={styles.title}>{encuesta.titulo}</h1>
-                    <div style={{display: 'inline-block', backgroundColor: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '600', marginBottom: '1.5rem'}}>
+                    <div style={{ display: 'inline-block', backgroundColor: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '600', marginBottom: '1.5rem' }}>
                         Versión {encuesta.version || '1.0'}
                     </div>
                     <p className={styles.desc}>Selecciona el paciente.</p>
 
-                    <div className={styles.formGroup} style={{marginBottom: '2rem', textAlign: 'left'}}>
-                        <label className={styles.questionLabel} style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                    <div className={styles.formGroup} style={{ marginBottom: '2rem', textAlign: 'left' }}>
+                        <label className={styles.questionLabel} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <FaUserInjured /> Seleccionar Paciente:
                         </label>
-                        <select className={styles.select} value={selectedPaciente} onChange={(e) => setSelectedPaciente(e.target.value)} style={{width:'100%', padding:'10px'}}>
+                        <select className={styles.select} value={selectedPaciente} onChange={(e) => setSelectedPaciente(e.target.value)} style={{ width: '100%', padding: '10px' }}>
                             <option value="">-- Buscar Paciente --</option>
                             {pacientes.map(p => <option key={p.idPaciente} value={p.idPaciente}>{p.nombre} {p.apellidos}</option>)}
                         </select>
@@ -225,16 +295,16 @@ export default function ResponderEncuestaPage() {
             <div className={styles.formCard}>
                 <div className={styles.formHeader}>
                     <h2>{encuesta.titulo}</h2>
-                    <small style={{color: 'var(--primary)', fontWeight:'bold'}}>Paciente: {pacientes.find(p=>p.idPaciente.toString()===selectedPaciente)?.nombre}</small>
+                    <small style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Paciente: {pacientes.find(p => p.idPaciente.toString() === selectedPaciente)?.nombre}</small>
                 </div>
                 <form onSubmit={handleSubmit}>
                     {encuesta.preguntas.map((p) => (
                         <div key={p.idPregunta} className={styles.questionBlock}>
                             <label className={styles.questionLabel}>{p.textoPregunta} {p.obligatoria && <span className={styles.required}>*</span>}</label>
                             {(p.tipoPregunta === 'TEXTO' || p.tipoPregunta === 'TEXTO_LIBRE') && (
-                                p.tipoPregunta === 'TEXTO' ? 
-                                <input className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} /> :
-                                <textarea className={styles.textarea} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />
+                                p.tipoPregunta === 'TEXTO' ?
+                                    <input className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} /> :
+                                    <textarea className={styles.textarea} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />
                             )}
                             {p.tipoPregunta === 'NUMERO' && <input type="number" className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />}
                             {p.tipoPregunta === 'FECHA' && <input type="date" className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />}
@@ -242,7 +312,7 @@ export default function ResponderEncuestaPage() {
                                 <div className={styles.optionsContainer}>
                                     {p.opciones?.map((op) => (
                                         <label key={op.idOpcion} className={styles.optionLabel}>
-                                            <input type="radio" name={`p_${p.idPregunta}`} checked={respuestas[p.idPregunta] === op.idOpcion} onClick={() => handleRadioClick(p.idPregunta, op.idOpcion)} onChange={()=>{}} />
+                                            <input type="radio" name={`p_${p.idPregunta}`} checked={respuestas[p.idPregunta] === op.idOpcion} onClick={() => handleRadioClick(p.idPregunta, op.idOpcion)} onChange={() => { }} />
                                             {op.textoOpcion}
                                         </label>
                                     ))}
@@ -261,7 +331,27 @@ export default function ResponderEncuestaPage() {
                         </div>
                     ))}
                     <div className={styles.actions}>
-                        <button type="submit" className={styles.btnPrimary}><FaPaperPlane style={{marginRight:'5px'}}/> Guardar</button>
+                        <button type="submit" className={styles.btnPrimary}><FaPaperPlane style={{ marginRight: '5px' }} /> Guardar</button>
+                        <button
+                            type="button"
+                            onClick={handleSaveDraft}
+                            disabled={loading}
+                            style={{
+                                padding: '10px 20px',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                backgroundColor: '#95a5a6',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '1rem',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            <FaHistory /> Guardar Borrador
+                        </button>
                     </div>
                 </form>
             </div>
