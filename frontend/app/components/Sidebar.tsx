@@ -102,16 +102,15 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>Pacientes</span>}
                 </Link>
 
-                <div
-                    className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
-                    onClick={() => defaultSurveyId && router.push(`/dashboard/encuesta/${defaultSurveyId}`)}
-                    style={{ cursor: defaultSurveyId ? 'pointer' : 'wait', opacity: defaultSurveyId ? 1 : 0.7 }}
-                    title={isCollapsed ? "Encuestas" : ""}
+                <Link
+                     href="/dashboard/encuesta"
+                     className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
+                     title={isCollapsed ? "Encuestas" : ""}
                 >
                     <FaSearch size={20} style={{ minWidth: '20px' }} />
                     {!isCollapsed && <span className={styles.linkText}>Encuestas</span>}
-                </div>
-
+                </Link>
+                
                 <Link
                     href="/dashboard/exportar-datos"
                     className={`${styles.navItem} ${pathname === '/dashboard/exportar-datos' ? styles.navItemActive : ''}`}

@@ -1,276 +1,253 @@
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser, FaEdit, FaExclamationTriangle, FaTrashAlt } from 'react-icons/fa';
-import styles from './encuesta.module.css';
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import styles from './responder.module.css';
+import { FaArrowLeft, FaPaperPlane } from 'react-icons/fa';
+import Swal from 'sweetalert2';
+
+interface Opcion {
+    textoOpcion: string;
+}
+
+interface Pregunta {
+    idPregunta: number;
+    textoPregunta: string;
+    tipoPregunta: string; 
+    obligatoria: boolean;
+    opciones: Opcion[];
+}
 
 interface Encuesta {
     idEncuesta: number;
     titulo: string;
-    descripcion?: string;
-    version?: string;
+    descripcion: string;
+    preguntas: Pregunta[];
 }
 
-interface RegistroCompleto {
-    idRegistro: number;
-    fechaRealizacion: string;
-    paciente: {
-        idPaciente: number;
-        nombre: string;
-        rut: string;
-    };
-    usuario: {
-        username: string;
-    };
-}
-
-export default function EncuestaIntermediatePage() {
-    const router = useRouter();
+export default function ResponderEncuestaPage() {
     const params = useParams();
-    const id = params?.id as string;
+    const router = useRouter();
+    const idEncuesta = params.id;
 
     const [encuesta, setEncuesta] = useState<Encuesta | null>(null);
     const [loading, setLoading] = useState(true);
-    const [role, setRole] = useState<string | null>(null);
-    const [hasResponded, setHasResponded] = useState<boolean>(false);
-    const [registros, setRegistros] = useState<RegistroCompleto[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [totalPacientes, setTotalPacientes] = useState<number>(0);
+    const [respuestas, setRespuestas] = useState<{[key: number]: string}>({});
+    const [step, setStep] = useState<'intro' | 'form'>('intro');
 
     useEffect(() => {
+        if (idEncuesta) fetchEncuesta();
+    }, [idEncuesta]);
+
+    const fetchEncuesta = async () => {
         const token = localStorage.getItem('accessToken');
-        const storedRole = localStorage.getItem('userRole');
-
-        if (!token) {
-            router.push('/');
-            return;
-        }
-        setRole(storedRole || 'USER');
-
-        const fetchData = async () => {
-            try {
-                // 1. Cargar Detalles de Encuesta
-                const surveyRes = await fetch(`http://localhost:8080/api/v1/encuestas/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!surveyRes.ok) throw new Error('Error al cargar la encuesta');
-                const surveyData = await surveyRes.json();
-                setEncuesta(surveyData);
-
-                // 3. Si es ADMIN, cargar todas las respuestas y pacientes para estadísticas
-                if (storedRole === 'ADMIN') {
-                    const [regRes, pacRes] = await Promise.all([
-                        fetch(`http://localhost:8080/api/v1/encuestas/${id}/registros`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }),
-                        fetch('http://localhost:8080/api/v1/pacientes', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
-                    ]);
-
-                    if (regRes.ok) {
-                        const regData = await regRes.json();
-                        setRegistros(regData);
-                    }
-
-                    if (pacRes.ok) {
-                        const pacData = await pacRes.json();
-                        setTotalPacientes(pacData.length);
-                    }
+        try {
+            const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if(data.preguntas) {
+                    data.preguntas.sort((a: Pregunta, b: Pregunta) => a.idPregunta - b.idPregunta);
                 }
-
-            } catch (err: any) {
-                setError(err.message || 'Error desconocido');
-            } finally {
-                setLoading(false);
+                setEncuesta(data);
+            } else {
+                Swal.fire('Error', 'No se pudo cargar la encuesta', 'error');
             }
-        };
-
-        if (id) {
-            fetchData();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
-    }, [id, router]);
-
-    const handleResponder = () => {
-        router.push(`/responder-encuesta/${id}`);
     };
 
-    if (loading) return <div className={styles.loading}>Cargando información...</div>;
-    if (error) return <div className={styles.error}>Error: {error}</div>;
-    if (!encuesta) return <div className={styles.error}>No se encontró la encuesta.</div>;
+    const handleInputChange = (idPregunta: number, value: string) => {
+        setRespuestas(prev => ({ ...prev, [idPregunta]: value }));
+    };
 
-    const isAdmin = role === 'ADMIN';
+    const handleCheckboxChange = (idPregunta: number, opcion: string, checked: boolean) => {
+        setRespuestas(prev => {
+            const actual = prev[idPregunta] ? prev[idPregunta].split(',') : [];
+            let nuevoState = [...actual];
+            if (checked) {
+                if (!nuevoState.includes(opcion)) nuevoState.push(opcion);
+            } else {
+                nuevoState = nuevoState.filter(item => item !== opcion);
+            }
+            return { ...prev, [idPregunta]: nuevoState.join(',') };
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (encuesta?.preguntas) {
+            for (const p of encuesta.preguntas) {
+                if (p.obligatoria && (!respuestas[p.idPregunta] || respuestas[p.idPregunta].trim() === '')) {
+                    Swal.fire('Faltan datos', `La pregunta "${p.textoPregunta}" es obligatoria.`, 'warning');
+                    return;
+                }
+            }
+        }
+
+        const token = localStorage.getItem('accessToken');
+        const payload = {
+            idEncuesta: idEncuesta,
+            respuestas: Object.entries(respuestas).map(([k, v]) => ({
+                idPregunta: parseInt(k),
+                valorRespuesta: v
+            }))
+        };
+
+        try {
+            const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}/responder`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                await Swal.fire('¡Enviado!', 'La encuesta se ha guardado correctamente.', 'success');
+                router.push('/dashboard/encuesta');
+            } else {
+                Swal.fire('Error', 'No se pudieron guardar las respuestas.', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Fallo de conexión.', 'error');
+        }
+    };
+
+    if (loading) return <div className={styles.loading}>Cargando formulario...</div>;
+    if (!encuesta) return <div className={styles.error}>Encuesta no encontrada.</div>;
+
+    if (step === 'intro') {
+        return (
+            <div className={styles.container}>
+                <div className={styles.introCard}>
+                    <button onClick={() => router.back()} className={styles.backButton}><FaArrowLeft /> Volver</button>
+                    <div className={styles.iconBig}>📝</div>
+                    <h1 className={styles.title}>{encuesta.titulo}</h1>
+                    <p className={styles.desc}>{encuesta.descripcion || 'Sin descripción.'}</p>
+                    <div className={styles.metaInfo}>
+                        <span>{encuesta.preguntas?.length || 0} Preguntas</span>
+                    </div>
+                    <button className={styles.startBtn} onClick={() => setStep('form')}>
+                        Comenzar Ahora
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <>
-            {/* Header Superior */}
-            <header className={styles.header}>
-                <div>
-                    <button
-                        onClick={() => router.back()}
-                        style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px', fontSize: '0.9rem' }}
-                    >
-                        <FaArrowLeft /> Volver
-                    </button>
-                    <div className={styles.titleSection}>
-                        <h1>
-                            {encuesta.titulo}
-                            {encuesta.version && <span className={styles.badge}>v{encuesta.version}</span>}
-                        </h1>
-                        <p className={styles.subtitle}>Gestión y seguimiento de respuestas</p>
-                    </div>
+        <div className={styles.container}>
+            <div className={styles.formCard}>
+                <div className={styles.formHeader}>
+                    <h2>{encuesta.titulo}</h2>
+                    <span className={styles.badge}>En progreso</span>
                 </div>
 
-                {/* --- BOTÓN SUPERIOR ELIMINADO --- */}
+                <form onSubmit={handleSubmit}>
+                    {encuesta.preguntas.map((p) => (
+                        <div key={p.idPregunta} className={styles.questionBlock}>
+                            <label className={styles.questionLabel}>
+                                {p.textoPregunta}
+                                {p.obligatoria && <span className={styles.required}>*</span>}
+                            </label>
 
-            </header>
+                            {/* --- TEXTO CORTO --- */}
+                            {p.tipoPregunta === 'TEXTO' && (
+                                <input 
+                                    type="text" 
+                                    className={styles.input} 
+                                    value={respuestas[p.idPregunta] || ''}
+                                    onChange={e => handleInputChange(p.idPregunta, e.target.value)}
+                                    placeholder="Respuesta corta..."
+                                />
+                            )}
 
-            {/* VISTA DE ADMINISTRADOR */}
-            {isAdmin ? (
-                <>
-                    {/* Estadísticas Rápidas */}
-                    <section className={styles.statsGrid}>
-                        <div className={styles.statCard}>
-                            <div className={styles.iconBox}>
-                                <FaUserCheck />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Realizadas</h3>
-                                <p>{registros.length}</p>
-                            </div>
+                            {/* --- TEXTO LIBRE (BLOQUE GRANDE) --- */}
+                            {p.tipoPregunta === 'TEXTO_LIBRE' && (
+                                <textarea 
+                                    className={styles.textarea} 
+                                    value={respuestas[p.idPregunta] || ''}
+                                    onChange={e => handleInputChange(p.idPregunta, e.target.value)}
+                                    placeholder="Escribe tu respuesta aquí..."
+                                />
+                            )}
+
+                            {/* --- NUMERO --- */}
+                            {p.tipoPregunta === 'NUMERO' && (
+                                <input 
+                                    type="number" 
+                                    className={styles.input} 
+                                    value={respuestas[p.idPregunta] || ''}
+                                    onChange={e => handleInputChange(p.idPregunta, e.target.value)}
+                                    placeholder="0"
+                                />
+                            )}
+
+                            {/* --- FECHA --- */}
+                            {p.tipoPregunta === 'FECHA' && (
+                                <input 
+                                    type="date" 
+                                    className={styles.input} 
+                                    value={respuestas[p.idPregunta] || ''}
+                                    onChange={e => handleInputChange(p.idPregunta, e.target.value)}
+                                />
+                            )}
+
+                            {/* --- SELECCION UNICA (RADIO BUTTONS / PUNTITOS) --- */}
+                            {(p.tipoPregunta === 'SELECCION_UNICA' || p.tipoPregunta === 'SELECCION') && (
+                                <div className={styles.optionsContainer}>
+                                    {p.opciones?.map((op, idx) => (
+                                        <label key={idx} className={styles.optionLabel}>
+                                            <input 
+                                                type="radio"
+                                                name={`pregunta_${p.idPregunta}`} // Agrupa los radios
+                                                value={op.textoOpcion}
+                                                checked={respuestas[p.idPregunta] === op.textoOpcion}
+                                                onChange={(e) => handleInputChange(p.idPregunta, e.target.value)}
+                                            />
+                                            {op.textoOpcion}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* --- SELECCION MULTIPLE (CHECKBOXES / CUADRADOS) --- */}
+                            {p.tipoPregunta === 'SELECCION_MULTIPLE' && (
+                                <div className={styles.optionsContainer}>
+                                    {p.opciones?.map((op, idx) => {
+                                        const isChecked = (respuestas[p.idPregunta] || '').split(',').includes(op.textoOpcion);
+                                        return (
+                                            <label key={idx} className={styles.optionLabel}>
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={(e) => handleCheckboxChange(p.idPregunta, op.textoOpcion, e.target.checked)}
+                                                />
+                                                {op.textoOpcion}
+                                            </label>
+                                        )
+                                    })}
+                                </div>
+                            )}
                         </div>
+                    ))}
 
-                        <div className={styles.statCard}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>
-                                <FaExclamationTriangle />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Incompletas</h3>
-                                <p>{Math.max(0, totalPacientes - registros.length)}</p>
-                            </div>
-                        </div>
-
-                        <div className={styles.statCard}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#fef2f2', color: '#ef4444' }}>
-                                <FaTrashAlt />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Eliminadas</h3>
-                                <p>0</p>
-                            </div>
-                        </div>
-
-                        <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={handleResponder}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }}>
-                                <FaClipboardList />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Acción Rápida</h3>
-                                <p style={{ fontSize: '1rem', color: '#4f46e5' }}>Responder Encuesta</p>
-                            </div>
-                        </div>
-
-                        {/* Botón Editar Encuesta */}
-                        <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => router.push(`/dashboard/constructor/${id}`)}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#f3e8ff', color: '#9333ea' }}>
-                                <FaEdit />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Gestión</h3>
-                                <p style={{ fontSize: '1rem', color: '#9333ea' }}>Editar Estructura</p>
-                            </div>
-                        </div>
-
-                    </section>
-
-                    {/* Tabla de Registros */}
-                    <div className={styles.card}>
-                        <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}><FaClipboardList color="#4f46e5" /> Registro de Respuestas</h3>
-                        </div>
-                        <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Paciente</th>
-                                    <th>Fecha</th>
-                                    <th>Usuario</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {registros.length > 0 ? registros.map((reg) => (
-                                    <tr key={reg.idRegistro}>
-                                        <td style={{ color: '#64748b' }}>#{reg.idRegistro}</td>
-                                        <td style={{ fontWeight: '600', color: '#1e293b' }}>{reg.paciente?.nombre || 'N/A'}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <FaRegCalendarAlt color="#94a3b8" />
-                                                {new Date(reg.fechaRealizacion).toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <FaUser color="#94a3b8" size={12} />
-                                                {reg.usuario?.username}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <button className={styles.btnSecondary} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
-                                                <FaEye /> Ver
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr>
-                                        <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
-                                            No hay respuestas registradas aún.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className={styles.actions}>
+                        <button type="button" onClick={() => setStep('intro')} className={styles.btnSecondary}>Cancelar</button>
+                        <button type="submit" className={styles.btnPrimary}>
+                            <FaPaperPlane style={{marginRight:'5px'}}/> Enviar Respuestas
+                        </button>
                     </div>
-                </>
-            ) : (
-                /* VISTA DE USUARIO NORMAL (ESTADO) */
-                <div className={styles.card}>
-                    <div className={styles.userState}>
-                        {hasResponded ? (
-                            <>
-                                <div className={`${styles.stateIcon} ${styles.successIcon}`}>
-                                    <FaCheckCircle />
-                                </div>
-                                <div className={styles.stateText}>
-                                    <h2>¡Encuesta Completada!</h2>
-                                    <p>Ya has registrado una respuesta para este formulario.</p>
-                                </div>
-                                <button className={`${styles.btn} ${styles.btnSecondary}`} disabled>
-                                    Completado
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <div className={styles.stateIcon}>
-                                    <FaClipboardList />
-                                </div>
-                                <div className={styles.stateText}>
-                                    <h2>Disponible para Responder</h2>
-                                    <p>Selecciona un paciente y comienza a llenar el formulario clínico.</p>
-                                </div>
-
-                                {/* --- BOTÓN CENTRAL (ÚNICO) --- */}
-                                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleResponder}>
-                                    Comenzar Ahora
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-        </>
+                </form>
+            </div>
+        </div>
     );
 }
