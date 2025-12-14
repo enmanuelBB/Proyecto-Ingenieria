@@ -1,241 +1,263 @@
-.container {
-    display: flex;
-    min-height: 100vh;
-    background-color: #f8fafc;
-    font-family: 'Inter', sans-serif;
-    flex-direction: row;
-}
 
-.mainContent {
-    padding: 2rem;
-    flex: 1;
-}
-
+/* HEADER */
 .header {
-    margin-bottom: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1e293b;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
 }
 
-/* KPI CARDS */
+.select {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--primary);
+}
+
+/* KPI CARDS GRID */
 .statsGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .statCard {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border-left: 5px solid transparent;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 120px;
+  background-color: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.cardBlue {
-    border-left-color: #3b82f6;
-}
-
-.cardGreen {
-    border-left-color: #22c55e;
-}
-
-.cardYellow {
-    border-left-color: #eab308;
-}
-
-.cardRed {
-    border-left-color: #ef4444;
-}
+/* Colores de las tarjetas (Bordes y acentos suaves) */
+.cardBlue { border-left: 4px solid #3b82f6; }
+.cardGreen { border-left: 4px solid #22c55e; }
+.cardYellow { border-left: 4px solid #eab308; }
+.cardRed { border-left: 4px solid #ef4444; }
 
 .statLabel {
-    color: #64748b;
-    font-weight: 600;
-    font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .statValue {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #0f172a;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0.5rem 0;
 }
 
 .statSub {
-    font-size: 0.75rem;
-    color: #94a3b8;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
-/* MAIN CONTENT GRID */
+/* CONTENIDO PRINCIPAL (TIMELINE + FILTROS) */
 .contentGrid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Izquierda ancho, derecha angosto */
+  gap: 2rem;
 }
 
-/* TIMELINE / LIST */
+@media (max-width: 1024px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* TIMELINE (Lista de eventos) */
 .timelineCard {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
 }
 
 .sectionHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .sectionTitle {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #334155;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .eventList {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .eventItem {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    transition: transform 0.2s;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: var(--bg-main); /* Fondo alternado */
+  border: 1px solid transparent;
+  transition: all 0.2s;
 }
 
 .eventItem:hover {
-    transform: translateX(5px);
-    background-color: #eff6ff;
+  border-color: var(--border-color);
+  transform: translateX(5px);
 }
 
 .eventIcon {
-    color: #3b82f6;
-    padding-top: 2px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(79, 70, 229, 0.1); /* Indigo muy suave */
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .eventBody {
-    flex: 1;
+  flex: 1;
 }
 
 .eventTitle {
-    font-weight: 600;
-    color: #334155;
-    font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
 }
 
 .eventDesc {
-    color: #64748b;
-    font-size: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .eventTime {
-    color: #94a3b8;
-    font-size: 0.75rem;
-    text-align: right;
-    min-width: 60px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 80px;
 }
 
-/* FILTERS */
+/* FILTROS Y CHART (Derecha) */
 .filterCard {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    height: fit-content;
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  position: sticky;
+  top: 2rem;
 }
 
 .filterGroup {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #64748b;
-    margin-bottom: 0.5rem;
-}
-
-.select,
-.input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: #334155;
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
 }
 
 .searchBtn {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 1rem;
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+  margin-top: 1.5rem;
 }
 
 .searchBtn:hover {
-    background-color: #1d4ed8;
+  background-color: var(--primary-hover);
 }
 
-/* CHART SIMPLE */
+/* GRÁFICO DE BARRAS SIMPLE (CSS) */
 .chartContainer {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid #f1f5f9;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .chartTitle {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #64748b;
-    margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .barChart {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    height: 100px;
-    padding-bottom: 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 150px;
+  gap: 5px;
 }
 
 .barCol {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  justify-content: flex-end;
 }
 
 .bar {
-    width: 60%;
-    background-color: #3b82f6;
-    border-radius: 4px 4px 0 0;
-    transition: height 0.5s;
+  width: 100%;
+  max-width: 20px;
+  background-color: var(--primary);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease;
+  opacity: 0.8;
+}
+
+.bar:hover {
+  opacity: 1;
 }
 
 .barLabel {
-    font-size: 0.7rem;
-    color: #94a3b8;
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
 }

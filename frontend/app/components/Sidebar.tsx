@@ -2,12 +2,13 @@
 
 import React from 'react';
 import Image from 'next/image';
-import Link from 'next/link'; // Importante para navegar
+import Link from 'next/link'; 
 import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
-import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers } from 'react-icons/fa';
+import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers, FaMoon, FaSun } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
 import Swal from 'sweetalert2';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Sidebar() {
     const router = useRouter();
@@ -15,6 +16,8 @@ export default function Sidebar() {
     const { isCollapsed, toggleSidebar } = useSidebar();
     const [defaultSurveyId, setDefaultSurveyId] = React.useState<number | null>(null);
     const [role, setRole] = React.useState<string | null>(null);
+    
+    const { theme, toggleTheme } = useTheme();
 
     React.useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -43,7 +46,6 @@ export default function Sidebar() {
         })
             .then(res => res.ok ? res.json() : [])
             .then((encuestas: any[]) => {
-                // Logic to find the default survey (same as Dashboard)
                 const defaultSurvey = encuestas.find((e: any) => e.titulo.includes("Estudio Cáncer Gástrico"));
                 if (defaultSurvey) {
                     setDefaultSurveyId(defaultSurvey.idEncuesta);
@@ -70,6 +72,8 @@ export default function Sidebar() {
 
     return (
         <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ''}`}>
+            
+            {/* 1. HEADER (Logo + Título) */}
             <div className={styles.sidebarHeader}>
                 <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} style={{ minWidth: '30px' }} />
                 <span className={styles.sidebarTitle}>Ingeniería Vital</span>
@@ -78,8 +82,8 @@ export default function Sidebar() {
                 </button>
             </div>
 
+            {/* 2. BODY (Navegación con Scroll) */}
             <nav className={styles.nav}>
-                {/* Enlace al Dashboard */}
                 <Link
                     href="/dashboard"
                     className={`${styles.navItem} ${pathname === '/dashboard' ? styles.navItemActive : ''}`}
@@ -89,7 +93,6 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>Dashboard</span>}
                 </Link>
 
-                {/* Enlace a Pacientes */}
                 <Link
                     href="/dashboard/pacientes"
                     className={`${styles.navItem} ${pathname.startsWith('/dashboard/pacientes') ? styles.navItemActive : ''}`}
@@ -99,7 +102,6 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>Pacientes</span>}
                 </Link>
 
-                {/* Enlace a Encuestas (Dinámico) */}
                 <div
                     className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
                     onClick={() => defaultSurveyId && router.push(`/dashboard/encuesta/${defaultSurveyId}`)}
@@ -140,10 +142,27 @@ export default function Sidebar() {
                 )}
             </nav>
 
-            <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
-                <FaSignOutAlt size={20} style={{ minWidth: '20px' }} />
-                {!isCollapsed && <span className={styles.linkText}>Cerrar Sesión</span>}
-            </button>
+            {/* 3. FOOTER (Modo Oscuro + Logout) */}
+            <div className={styles.sidebarFooter}>
+                <button 
+                    onClick={toggleTheme} 
+                    className={styles.navItem} 
+                    title={isCollapsed ? (theme === 'light' ? "Modo Oscuro" : "Modo Claro") : ""}
+                    style={{ justifyContent: isCollapsed ? 'center' : 'flex-start', background: 'transparent', border: 'none', width: '100%' }}
+                >
+                    {theme === 'light' ? (
+                        <FaMoon size={20} style={{ minWidth: '20px' }} />
+                    ) : (
+                        <FaSun size={20} style={{ minWidth: '20px' }} />
+                    )}
+                    {!isCollapsed && <span className={styles.linkText}>{theme === 'light' ? "Modo Oscuro" : "Modo Claro"}</span>}
+                </button>
+
+                <button onClick={handleLogout} className={styles.logoutButton} title={isCollapsed ? "Cerrar Sesión" : ""}>
+                    <FaSignOutAlt size={20} style={{ minWidth: '20px' }} />
+                    {!isCollapsed && <span className={styles.linkText}>Cerrar Sesión</span>}
+                </button>
+            </div>
         </aside>
     );
 }

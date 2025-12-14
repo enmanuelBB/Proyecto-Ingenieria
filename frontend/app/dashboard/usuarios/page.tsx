@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "../dashboard.module.css";
+import styles from "./users.module.css";
 import { FaEdit, FaSearch } from "react-icons/fa";
 
 interface User {
@@ -34,7 +34,7 @@ export default function UsuariosPage() {
         try {
             const token = localStorage.getItem("accessToken");
             if (!token) {
-                router.push("/login"); // Adjust if login route is different
+                router.push("/login");
                 return;
             }
 
@@ -81,7 +81,6 @@ export default function UsuariosPage() {
             });
 
             if (response.ok) {
-                // Update local state
                 setUsers(users.map((u) => (u.id === selectedUser.id ? { ...u, role: newRole } : u)));
                 setIsModalOpen(false);
             } else {
@@ -112,7 +111,7 @@ export default function UsuariosPage() {
 
             <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
                 <div style={{ position: "relative", flex: 1 }}>
-                    <FaSearch style={{ position: "absolute", top: "10px", left: "10px", color: "#888" }} />
+                    <FaSearch style={{ position: "absolute", top: "10px", left: "10px", color: "var(--text-muted)" }} />
                     <input
                         type="text"
                         placeholder="Buscar por nombre o email..."
@@ -122,7 +121,9 @@ export default function UsuariosPage() {
                             width: "100%",
                             padding: "0.5rem 0.5rem 0.5rem 2.5rem",
                             borderRadius: "5px",
-                            border: "1px solid #ccc",
+                            border: "1px solid var(--border-color)",
+                            backgroundColor: "var(--bg-input)",
+                            color: "var(--text-main)"
                         }}
                     />
                 </div>
@@ -130,7 +131,13 @@ export default function UsuariosPage() {
                 <select
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
-                    style={{ padding: "0.5rem", borderRadius: "5px", border: "1px solid #ccc" }}
+                    style={{ 
+                        padding: "0.5rem", 
+                        borderRadius: "5px", 
+                        border: "1px solid var(--border-color)",
+                        backgroundColor: "var(--bg-input)",
+                        color: "var(--text-main)"
+                    }}
                 >
                     <option value="ALL">Todos los Roles</option>
                     <option value="ADMIN">ADMIN</option>
@@ -141,19 +148,26 @@ export default function UsuariosPage() {
             </div>
 
             <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", backgroundColor: "white", borderRadius: "8px", overflow: "hidden", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
-                    <thead style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
+                <table style={{ 
+                    width: "100%", 
+                    borderCollapse: "collapse", 
+                    backgroundColor: "var(--bg-card)", 
+                    borderRadius: "8px", 
+                    overflow: "hidden", 
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)" 
+                }}>
+                    <thead style={{ backgroundColor: "var(--bg-main)", borderBottom: "2px solid var(--border-color)" }}>
                         <tr>
-                            <th style={{ padding: "1rem", textAlign: "left" }}>ID</th>
-                            <th style={{ padding: "1rem", textAlign: "left" }}>Nombre</th>
-                            <th style={{ padding: "1rem", textAlign: "left" }}>Email</th>
-                            <th style={{ padding: "1rem", textAlign: "left" }}>Rol</th>
-                            <th style={{ padding: "1rem", textAlign: "center" }}>Acciones</th>
+                            <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-muted)" }}>ID</th>
+                            <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-muted)" }}>Nombre</th>
+                            <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-muted)" }}>Email</th>
+                            <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-muted)" }}>Rol</th>
+                            <th style={{ padding: "1rem", textAlign: "center", color: "var(--text-muted)" }}>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredUsers.map((user) => (
-                            <tr key={user.id} style={{ borderBottom: "1px solid #e9ecef" }}>
+                            <tr key={user.id} style={{ borderBottom: "1px solid var(--border-color)", color: "var(--text-main)" }}>
                                 <td style={{ padding: "1rem" }}>{user.id}</td>
                                 <td style={{ padding: "1rem" }}>{user.name} {user.lastname}</td>
                                 <td style={{ padding: "1rem" }}>{user.email}</td>
@@ -162,14 +176,15 @@ export default function UsuariosPage() {
                                         style={{
                                             padding: "0.25rem 0.5rem",
                                             borderRadius: "4px",
+                                            // Usamos rgba para que funcione bien en dark y light mode
                                             backgroundColor:
-                                                user.role === "ADMIN" ? "#d4edda" :
-                                                    user.role === "ANALISTA" ? "#cce5ff" :
-                                                        user.role === "INVESTIGADOR" ? "#fff3cd" : "#e2e3e5",
+                                                user.role === "ADMIN" ? "rgba(34, 197, 94, 0.2)" : // Green
+                                                    user.role === "ANALISTA" ? "rgba(59, 130, 246, 0.2)" : // Blue
+                                                        user.role === "INVESTIGADOR" ? "rgba(234, 179, 8, 0.2)" : "rgba(148, 163, 184, 0.2)", // Yellow / Gray
                                             color:
-                                                user.role === "ADMIN" ? "#155724" :
-                                                    user.role === "ANALISTA" ? "#004085" :
-                                                        user.role === "INVESTIGADOR" ? "#856404" : "#383d41",
+                                                user.role === "ADMIN" ? "#22c55e" :
+                                                    user.role === "ANALISTA" ? "#3b82f6" :
+                                                        user.role === "INVESTIGADOR" ? "#eab308" : "#94a3b8",
                                             fontSize: "0.85rem",
                                             fontWeight: "bold",
                                         }}
@@ -212,16 +227,23 @@ export default function UsuariosPage() {
                         zIndex: 1000,
                     }}
                 >
-                    <div style={{ backgroundColor: "white", padding: "2rem", borderRadius: "8px", width: "90%", maxWidth: "400px" }}>
-                        <h2>Editar Rol</h2>
-                        <p className="mb-4">Usuario: {selectedUser?.name} {selectedUser?.lastname}</p>
+                    <div style={{ backgroundColor: "var(--bg-card)", padding: "2rem", borderRadius: "8px", width: "90%", maxWidth: "400px", border: "1px solid var(--border-color)" }}>
+                        <h2 style={{color: "var(--text-main)"}}>Editar Rol</h2>
+                        <p style={{marginBottom: "1rem", color: "var(--text-muted)"}}>Usuario: {selectedUser?.name} {selectedUser?.lastname}</p>
 
                         <div style={{ marginBottom: "1.5rem" }}>
-                            <label style={{ display: "block", marginBottom: "0.5rem" }}>Rol:</label>
+                            <label style={{ display: "block", marginBottom: "0.5rem", color: "var(--text-main)" }}>Rol:</label>
                             <select
                                 value={newRole}
                                 onChange={(e) => setNewRole(e.target.value)}
-                                style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+                                style={{ 
+                                    width: "100%", 
+                                    padding: "0.5rem", 
+                                    borderRadius: "4px", 
+                                    border: "1px solid var(--border-color)",
+                                    backgroundColor: "var(--bg-input)",
+                                    color: "var(--text-main)"
+                                }}
                             >
                                 <option value="USER">USER</option>
                                 <option value="ADMIN">ADMIN</option>
@@ -235,9 +257,10 @@ export default function UsuariosPage() {
                                 onClick={() => setIsModalOpen(false)}
                                 style={{
                                     padding: "0.5rem 1rem",
-                                    border: "1px solid #ccc",
+                                    border: "1px solid var(--border-color)",
                                     borderRadius: "4px",
-                                    background: "white",
+                                    background: "var(--bg-input)",
+                                    color: "var(--text-main)",
                                     cursor: "pointer",
                                 }}
                             >
