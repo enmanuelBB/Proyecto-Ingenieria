@@ -215,7 +215,24 @@ public class EncuestaController {
      * EXPORTAR ENCUESTA A PDF
      * URL: GET /api/v1/encuestas/{id}/export/pdf
      */
-    @GetMapping("/{id}/export/csv")
+    @GetMapping("/{id}/export/pdf")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<Resource> exportarPdf(
+            @PathVariable(name = "id") Integer id,
+            @RequestParam(name = "idPaciente", required = false) Integer idPaciente) {
+        String filename = "encuesta_" + id + ".pdf";
+        InputStreamResource file = new InputStreamResource(exportService.generatePdf(id, idPaciente));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(file);
+    }
+
+    /**
+     * EXPORTAR ENCUESTA A CSV
+     * URL: GET /api/v1/encuestas/{id}/export/csv
+     */
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<Resource> exportarCsv(
             @PathVariable(name = "id") Integer id,
