@@ -105,24 +105,25 @@ export default function UsuariosPage() {
 
     if (loading) return <div>Cargando usuarios...</div>;
 
-
     return (
         <div className={styles.container}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 className={styles.title} style={{ margin: 0 }}>Gestión de Usuarios</h1>
             </div>
 
+            {/* --- CORRECCIÓN: FILTRO Y BUSCADOR MEJORADOS --- */}
             <div 
                 style={{ 
                     display: "flex", 
-                    gap: "1rem", 
+                    justifyContent: "space-between",
+                    gap: "2rem", 
                     marginBottom: "1.5rem", 
-                    flexWrap: "wrap", // Permite que baje si la pantalla es muy pequeña (móvil)
+                    flexWrap: "wrap", 
                     alignItems: 'center'
                 }}
             >
-                {/* 1. Buscador (Ocupa el espacio restante) */}
-                <div style={{ position: "relative", flex: "1 1 300px" }}> {/* flex-grow: 1, flex-shrink: 1, min-width: 300px */}
+                {/* 1. Buscador */}
+                <div style={{ position: "relative", flex: "1 1 300px", maxWidth: "500px",marginRight: "1rem" }}>
                     <FaSearch style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", left: "12px", color: "var(--text-muted)" }} />
                     <input
                         type="text"
@@ -131,7 +132,7 @@ export default function UsuariosPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
                             width: "100%",
-                            padding: "0.7rem 1rem 0.7rem 2.5rem", // Padding ajustado
+                            padding: "0.7rem 1rem 0.7rem 2.5rem",
                             borderRadius: "8px",
                             border: "1px solid var(--border-color)",
                             backgroundColor: "var(--bg-input)",
@@ -141,8 +142,8 @@ export default function UsuariosPage() {
                     />
                 </div>
 
-                {/* 2. Selector de Rol (Ancho fijo cómodo) */}
-                <div style={{ flex: "0 0 200px" }}> {/* No crece, no encoge, ancho base 200px */}
+                {/* 2. Selector de Rol  */}
+                <div style={{ flex: "0 0 220px" }}> 
                     <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
@@ -166,7 +167,6 @@ export default function UsuariosPage() {
                 </div>
             </div>
 
-            {/* TABLA (Sin cambios mayores, solo estilos) */}
             <div style={{ 
                 overflowX: "auto", 
                 backgroundColor: "var(--bg-card)", 
@@ -252,12 +252,12 @@ export default function UsuariosPage() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: "rgba(0,0,0,0.6)", // Fondo más oscuro
+                        backgroundColor: "rgba(0,0,0,0.6)",
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
                         zIndex: 1000,
-                        backdropFilter: 'blur(2px)' // Efecto borroso suave
+                        backdropFilter: 'blur(2px)'
                     }}
                 >
                     <div style={{ backgroundColor: "var(--bg-card)", padding: "2rem", borderRadius: "12px", width: "90%", maxWidth: "400px", border: "1px solid var(--border-color)", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}>
@@ -308,7 +308,7 @@ export default function UsuariosPage() {
                                     padding: "0.6rem 1.2rem",
                                     border: "none",
                                     borderRadius: "8px",
-                                    background: "#3b82f6", // Azul moderno
+                                    background: "#3b82f6",
                                     color: "white",
                                     cursor: "pointer",
                                     fontSize: '0.9rem',
