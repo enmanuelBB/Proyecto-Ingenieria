@@ -233,20 +233,20 @@ function ResponderEncuestaContent() {
         setValidationErrors(newErrors);
 
         if (newErrors.size > 0) {
+            // Scroll immediately to the first error
+            if (firstErrorId !== null) {
+                const element = document.getElementById(`pregunta-${firstErrorId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.focus();
+                }
+            }
+
             Swal.fire({
                 icon: 'warning',
                 title: 'Campos Incompletos',
                 text: 'Por favor, responda todas las preguntas obligatorias resaltadas.',
-                confirmButtonColor: '#f39c12',
-                willClose: () => {
-                    if (firstErrorId !== null) {
-                        const element = document.getElementById(`pregunta-${firstErrorId}`);
-                        if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            element.focus(); // Accessibility: focus the element if possible (divs usually need tabindex)
-                        }
-                    }
-                }
+                confirmButtonColor: '#f39c12'
             });
             return false;
         }
