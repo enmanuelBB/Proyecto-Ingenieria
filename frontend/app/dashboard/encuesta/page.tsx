@@ -43,29 +43,45 @@ export default function EncuestasMenuPage() {
 
     // Función para crear una nueva encuesta rápida
     const handleCreateSurvey = async () => {
+        const token = localStorage.getItem('accessToken');
+        
+        // 1. Verificación visual si falta el token
+        if (!token) {
+            Swal.fire('Error', 'No estás autenticado. Por favor inicia sesión nuevamente.', 'error');
+            return;
+        }
+
         const { value: formValues } = await Swal.fire({
             title: 'Nueva Encuesta',
             html:
                 '<input id="swal-title" class="swal2-input" placeholder="Título de la encuesta">' +
-                '<textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción breve"></textarea>',
+                '<textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción breve" style="margin-top: 10px;"></textarea>',
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Crear y Personalizar',
             cancelButtonText: 'Cancelar',
+            confirmButtonColor: 'var(--primary)',
             preConfirm: () => {
-                return [
-                    (document.getElementById('swal-title') as HTMLInputElement).value,
-                    (document.getElementById('swal-desc') as HTMLTextAreaElement).value
-                ]
+                const titulo = (document.getElementById('swal-title') as HTMLInputElement).value;
+                const descripcion = (document.getElementById('swal-desc') as HTMLTextAreaElement).value;
+                
+                if (!titulo) {
+                    Swal.showValidationMessage('El título es obligatorio');
+                    return false; // Detiene el cierre del modal
+                }
+                return [titulo, descripcion];
             }
         });
 
         if (formValues) {
             const [titulo, descripcion] = formValues;
-            if (!titulo) return Swal.fire('Error', 'El título es obligatorio', 'error');
-
-            const token = localStorage.getItem('accessToken');
+            
             try {
+                // Indicador de carga
+                Swal.showLoading();
+
+                console.log("Enviando datos:", { titulo, descripcion }); // DEBUG
+
                 const res = await fetch('http://localhost:8080/api/v1/encuestas', {
                     method: 'POST',
                     headers: {
@@ -75,13 +91,31 @@ export default function EncuestasMenuPage() {
                     body: JSON.stringify({ titulo, descripcion })
                 });
 
+                console.log("Status respuesta:", res.status); // DEBUG
+
                 if (res.ok) {
                     const data = await res.json();
-                    // Redirigir al constructor inmediatamente
-                    router.push(`/dashboard/constructor/${data.idEncuesta}`);
+                    console.log("Data recibida:", data); // DEBUG
+
+                    if (data && data.idEncuesta) {
+                        // Éxito total: Redirigir
+                        router.push(`/dashboard/constructor/${data.idEncuesta}`);
+                        
+                        // Cerramos el loading de Swal
+                        Swal.close();
+                    } else {
+                        
+                        Swal.fire('Creada', 'La encuesta se creó, pero no pudimos redirigirte automáticamente.', 'success');
+                        fetchEncuestas(); // Recargamos la lista
+                    }
+                } else {
+                    const textError = await res.text();
+                    console.error("Error backend:", textError);
+                    Swal.fire('Error', `El servidor respondió: ${res.status}`, 'error');
                 }
             } catch (error) {
-                Swal.fire('Error', 'No se pudo crear la encuesta', 'error');
+                console.error("Error de red:", error);
+                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
             }
         }
     };
