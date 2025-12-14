@@ -17,7 +17,7 @@ interface Paciente {
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<string | null>("Usuario");
-  const [role, setRole] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null); // Guardamos el rol aquí
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPacientes: 0, totalEncuestas: 0, registrosHoy: 0 });
@@ -30,7 +30,6 @@ export default function DashboardPage() {
       return;
     }
 
-    // Decodificar Token para obtener nombre y rol
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -39,14 +38,10 @@ export default function DashboardPage() {
       }).join(''));
 
       const decoded = JSON.parse(jsonPayload);
-      if (decoded.name) {
-        setUser(decoded.name);
-      }
+      if (decoded.name) setUser(decoded.name);
+      
+      // Lógica para extraer el rol (ADMIN, USER, etc.)
       if (decoded.authorities && Array.isArray(decoded.authorities)) {
-        // Asumiendo que authorities es [{authority: "ROLE_ADMIN"}, ...] o similar
-        // Si es simple string o array de strings, ajustar.
-        // Backend suele mandar: [{authority: 'ADMIN'}] o strings directos.
-        // Vamos a mostrar el primer rol encontrado si es lista compleja.
         const r = decoded.authorities[0]?.authority || decoded.authorities[0] || "";
         setRole(r.replace("ROLE_", ""));
       }
@@ -56,7 +51,6 @@ export default function DashboardPage() {
 
     const fetchData = async () => {
       try {
-        // 1. Petición a Pacientes (se mantiene igual)
         const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -68,7 +62,6 @@ export default function DashboardPage() {
           totalPacientesLen = dataPacientes.length;
         }
 
-        // 2. Petición a Encuestas (para obtener la default) y luego sus registros
         const resEncuestas = await fetch('http://localhost:8080/api/v1/encuestas', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -88,7 +81,6 @@ export default function DashboardPage() {
           }
         }
 
-        // 3. Obtener Estadísticas Reales si tenemos una encuesta ID
         let totalEncuestasLen = 0;
         let registrosHoyLen = 0;
 
@@ -100,14 +92,11 @@ export default function DashboardPage() {
           if (resRegistros.ok) {
             const registros: any[] = await resRegistros.json();
             totalEncuestasLen = registros.length;
-
-            // Calcular registros de HOY
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const today = new Date().toISOString().split('T')[0];
             registrosHoyLen = registros.filter((r: any) => r.fechaRealizacion.startsWith(today)).length;
           }
         }
 
-        // Actualizar estado final
         setStats({
           totalPacientes: totalPacientesLen,
           totalEncuestas: totalEncuestasLen,
@@ -124,46 +113,32 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-
-
   return (
     <>
-      {/* Header Superior */}
       <header className={styles.header}>
         <div className={styles.welcomeText}>
           <h1>Hola, {user} {role && <span style={{ fontSize: '0.6em', color: '#666', opacity: 0.8, verticalAlign: 'middle', border: '1px solid #ccc', borderRadius: '4px', padding: '2px 6px' }}> {role}</span>} 👋</h1>
           <p>Aquí tienes un resumen de la actividad del estudio.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {/* Aquí podrías poner un avatar o notificaciones */}
-        </div>
       </header>
 
       <section className={styles.statsGrid}>
         <div className={styles.statCard}>
-          <div className={`${styles.statIconBox} ${styles.iconBlue}`}>
-            <FaUserInjured />
-          </div>
+          <div className={`${styles.statIconBox} ${styles.iconBlue}`}><FaUserInjured /></div>
           <div className={styles.statInfo}>
             <h3>Total Pacientes</h3>
             <p>{loading ? "..." : stats.totalPacientes}</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
-          <div className={`${styles.statIconBox} ${styles.iconPurple}`}>
-            <FaClipboardList />
-          </div>
+          <div className={`${styles.statIconBox} ${styles.iconPurple}`}><FaClipboardList /></div>
           <div className={styles.statInfo}>
             <h3>Encuestas Completas</h3>
             <p>{loading ? "..." : stats.totalEncuestas}</p>
           </div>
         </div>
-
         <div className={styles.statCard}>
-          <div className={`${styles.statIconBox} ${styles.iconGreen}`}>
-            <FaPlus />
-          </div>
+          <div className={`${styles.statIconBox} ${styles.iconGreen}`}><FaPlus /></div>
           <div className={styles.statInfo}>
             <h3>Registros Hoy</h3>
             <p>{loading ? "..." : (stats as any).registrosHoy || 0}</p>
@@ -172,14 +147,11 @@ export default function DashboardPage() {
       </section>
 
       <section className={styles.sectionGrid}>
-
-        {/* Tabla de Pacientes Recientes */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <h3 className={styles.cardTitle}>Pacientes Recientes</h3>
             <button style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => router.push('/dashboard/pacientes')}>Ver todos</button>
           </div>
-
           <table className={styles.table}>
             <thead>
               <tr>
@@ -197,12 +169,16 @@ export default function DashboardPage() {
                     <td style={{ fontWeight: '500' }}>{p.nombre} {p.apellidos}</td>
                     <td>{p.rut}</td>
                     <td>
-                      <button
-                        style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}
-                        onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
-                      >
-                        Ver Ficha
-                      </button>
+                      {/* SOLO ADMIN VE ESTE BOTÓN --- */}
+                      {role === 'ADMIN' && (
+                        <button
+                          style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                          onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
+                        >
+                          Ver Ficha
+                        </button>
+                      )}
+                      {role !== 'ADMIN' && <span style={{color: '#9ca3af', fontSize:'0.9em'}}>Restringido</span>}
                     </td>
                   </tr>
                 ))
@@ -235,7 +211,6 @@ export default function DashboardPage() {
               </div>
             </button>
 
-            {/* Botón añadido: Personalizar Formulario */}
             <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/dashboard/constructor/${defaultSurveyId}`)}>
               <FaEdit size={20} color="#8b5cf6" />
               <div>
