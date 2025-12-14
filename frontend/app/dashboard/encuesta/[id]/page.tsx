@@ -17,6 +17,7 @@ interface Paciente {
 interface Opcion {
     idOpcion: number;
     textoOpcion: string;
+    idPreguntaDestino?: number; // Nuevo campo para lógica de salto
 }
 
 interface Pregunta {
@@ -87,6 +88,52 @@ export default function ResponderEncuestaPage() {
         } catch (error) { console.error(error); }
     };
 
+    // --- LOGICA DE SALTO (VISIBILIDAD) ---
+    const getVisibleQuestions = () => {
+        if (!encuesta || !encuesta.preguntas) return [];
+
+        const visibleQuestions: Pregunta[] = [];
+        let jumpTargetId: number | null = null;
+
+        for (const pregunta of encuesta.preguntas) {
+            // 1. Si hay un salto activo
+            if (jumpTargetId !== null) {
+                // Si llegamos a la pregunta destino, desactivamos el salto y la mostramos
+                if (pregunta.idPregunta === jumpTargetId) {
+                    jumpTargetId = null;
+                    visibleQuestions.push(pregunta);
+                }
+                // Si no, la ignoramos (saltamos) mientras el ID sea menor al destino
+                // (Nota: esto asume orden ascendente de IDs, que ya aseguramos en el fetch)
+                else if (pregunta.idPregunta > jumpTargetId) {
+                    // Caso de seguridad: si nos pasamos del destino sin encontrarlo (ej: se borró), reseteamos
+                    jumpTargetId = null;
+                    visibleQuestions.push(pregunta);
+                }
+                continue;
+            }
+
+            // 2. Si no hay salto activo, mostramos la pregunta
+            visibleQuestions.push(pregunta);
+
+            // 3. Verificamos si la respuesta actual dispara un NUEVO salto
+            const respuestaActual = respuestas[pregunta.idPregunta];
+            if (respuestaActual !== undefined && respuestaActual !== null) {
+                // Solo las preguntas de selección (radio) suelen tener lógica de salto simple
+                if (pregunta.tipoPregunta.includes('SELECCION') && typeof respuestaActual === 'number') {
+                    // Buscar la opción seleccionada
+                    const opcionSeleccionada = pregunta.opciones.find(op => op.idOpcion === respuestaActual);
+                    if (opcionSeleccionada && opcionSeleccionada.idPreguntaDestino) {
+                        jumpTargetId = opcionSeleccionada.idPreguntaDestino;
+                    }
+                }
+            }
+        }
+        return visibleQuestions;
+    };
+
+    const visibleQuestions = getVisibleQuestions();
+
     // --- HANDLERS ---
     const handleInputChange = (idPregunta: number, value: string) => {
         setRespuestas(prev => ({ ...prev, [idPregunta]: value }));
@@ -124,8 +171,8 @@ export default function ResponderEncuestaPage() {
         e.preventDefault();
         if (!encuesta) return;
 
-        // Validación
-        for (const p of encuesta.preguntas) {
+        // Validación: Solo de preguntas visibles
+        for (const p of visibleQuestions) {
             const r = respuestas[p.idPregunta];
             const estaVacio = r === undefined || r === null || r === "" || (Array.isArray(r) && r.length === 0);
             if (p.obligatoria && estaVacio) {
@@ -136,26 +183,32 @@ export default function ResponderEncuestaPage() {
 
         const token = localStorage.getItem('accessToken');
 
-        // 2. Construcción correcta del Payload
+        // 2. Construcción correcta del Payload: Solo respuetas de preguntas visibles
         const respuestasEnviar: any[] = [];
 
-        Object.keys(respuestas).forEach(key => {
-            const idPregunta = parseInt(key);
-            const valor = respuestas[idPregunta];
-            const pregunta = encuesta.preguntas.find(p => p.idPregunta === idPregunta);
+        // Usamos visibleQuestions para filtrar qué respuestas enviar
+        visibleQuestions.forEach(p => {
+            const key = p.idPregunta;
+            const valor = respuestas[key];
 
-            if (!pregunta) return;
+            // Si no hay respuesta (y era opcional), no la enviamos o la enviamos null? 
+            // El backend suele ignorar si no se envía, pero si quieres borrar una respuesta previa...
+            // Por simplicidad enviamos solo si existe valor
+            if (valor === undefined || valor === null || valor === "") return;
+            if (Array.isArray(valor) && valor.length === 0) return;
 
-            if (pregunta.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
+            if (p.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
                 valor.forEach(idOp => {
-                    respuestasEnviar.push({ idPregunta: idPregunta, idOpcionSeleccionada: idOp });
+                    respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: idOp });
                 });
-            } else if (pregunta.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
-                respuestasEnviar.push({ idPregunta: idPregunta, idOpcionSeleccionada: valor });
+            } else if (p.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
+                respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: valor });
             } else {
-                respuestasEnviar.push({ idPregunta: idPregunta, valorTexto: String(valor) });
+                respuestasEnviar.push({ idPregunta: key, valorTexto: String(valor) });
             }
         });
+
+        // NOTA: El payload NO debe incluir respuestas de preguntas ocultas para evitar inconsistencias
 
         const payload = {
             idEncuesta: parseInt(idEncuesta!),
@@ -206,33 +259,38 @@ export default function ResponderEncuestaPage() {
         const token = localStorage.getItem('accessToken');
 
         // Construcción del Payload para borrador
+        // Para borradores, quizás quieras guardar TODO, incluso ocultas, para no perder datos si el usuario cambia de opinión después?
+        // Pero para ser consistente con la lógica de salto, mejor guardar solo lo visible o lo que el usuario "cree" que respondió.
+        // Vamos a guardar solo visibles para mantener consistencia.
         const respuestasEnviar: any[] = [];
 
-        Object.keys(respuestas).forEach(key => {
-            const idPregunta = parseInt(key);
-            const valor = respuestas[idPregunta];
-            const pregunta = encuesta.preguntas.find(p => p.idPregunta === idPregunta);
+        visibleQuestions.forEach(p => {
+            const key = p.idPregunta;
+            const valor = respuestas[key];
 
-            if (!pregunta) return;
+            if (valor === undefined || valor === null || valor === "") return;
+            if (Array.isArray(valor) && valor.length === 0) return;
 
-            if (pregunta.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
+            if (p.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
                 valor.forEach(idOp => {
-                    respuestasEnviar.push({ idPregunta: idPregunta, idOpcionSeleccionada: idOp });
+                    respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: idOp });
                 });
-            } else if (pregunta.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
-                respuestasEnviar.push({ idPregunta: idPregunta, idOpcionSeleccionada: valor });
+            } else if (p.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
+                respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: valor });
             } else {
-                respuestasEnviar.push({ idPregunta: idPregunta, valorTexto: String(valor) });
+                respuestasEnviar.push({ idPregunta: key, valorTexto: String(valor) });
             }
         });
+
 
         const payload = {
             idEncuesta: parseInt(idEncuesta!),
             idPaciente: parseInt(selectedPaciente),
             respuestas: respuestasEnviar,
-            esBorrador: true // IMPORTANTE: Marca como borrador
+            esBorrador: true
         };
 
+        // ... (resto del fetch igual)
         try {
             const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
                 method: 'POST',
@@ -298,7 +356,7 @@ export default function ResponderEncuestaPage() {
                     <small style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Paciente: {pacientes.find(p => p.idPaciente.toString() === selectedPaciente)?.nombre}</small>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    {encuesta.preguntas.map((p) => (
+                    {visibleQuestions.map((p) => (
                         <div key={p.idPregunta} className={styles.questionBlock}>
                             <label className={styles.questionLabel}>{p.textoPregunta} {p.obligatoria && <span className={styles.required}>*</span>}</label>
                             {(p.tipoPregunta === 'TEXTO' || p.tipoPregunta === 'TEXTO_LIBRE') && (

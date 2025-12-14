@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class OpcionRespuestaCreateDto {
     private String textoOpcion;
     private Integer valorDicotomizado; // Opcional
+    private Integer idPreguntaDestino; // ID de la pregunta a la que saltar
 }

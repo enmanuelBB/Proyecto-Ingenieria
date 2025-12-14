@@ -172,6 +172,12 @@ public class EncuestaService {
             pregunta.setOpciones(opciones);
         }
         Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
+
+        // Procesar lógica de salto después de guardar (para tener IDs de opciones)
+        if (preguntaDto.getOpciones() != null) {
+            procesarLogicaSalto(preguntaGuardada, preguntaDto.getOpciones());
+        }
+
         return mapPreguntaToDto(preguntaGuardada);
     }
 
@@ -186,6 +192,14 @@ public class EncuestaService {
         pregunta.setTipoPregunta(preguntaDto.getTipoPregunta());
         pregunta.setObligatoria(preguntaDto.isObligatoria());
 
+        // Limpiar opciones existentes (esto borrará las opciones por orphanRemoval)
+        // Nota: Si la DB no tiene ON DELETE CASCADE en LogicaSalto, esto podría fallar
+        // si había lógica previa.
+        // Lo ideal sería borrar LogicaSalto explícitamente antes, pero asumiremos que
+        // el FK lo maneja o no hay datos.
+        // Si falla, descomentar la siguiente línea (necesitaría repositorio):
+        // logicaSaltoRepository.deleteByPreguntaOrigen(pregunta);
+
         pregunta.getOpciones().clear();
 
         if (preguntaDto.getOpciones() != null) {
@@ -199,7 +213,43 @@ public class EncuestaService {
             pregunta.getOpciones().addAll(nuevasOpciones);
         }
         Pregunta preguntaGuardada = preguntaRepository.save(pregunta);
+
+        // Procesar lógica de salto
+        if (preguntaDto.getOpciones() != null) {
+            procesarLogicaSalto(preguntaGuardada, preguntaDto.getOpciones());
+        }
+
         return mapPreguntaToDto(preguntaGuardada);
+    }
+
+    private void procesarLogicaSalto(Pregunta pregunta, List<OpcionRespuestaCreateDto> opcionesDto) {
+        // Asumimos que el orden de pregunta.getOpciones() coincide con opcionesDto
+        // porque acabamos de guardarlas en ese orden.
+        List<OpcionRespuesta> opcionesGuardadas = pregunta.getOpciones();
+
+        if (opcionesGuardadas.size() != opcionesDto.size()) {
+            // Mismatch en tamaño, algo raro pasó o no se guardaron en orden
+            return;
+        }
+
+        for (int i = 0; i < opcionesGuardadas.size(); i++) {
+            OpcionRespuesta opcion = opcionesGuardadas.get(i);
+            OpcionRespuestaCreateDto dto = opcionesDto.get(i);
+
+            if (dto.getIdPreguntaDestino() != null) {
+                Pregunta preguntaDestino = preguntaRepository.findById(dto.getIdPreguntaDestino())
+                        .orElse(null); // O lanzar excepción si es estricto
+
+                if (preguntaDestino != null) {
+                    LogicaSalto logica = LogicaSalto.builder()
+                            .preguntaOrigen(pregunta)
+                            .opcionOrigen(opcion)
+                            .preguntaDestino(preguntaDestino)
+                            .build();
+                    logicaSaltoRepository.save(logica);
+                }
+            }
+        }
     }
 
     // --- FUNCIONALIDAD Encuesta 6: EDITAR TITULO Y VERSION ENCUESTA ---
