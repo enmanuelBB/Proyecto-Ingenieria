@@ -4,14 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './encuesta.module.css';
-import { FaPlus, FaEdit, FaPlay, FaClipboardCheck } from 'react-icons/fa'; // Corregido import
+import { FaPlus, FaEdit, FaPlay, FaClipboardCheck, FaHistory } from 'react-icons/fa'; // Corregido import
 import Swal from 'sweetalert2';
 
 // 1. ACTUALIZAMOS LA INTERFAZ
 interface Encuesta {
     idEncuesta: number;
     titulo: string;
-    version?: string;     
+    version?: string;
 }
 
 export default function EncuestasMenuPage() {
@@ -33,7 +33,7 @@ export default function EncuestasMenuPage() {
             });
             if (res.ok) {
                 const data = await res.json();
-                
+
                 data.sort((a: Encuesta, b: Encuesta) => b.idEncuesta - a.idEncuesta);
                 setEncuestas(data);
             }
@@ -56,7 +56,7 @@ export default function EncuestasMenuPage() {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(decodeURIComponent(window.atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-            userId = payload.id || payload.userId || payload.sub; 
+            userId = payload.id || payload.userId || payload.sub;
         } catch (e) { console.error(e); }
 
         const { value: formValues } = await Swal.fire({
@@ -71,7 +71,7 @@ export default function EncuestasMenuPage() {
             preConfirm: () => {
                 const titulo = (document.getElementById('swal-title') as HTMLInputElement).value;
                 const version = (document.getElementById('swal-version') as HTMLInputElement).value;
-                
+
                 if (!titulo) {
                     Swal.showValidationMessage('El título es obligatorio');
                     return false;
@@ -86,7 +86,7 @@ export default function EncuestasMenuPage() {
 
             try {
                 const payload: any = { titulo, version };
-                if (userId) payload.usuarioId = userId; 
+                if (userId) payload.usuarioId = userId;
 
                 const res = await fetch('http://localhost:8080/api/v1/encuestas', {
                     method: 'POST',
@@ -120,9 +120,18 @@ export default function EncuestasMenuPage() {
                     <h1>Encuestas Disponibles</h1>
                     <p>Selecciona una encuesta para responder o editar su estructura.</p>
                 </div>
-                <button className={styles.createBtn} onClick={handleCreateSurvey}>
-                    <FaPlus /> Nueva Encuesta
-                </button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <Link
+                        href="/borradores"
+                        className={styles.createBtn}
+                        style={{ backgroundColor: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+                    >
+                        <FaHistory /> Ver Borradores
+                    </Link>
+                    <button className={styles.createBtn} onClick={handleCreateSurvey}>
+                        <FaPlus /> Nueva Encuesta
+                    </button>
+                </div>
             </header>
 
             {loading ? (
@@ -130,7 +139,7 @@ export default function EncuestasMenuPage() {
             ) : encuestas.length === 0 ? (
                 <div className={styles.loading}>
                     <p>No hay encuestas creadas aún.</p>
-                    <button className={styles.createBtn} onClick={handleCreateSurvey} style={{margin: '1rem auto'}}>
+                    <button className={styles.createBtn} onClick={handleCreateSurvey} style={{ margin: '1rem auto' }}>
                         Crear la primera
                     </button>
                 </div>
@@ -143,29 +152,29 @@ export default function EncuestasMenuPage() {
                                     <FaClipboardCheck />
                                 </div>
                                 <h3 className={styles.cardTitle}>{encuesta.titulo}</h3>
-                                
+
                                 {/* 2. CAMBIAMOS LA DESCRIPCIÓN POR LA VERSIÓN */}
-                                <p className={styles.cardDesc} style={{display:'flex', alignItems:'center', gap:'5px'}}>
-                                    <span style={{fontWeight:'600', color:'var(--text-main)'}}>Versión:</span> 
-                                    <span style={{backgroundColor:'var(--bg-input)', padding:'2px 8px', borderRadius:'12px', fontSize:'0.85rem'}}>
+                                <p className={styles.cardDesc} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>Versión:</span>
+                                    <span style={{ backgroundColor: 'var(--bg-input)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.85rem' }}>
                                         {encuesta.version || "1.0"}
                                     </span>
                                 </p>
 
                             </div>
-                            
+
                             <div className={styles.cardActions}>
                                 {/* BOTÓN: EDITAR (Va al Constructor) */}
-                                <Link 
-                                    href={`/dashboard/constructor/${encuesta.idEncuesta}`} 
+                                <Link
+                                    href={`/dashboard/constructor/${encuesta.idEncuesta}`}
                                     className={`${styles.btn} ${styles.btnSecondary}`}
                                 >
                                     <FaEdit /> Personalizar
                                 </Link>
 
                                 {/* BOTÓN: RESPONDER (Va al Formulario) */}
-                                <Link 
-                                    href={`/dashboard/encuesta/${encuesta.idEncuesta}`} 
+                                <Link
+                                    href={`/dashboard/encuesta/${encuesta.idEncuesta}`}
                                     className={`${styles.btn} ${styles.btnPrimary}`}
                                 >
                                     <FaPlay size={12} /> Responder

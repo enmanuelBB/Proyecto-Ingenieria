@@ -139,6 +139,30 @@ public class EncuestaController {
     }
 
     /**
+     * URL: GET /api/v1/encuestas/borradores
+     * Obtiene los borradores del usuario actual.
+     */
+    @GetMapping("/borradores")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<java.util.List<RegistroCompletoResponseDto>> getBorradores(
+            @AuthenticationPrincipal Users user) {
+        if (user == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.ok(encuestaService.getBorradoresByUsuario(user));
+    }
+
+    /**
+     * URL: GET /api/v1/encuestas/registro/{id}
+     * Obtiene un registro específico por ID (para cargar borradores o ver
+     * detalles).
+     */
+    @GetMapping("/registro/{id}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<RegistroCompletoResponseDto> getRegistroById(@PathVariable Integer id) {
+        return ResponseEntity.ok(encuestaService.getRegistroById(id));
+    }
+
+    /**
      * elimina una pregunta URL: DELETE /api/v1/encuestas/preguntas/{id}
      */
     @DeleteMapping("/preguntas/{id}")

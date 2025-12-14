@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './responder.module.css';
 
@@ -46,11 +46,22 @@ interface RegistroRequestDto {
     idPaciente: number;
     idEncuesta: number;
     respuestas: RespuestaRequestDto[];
+    esBorrador?: boolean;
 }
 
 export default function ResponderEncuestaPage() {
+    return (
+        <Suspense fallback={<div>Cargando...</div>}>
+            <ResponderEncuestaContent />
+        </Suspense>
+    );
+}
+
+function ResponderEncuestaContent() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const registroId = searchParams.get('registroId');
     const { id } = params; // This is a string
 
     const [encuesta, setEncuesta] = useState<Encuesta | null>(null);
@@ -105,6 +116,55 @@ export default function ResponderEncuestaPage() {
             fetchData();
         }
     }, [id, router]);
+
+    // Load Draft Data if registroId is present
+    useEffect(() => {
+        if (!registroId || !id) return;
+
+        const fetchDraft = async () => {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+
+            try {
+                const res = await fetch(`http://localhost:8080/api/v1/encuestas/registro/${registroId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Pre-fill patient
+                    setSelectedPacienteId(data.idPaciente);
+
+                    // Pre-fill answers
+                    const newRespuestas: Record<number, { optionId: number | null, text: string | null }> = {};
+
+                    if (data.respuestas && Array.isArray(data.respuestas)) {
+                        data.respuestas.forEach((r: any) => {
+                            if (r.idPregunta) {
+                                newRespuestas[r.idPregunta] = {
+                                    optionId: r.idOpcionSeleccionada || null,
+                                    text: r.respuestaDada || null
+                                };
+
+                                // Special case: if it has an option selected, clear text explicitly to match state logic
+                                if (r.idOpcionSeleccionada) {
+                                    newRespuestas[r.idPregunta].text = null;
+                                } else {
+                                    // If text, ensure optionId is null
+                                    newRespuestas[r.idPregunta].optionId = null;
+                                }
+                            }
+                        });
+                        setRespuestas(newRespuestas);
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading draft", err);
+            }
+        };
+
+        fetchDraft();
+    }, [registroId, id]);
 
     const handleOptionChange = (questionId: number, optionId: number) => {
         setRespuestas(prev => ({
@@ -173,19 +233,26 @@ export default function ResponderEncuestaPage() {
         setValidationErrors(newErrors);
 
         if (newErrors.size > 0) {
+            // Scroll immediately to the first error
             if (firstErrorId !== null) {
                 const element = document.getElementById(`pregunta-${firstErrorId}`);
                 if (element) {
+                    // Use auto for instant jump if smooth is conflicting, or give it time
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.focus();
                 }
             }
 
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campos Incompletos',
-                text: 'Por favor, responda todas las preguntas obligatorias resaltadas.',
-                confirmButtonColor: '#f39c12'
-            });
+            // Small delay to allow scroll to start/finish before Alert locks the thread/viewport
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos Incompletos',
+                    text: 'Por favor, responda todas las preguntas obligatorias resaltadas.',
+                    confirmButtonColor: '#f39c12'
+                });
+            }, 600); // 600ms delay to let the smooth scroll animation play out visibly
+
             return false;
         }
 
@@ -230,7 +297,7 @@ export default function ResponderEncuestaPage() {
                     text: 'El formulario clínico ha sido guardado y asociado al paciente correctamente.',
                     confirmButtonColor: '#3085d6',
                 });
-                router.push('/dashboard');
+                router.push('/dashboard/encuesta');
             } else {
                 const errData = await res.text(); // Could be text or json
                 Swal.fire({
@@ -246,6 +313,74 @@ export default function ResponderEncuestaPage() {
                 icon: 'error',
                 title: 'Error de Conexión',
                 text: 'No se pudo conectar con el servidor para enviar la encuesta.',
+                confirmButtonColor: '#d33',
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleSaveDraft = async () => {
+        if (!encuesta) return;
+        if (!selectedPacienteId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selección Requerida',
+                text: 'Por favor seleccione un paciente para guardar el borrador.',
+                confirmButtonColor: '#f39c12'
+            });
+            return;
+        }
+
+        setSubmitting(true);
+        const token = localStorage.getItem('accessToken');
+
+        const respuestasList: RespuestaRequestDto[] = Object.entries(respuestas).map(([qId, ans]) => ({
+            idPregunta: Number(qId),
+            idOpcionSeleccionada: ans.optionId || (null as any),
+            valorTexto: ans.text || null
+        }));
+
+        const payload: RegistroRequestDto = {
+            idPaciente: Number(selectedPacienteId),
+            idEncuesta: encuesta.idEncuesta,
+            respuestas: respuestasList,
+            esBorrador: true
+        };
+
+        try {
+            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Borrador Guardado',
+                    text: 'Puede continuar editando esta encuesta más tarde desde la sección de Borradores.',
+                    confirmButtonColor: '#3085d6',
+                });
+                router.push('/borradores');
+            } else {
+                const errData = await res.text();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al guardar',
+                    text: errData || 'Ocurrió un error al guardar el borrador.',
+                    confirmButtonColor: '#d33',
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Conexión',
+                text: 'No se pudo conectar con el servidor.',
                 confirmButtonColor: '#d33',
             });
         } finally {
@@ -337,7 +472,16 @@ export default function ResponderEncuestaPage() {
                             className={styles.submitButton}
                             disabled={submitting}
                         >
-                            {submitting ? 'Enviando...' : 'Enviar Encuesta'}
+                            {submitting ? 'Guardando...' : 'Guardar'}
+                        </button>
+                        <button
+                            type="button"
+                            className={styles.draftButton}
+                            onClick={handleSaveDraft}
+                            disabled={submitting}
+                            style={{ marginLeft: '10px', backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}
+                        >
+                            Dejar como borrador
                         </button>
                     </div>
                 </form>

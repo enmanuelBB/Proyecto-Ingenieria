@@ -40,4 +40,7 @@ public class RegistroEncuesta {
 
     @OneToMany(mappedBy = "registroEncuesta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Respuesta> respuestas;
+
+    @Column(name = "estado")
+    private String estado; // 'COMPLETADO', 'BORRADOR'
 }

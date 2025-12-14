@@ -1,10 +1,16 @@
 package com.v1.proyecto.encuesta.service;
 
 import com.lowagie.text.Document;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import java.awt.Color;
 import com.v1.proyecto.encuesta.model.Encuesta;
 import com.v1.proyecto.encuesta.model.Pregunta;
 import com.v1.proyecto.encuesta.model.RegistroEncuesta;
@@ -116,29 +122,45 @@ public class ExportService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            document.add(new Paragraph("Reporte de Encuesta: " + encuesta.getTitulo()));
+            // Título
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
+            Paragraph title = new Paragraph("Reporte de Encuesta: " + encuesta.getTitulo(), titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
             document.add(new Paragraph("Versión: " + encuesta.getVersion()));
             document.add(new Paragraph("Total Registros: " + registros.size()));
             document.add(new Paragraph(" ")); // Espacio
 
             PdfPTable table = new PdfPTable(4 + preguntas.size());
             table.setWidthPercentage(100);
+            table.setHeaderRows(1);
+
+            // Definir Font para Header y Data
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
+            Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
 
             // Headers
-            table.addCell("ID");
-            table.addCell("Fecha");
-            table.addCell("Paciente");
-            table.addCell("Usuario");
+            // Helper local (aunque idealmente método privado) para celdas de header
+            addHeaderCell(table, "ID", headerFont);
+            addHeaderCell(table, "Fecha", headerFont);
+            addHeaderCell(table, "Paciente", headerFont);
+            addHeaderCell(table, "Usuario", headerFont);
+
             for (Pregunta p : preguntas) {
-                table.addCell(p.getTextoPregunta());
+                addHeaderCell(table, p.getTextoPregunta(), headerFont);
             }
 
             // Data
+            boolean alternate = false;
             for (RegistroEncuesta registro : registros) {
-                table.addCell(registro.getIdRegistro().toString());
-                table.addCell(registro.getFechaRealizacion().toString());
-                table.addCell(registro.getPaciente().getNombre() + " " + registro.getPaciente().getApellidos());
-                table.addCell(registro.getUsuario().getUsername());
+                Color rowColor = alternate ? new Color(245, 245, 245) : Color.WHITE; // Light Gray vs White
+
+                addCell(table, registro.getIdRegistro().toString(), dataFont, rowColor);
+                addCell(table, registro.getFechaRealizacion().toString(), dataFont, rowColor);
+                addCell(table, registro.getPaciente().getNombre() + " " + registro.getPaciente().getApellidos(),
+                        dataFont, rowColor);
+                addCell(table, registro.getUsuario().getUsername(), dataFont, rowColor);
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
@@ -146,8 +168,9 @@ public class ExportService {
                                 this::getRespuestaTexto));
 
                 for (Pregunta p : preguntas) {
-                    table.addCell(respuestasMap.getOrDefault(p.getIdPregunta(), ""));
+                    addCell(table, respuestasMap.getOrDefault(p.getIdPregunta(), ""), dataFont, rowColor);
                 }
+                alternate = !alternate;
             }
 
             document.add(table);
@@ -229,5 +252,22 @@ public class ExportService {
             escapedData = "\"" + data + "\"";
         }
         return escapedData;
+    }
+
+    private void addHeaderCell(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBackgroundColor(Color.DARK_GRAY);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        table.addCell(cell);
+    }
+
+    private void addCell(PdfPTable table, String text, Font font, Color backgroundColor) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(4);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBackgroundColor(backgroundColor);
+        table.addCell(cell);
     }
 }
