@@ -49,25 +49,29 @@ public class EncuestaService {
         Encuesta encuesta = encuestaRepository.findById(registroDto.getIdEncuesta())
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
 
+        boolean esBorrador = Boolean.TRUE.equals(registroDto.getEsBorrador());
+
         // --- INICIO DE LA VALIDACIÓN DE PREGUNTAS OBLIGATORIAS ---
+        // SOLO VALIDAR SI NO ES BORRADOR
+        if (!esBorrador) {
+            // 1. Obtiene todas las preguntas obligatorias de esta encuesta
+            Set<Integer> preguntasObligatoriasIds = encuesta.getPreguntas().stream()
+                    .filter(Pregunta::isObligatoria)
+                    .map(Pregunta::getIdPregunta)
+                    .collect(Collectors.toSet());
 
-        // 1. Obtiene todas las preguntas obligatorias de esta encuesta
-        Set<Integer> preguntasObligatoriasIds = encuesta.getPreguntas().stream()
-                .filter(Pregunta::isObligatoria)
-                .map(Pregunta::getIdPregunta)
-                .collect(Collectors.toSet());
+            // 2. Obtiene los IDs de las preguntas que el usuario SÍ respondió
+            Set<Integer> preguntasRespondidasIds = registroDto.getRespuestas().stream()
+                    .map(RespuestaRequestDto::getIdPregunta)
+                    .collect(Collectors.toSet());
 
-        // 2. Obtiene los IDs de las preguntas que el usuario SÍ respondió
-        Set<Integer> preguntasRespondidasIds = registroDto.getRespuestas().stream()
-                .map(RespuestaRequestDto::getIdPregunta)
-                .collect(Collectors.toSet());
-
-        // 3. Comprueba si faltan obligatorias
-        for (Integer idObligatoria : preguntasObligatoriasIds) {
-            if (!preguntasRespondidasIds.contains(idObligatoria)) {
-                // (En un escenario real, también deberías chequear la lógica de salto aquí)
-                throw new IllegalArgumentException(
-                        "Respuesta faltante para la pregunta obligatoria ID: " + idObligatoria);
+            // 3. Comprueba si faltan obligatorias
+            for (Integer idObligatoria : preguntasObligatoriasIds) {
+                if (!preguntasRespondidasIds.contains(idObligatoria)) {
+                    // (En un escenario real, también deberías chequear la lógica de salto aquí)
+                    throw new IllegalArgumentException(
+                            "Respuesta faltante para la pregunta obligatoria ID: " + idObligatoria);
+                }
             }
         }
         // --- FIN DE LA VALIDACIÓN ---
@@ -78,6 +82,7 @@ public class EncuestaService {
                 .usuario(user)
                 .fechaRealizacion(LocalDateTime.now())
                 .respuestas(new ArrayList<>())
+                .estado(esBorrador ? "BORRADOR" : "COMPLETADO")
                 .build();
 
         for (RespuestaRequestDto resDto : registroDto.getRespuestas()) {
@@ -279,6 +284,26 @@ public class EncuestaService {
                 .collect(Collectors.toList());
     }
 
+    // --- FUNCIONALIDAD EXTRA: Obtener un registro por ID ---
+    @Transactional(readOnly = true)
+    public RegistroCompletoResponseDto getRegistroById(Integer idRegistro) {
+        RegistroEncuesta registro = registroEncuestaRepository.findById(idRegistro)
+                .orElseThrow(() -> new RuntimeException("Registro no encontrado con id: " + idRegistro));
+        return mapRegistroToCompletoDto(registro);
+    }
+
+    // --- FUNCIONALIDAD EXTRA: Obtener Borradores por Usuario ---
+    @Transactional(readOnly = true)
+    public List<RegistroCompletoResponseDto> getBorradoresByUsuario(Users user) {
+        // Asumiendo que quieres todos los borradores del usuario sin importar qué
+        // encuesta es
+        List<RegistroEncuesta> borradores = registroEncuestaRepository.findByUsuarioIdAndEstado(user.getId(),
+                "BORRADOR");
+        return borradores.stream()
+                .map(this::mapRegistroToCompletoDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public RespuestaDetalladaDto updateRespuesta(Integer idRespuesta, RespuestaUpdateDto dto) {
 
@@ -328,12 +353,13 @@ public class EncuestaService {
         return EncuestaResponseDto.builder()
                 .idEncuesta(encuesta.getIdEncuesta())
                 .titulo(encuesta.getTitulo())
-                .version(encuesta.getVersion()) 
+                .version(encuesta.getVersion())
                 .preguntas(encuesta.getPreguntas().stream()
                         .map(this::mapPreguntaToDto)
                         .collect(Collectors.toList()))
                 .build();
     }
+
     private PreguntaDto mapPreguntaToDto(Pregunta pregunta) {
         return PreguntaDto.builder()
                 .idPregunta(pregunta.getIdPregunta())
@@ -397,6 +423,7 @@ public class EncuestaService {
 
         return RespuestaDetalladaDto.builder()
                 .idRespuesta(respuesta.getIdRespuesta())
+                .idPregunta(respuesta.getPregunta().getIdPregunta())
                 .textoPregunta(respuesta.getPregunta().getTextoPregunta())
                 .respuestaDada(textoRespuesta)
                 .idOpcionSeleccionada(idOpcion)
