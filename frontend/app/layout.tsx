@@ -1,7 +1,7 @@
-// Ubicación: app/layout.tsx
-
 import './globals.css';
 import { Inter } from 'next/font/google'; 
+import ThemeProvider from "./components/ThemeProvider"; 
+
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,7 +17,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body> 
+      {/* 3. Aplicamos la clase de la fuente al body */}
+      <body className={inter.className}>
+        
+        {/* Mantenemos el ThemeProvider para que funcione el modo oscuro */}
+        <ThemeProvider>
+            {children}
+        </ThemeProvider>
+        
+      </body>
     </html>
   );
 }

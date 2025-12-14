@@ -1,7 +1,8 @@
 .container {
     display: flex;
     min-height: 100vh;
-    background-color: #f1f5f9;
+
+    background-color: var(--background); 
     font-family: 'Inter', sans-serif;
 }
 
@@ -17,11 +18,13 @@
 .title {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #0f172a;
+    /* Cambio: color de texto principal */
+    color: var(--text-main); 
 }
 
 .subtitle {
-    color: #64748b;
+    /* Cambio: color de texto secundario */
+    color: var(--text-muted); 
     margin-top: 0.5rem;
 }
 
@@ -32,10 +35,11 @@
 }
 
 .card {
-    background: white;
+    /* Cambio: fondo de tarjeta y bordes dinámicos */
+    background: var(--bg-card); 
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color); 
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     height: fit-content;
 }
@@ -43,9 +47,10 @@
 .cardTitle {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e293b;
+    /* Cambio: color de título de tarjeta */
+    color: var(--text-main); 
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-color); 
     padding-bottom: 0.75rem;
 }
 
@@ -56,7 +61,8 @@
 .label {
     display: block;
     font-size: 0.85rem;
-    color: #64748b;
+    /* Cambio: color de etiqueta */
+    color: var(--text-muted); 
     text-transform: uppercase;
     font-weight: 600;
     margin-bottom: 0.3rem;
@@ -64,7 +70,8 @@
 
 .value {
     font-size: 1.1rem;
-    color: #334155;
+    /* Cambio: color de valor */
+    color: var(--text-main); 
     font-weight: 500;
 }
 
@@ -77,23 +84,27 @@
     text-align: left;
     padding: 1rem;
     font-size: 0.85rem;
-    color: #64748b;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
+    /* Cambio: color de encabezado de tabla */
+    color: var(--text-muted); 
+    border-bottom: 1px solid var(--border-color); 
+    /* Cambio: fondo de encabezado de tabla (usamos bg-hover para un gris suave) */
+    background: var(--bg-hover); 
     text-transform: uppercase;
 }
 
 .table td {
     padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    color: #334155;
+    border-bottom: 1px solid var(--border-color); 
+    /* Cambio: color de contenido de celda */
+    color: var(--text-main); 
 }
 
 .backButton {
     margin-bottom: 1.5rem;
     background: none;
     border: none;
-    color: #4f46e5;
+    /* Cambio: color primario (azul/indigo) */
+    color: var(--primary); 
     cursor: pointer;
     display: flex;
     align-items: center;
