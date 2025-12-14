@@ -1,19 +1,83 @@
-/* Ubicación: app/globals.css */
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+:root {
+  /* --- MODO CLARO (Default) --- */
+  --bg-main: #f1f5f9;       /* Fondo gris suave */
+  --bg-card: #ffffff;       /* Fondo de tarjetas/sidebar */
+  --text-main: #0f172a;     /* Texto principal oscuro */
+  --text-muted: #64748b;    /* Texto secundario gris */
+  --border-color: #e2e8f0;  /* Bordes suaves */
+  --primary: #4f46e5;       /* Tu azul/morado principal */
+  --primary-hover: #4338ca;
+  --bg-input: #ffffff;
 }
 
-html,
+[data-theme='dark'] {
+  /* --- MODO OSCURO --- */
+  --bg-main: #0f172a;       /* Azul oscuro profundo (Slate 900) */
+  --bg-card: #1e293b;       /* Azul grisáceo (Slate 800) */
+  --text-main: #f1f5f9;     /* Texto claro */
+  --text-muted: #94a3b8;    /* Texto secundario más claro */
+  --border-color: #334155;  /* Bordes oscuros */
+  --primary: #6366f1;       /* Un tono más brillante para resaltar en negro */
+  --primary-hover: #818cf8;
+  --bg-input: #1e293b;
+}
+
+/* Aplicamos transición suave global para que el cambio no sea brusco */
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  line-height: 1.5;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* Animación de entrada para páginas */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* Empieza un poco más abajo */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-enter {
+  animation: fadeInUp 0.4s ease-out forwards;
+  width: 100%; 
+}
+
+
+/* Forzamos a las alertas a usar nuestras variables cuando el tema es 'dark' */
+
+[data-theme='dark'] .swal2-popup {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme='dark'] .swal2-title {
+  color: var(--text-main) !important;
+}
+
+[data-theme='dark'] .swal2-html-container {
+  color: var(--text-muted) !important;
+}
+
+/* Ajuste para el botón de confirmar (si usas alguno en otro lado) */
+[data-theme='dark'] .swal2-confirm {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+[data-theme='dark'] .swal2-cancel {
+  background-color: var(--bg-input) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Ajuste para los iconos (Success, Error, Info) */
+[data-theme='dark'] .swal2-success-circular-line-left,
+[data-theme='dark'] .swal2-success-circular-line-right,
+[data-theme='dark'] .swal2-success-fix {
+  background-color: transparent !important;
 }

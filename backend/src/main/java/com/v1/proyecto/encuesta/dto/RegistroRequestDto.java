@@ -16,10 +16,11 @@ import java.util.List;
 public class RegistroRequestDto {
     @NotNull
     private Integer idPaciente;
-    
+
     @NotNull
     private Integer idEncuesta;
-    
-  
+
     private List<RespuestaRequestDto> respuestas;
+
+    private Boolean esBorrador; // true = borrador, false/null = completado
 }

@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard.module.css';
-import { FaUserPlus, FaSearch } from 'react-icons/fa';
+import { FaUserPlus, FaSearch, FaFileMedical } from 'react-icons/fa'; 
 import Swal from 'sweetalert2';
 
 interface Paciente {
@@ -21,12 +20,32 @@ export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // 1. Estado para el rol
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       router.push('/');
       return;
+    }
+
+    // 2. Lógica para obtener el rol del token 
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const decoded = JSON.parse(jsonPayload);
+      if (decoded.authorities && Array.isArray(decoded.authorities)) {
+        const r = decoded.authorities[0]?.authority || decoded.authorities[0] || "";
+        setRole(r.replace("ROLE_", ""));
+      }
+    } catch (e) {
+      console.error("Error decodificando token", e);
     }
 
     const fetchPacientes = async () => {
@@ -37,6 +56,8 @@ export default function PacientesPage() {
 
         if (response.ok) {
           const data = await response.json();
+          // Ordenamos para ver los nuevos primero (opcional)
+          data.sort((a: Paciente, b: Paciente) => b.idPaciente - a.idPaciente);
           setPacientes(data);
         }
       } catch (error) {
@@ -100,7 +121,6 @@ export default function PacientesPage() {
           <p>Consulta y administra la base de datos de participantes.</p>
         </div>
 
-        {/* BOTÓN ACTIVADO */}
         <button
           className={styles.actionButton}
           style={{ width: 'auto', backgroundColor: '#4f46e5', color: 'white' }}
@@ -111,7 +131,6 @@ export default function PacientesPage() {
 
       </header>
 
-      {/* Barra de Búsqueda */}
       <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem' }}>
         <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
           <FaSearch style={{ position: 'absolute', left: '15px', top: '12px', color: '#94a3b8' }} />
@@ -155,6 +174,28 @@ export default function PacientesPage() {
                   <td>{p.sexo}</td>
                   <td>{new Date(p.fechaNacimiento).toLocaleDateString()}</td>
                   <td>
+                    
+                    {/* --- 3. BOTÓN VER FICHA (SOLO ADMIN) --- */}
+                    {role === 'ADMIN' && (
+                        <button
+                          style={{ 
+                            color: '#3b82f6', 
+                            background: 'none', 
+                            border: 'none', 
+                            cursor: 'pointer', 
+                            marginRight: '10px', 
+                            fontWeight: 'bold',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
+                          title="Ver Ficha Clínica Detallada"
+                        >
+                          <FaFileMedical /> Ver Ficha
+                        </button>
+                    )}
+
                     <button
                       style={{ color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}
                       onClick={() => router.push(`/dashboard/pacientes/editar/${p.idPaciente}`)}

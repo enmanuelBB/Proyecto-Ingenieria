@@ -1,276 +1,474 @@
+"use client";
 
-'use client';
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import styles from './responder.module.css';
+import { FaArrowLeft, FaPaperPlane, FaUserInjured, FaHistory } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { FaClipboardList, FaUserCheck, FaCheckCircle, FaArrowLeft, FaEye, FaRegCalendarAlt, FaUser, FaEdit, FaExclamationTriangle, FaTrashAlt } from 'react-icons/fa';
-import styles from './encuesta.module.css';
+// --- INTERFACES ---
+interface Paciente {
+    idPaciente: number;
+    nombre: string;
+    apellidos: string;
+    rut?: string;
+}
+
+interface Opcion {
+    idOpcion: number;
+    textoOpcion: string;
+    idPreguntaDestino?: number; // Nuevo campo para lógica de salto
+}
+
+interface Pregunta {
+    idPregunta: number;
+    textoPregunta: string;
+    tipoPregunta: string;
+    obligatoria: boolean;
+    oculta?: boolean; // Campo opcional
+    opciones: Opcion[];
+}
 
 interface Encuesta {
     idEncuesta: number;
     titulo: string;
-    descripcion?: string;
     version?: string;
+    preguntas: Pregunta[];
 }
 
-interface RegistroCompleto {
-    idRegistro: number;
-    fechaRealizacion: string;
-    paciente: {
-        idPaciente: number;
-        nombre: string;
-        rut: string;
-    };
-    usuario: {
-        username: string;
-    };
-}
-
-export default function EncuestaIntermediatePage() {
+export default function ResponderEncuestaPage() {
     const router = useRouter();
     const params = useParams();
-    const id = params?.id as string;
+
+
+    const idEncuesta = params?.id ? String(params.id) : null;
 
     const [encuesta, setEncuesta] = useState<Encuesta | null>(null);
+    const [pacientes, setPacientes] = useState<Paciente[]>([]);
+    const [selectedPaciente, setSelectedPaciente] = useState<string>("");
+
     const [loading, setLoading] = useState(true);
-    const [role, setRole] = useState<string | null>(null);
-    const [hasResponded, setHasResponded] = useState<boolean>(false);
-    const [registros, setRegistros] = useState<RegistroCompleto[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [totalPacientes, setTotalPacientes] = useState<number>(0);
+    const [respuestas, setRespuestas] = useState<{ [key: number]: string | number | number[] }>({});
+    const [errorIds, setErrorIds] = useState<number[]>([]); // Estado de errores
+    const [step, setStep] = useState<'intro' | 'form'>('intro');
 
+    // Cargar datos
     useEffect(() => {
+        if (idEncuesta) {
+            fetchEncuesta();
+            fetchPacientes();
+        }
+    }, [idEncuesta]);
+
+    const fetchEncuesta = async () => {
         const token = localStorage.getItem('accessToken');
-        const storedRole = localStorage.getItem('userRole');
-
-        if (!token) {
-            router.push('/');
-            return;
-        }
-        setRole(storedRole || 'USER');
-
-        const fetchData = async () => {
-            try {
-                // 1. Cargar Detalles de Encuesta
-                const surveyRes = await fetch(`http://localhost:8080/api/v1/encuestas/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!surveyRes.ok) throw new Error('Error al cargar la encuesta');
-                const surveyData = await surveyRes.json();
-                setEncuesta(surveyData);
-
-                // 3. Si es ADMIN, cargar todas las respuestas y pacientes para estadísticas
-                if (storedRole === 'ADMIN') {
-                    const [regRes, pacRes] = await Promise.all([
-                        fetch(`http://localhost:8080/api/v1/encuestas/${id}/registros`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }),
-                        fetch('http://localhost:8080/api/v1/pacientes', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
-                    ]);
-
-                    if (regRes.ok) {
-                        const regData = await regRes.json();
-                        setRegistros(regData);
-                    }
-
-                    if (pacRes.ok) {
-                        const pacData = await pacRes.json();
-                        setTotalPacientes(pacData.length);
-                    }
+        if (!idEncuesta) return;
+        try {
+            const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.preguntas) {
+                    data.preguntas.sort((a: Pregunta, b: Pregunta) => a.idPregunta - b.idPregunta);
                 }
-
-            } catch (err: any) {
-                setError(err.message || 'Error desconocido');
-            } finally {
-                setLoading(false);
+                setEncuesta(data);
             }
-        };
-
-        if (id) {
-            fetchData();
-        }
-    }, [id, router]);
-
-    const handleResponder = () => {
-        router.push(`/responder-encuesta/${id}`);
+        } catch (error) { console.error(error); } finally { setLoading(false); }
     };
 
-    if (loading) return <div className={styles.loading}>Cargando información...</div>;
-    if (error) return <div className={styles.error}>Error: {error}</div>;
-    if (!encuesta) return <div className={styles.error}>No se encontró la encuesta.</div>;
+    const fetchPacientes = async () => {
+        const token = localStorage.getItem('accessToken');
+        try {
+            const res = await fetch('http://localhost:8080/api/v1/pacientes', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPacientes(data);
+            }
+        } catch (error) { console.error(error); }
+    };
 
-    const isAdmin = role === 'ADMIN';
+    // --- LÓGICA DE SALTO DE PREGUNTAS (SKIP LOGIC) ---
+    const getVisibleQuestions = () => {
+        if (!encuesta) return [];
+
+        const visibleQuestions: Pregunta[] = [];
+        let jumpTargetId: number | null = null;
+
+        // Ordenar por ID para flujo secuencial
+        const sortedQuestions = [...encuesta.preguntas].sort((a, b) => a.idPregunta - b.idPregunta);
+
+        for (const p of sortedQuestions) {
+
+            // 1. MANEJO DE SALTO ACTIVO
+            if (jumpTargetId !== null) {
+                if (p.idPregunta === jumpTargetId) {
+                    jumpTargetId = null; // Aterrizamos
+                    visibleQuestions.push(p);
+                } else {
+                    continue; // Saltamos
+                }
+            } else {
+                // 2. FLUJO NORMAL
+                // Si la pregunta es OCULTA por defecto, solo se muestra si el salto nos trajo aquí.
+                // Como jumpTargetId es null aquí, significa que llegamos por flujo natural.
+                if (p.oculta) {
+                    continue;
+                }
+                visibleQuestions.push(p);
+            }
+
+            // 3. VERIFICAR NUEVO SALTO
+            // Solo verificamos si la pregunta actual está visible y fue respondida
+            if (jumpTargetId === null) {
+                const respuesta: string | number | number[] | undefined = respuestas[p.idPregunta];
+
+                // Si hay respuesta y es tipo selección (que maneja lógica de ID)
+                if (respuesta !== undefined && respuesta !== null && p.opciones) {
+                    // Si es número, buscamos por ID de opción
+                    if (typeof respuesta === 'number') {
+                        const opcionSeleccionada: Opcion | undefined = p.opciones.find((op: Opcion) => op.idOpcion === respuesta);
+                        if (opcionSeleccionada && opcionSeleccionada.idPreguntaDestino) {
+                            jumpTargetId = opcionSeleccionada.idPreguntaDestino;
+                        }
+                    }
+                }
+            }
+        }
+        return visibleQuestions;
+    };
+
+    const visibleQuestions = getVisibleQuestions();
+
+    // --- HANDLERS ---
+    const handleInputChange = (idPregunta: number, value: string) => {
+        setRespuestas(prev => ({ ...prev, [idPregunta]: value }));
+        if (errorIds.includes(idPregunta)) setErrorIds(prev => prev.filter(id => id !== idPregunta));
+    };
+
+    const handleRadioClick = (idPregunta: number, idOpcion: number) => {
+        if (respuestas[idPregunta] === idOpcion) {
+            const nuevas = { ...respuestas };
+            delete nuevas[idPregunta];
+            setRespuestas(nuevas);
+        } else {
+            setRespuestas(prev => ({ ...prev, [idPregunta]: idOpcion }));
+        }
+        if (errorIds.includes(idPregunta)) setErrorIds(prev => prev.filter(id => id !== idPregunta));
+    };
+
+    const handleCheckboxChange = (idPregunta: number, idOpcion: number, checked: boolean) => {
+        setRespuestas(prev => {
+            const current = (prev[idPregunta] as number[]) || [];
+            let nuevoState = [...current];
+            if (checked) nuevoState.push(idOpcion);
+            return { ...prev, [idPregunta]: nuevoState };
+        });
+        if (errorIds.includes(idPregunta)) setErrorIds(prev => prev.filter(id => id !== idPregunta));
+    };
+
+    const handleStart = () => {
+        if (!selectedPaciente) {
+            Swal.fire('Atención', 'Debes seleccionar un paciente.', 'warning');
+            return;
+        }
+        setStep('form');
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!encuesta) return;
+
+        // Validación: Solo de preguntas visibles
+        // Validación de preguntas visibles
+        const newErrors: number[] = [];
+
+        for (const p of visibleQuestions) {
+            const r = respuestas[p.idPregunta];
+            const estaVacio = r === undefined || r === null || r === "" || (Array.isArray(r) && r.length === 0);
+
+            if (p.obligatoria && estaVacio) {
+                newErrors.push(p.idPregunta);
+            }
+        }
+
+        setErrorIds(newErrors);
+
+        if (newErrors.length > 0) {
+            const firstErrorId = newErrors[0];
+            const p = visibleQuestions.find(q => q.idPregunta === firstErrorId);
+
+            // Hacemos scroll inmediato (visual) al PRIMER error
+            const element = document.getElementById(`pregunta-${firstErrorId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            await Swal.fire({
+                title: 'Faltan datos',
+                text: `Faltan preguntas obligatorias (marcadas en rojo). Por favor contéstalas.`, // Mensaje genérico mejorado
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+                returnFocus: false, // CRÍTICO: No volver al botón save
+                didClose: () => {
+                    // Al cerrar, forzamos foco en el PRIMER error
+                    const el = document.getElementById(`pregunta-${firstErrorId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const input = el.querySelector('input, textarea, select') as HTMLElement;
+                        if (input) {
+                            input.focus({ preventScroll: true });
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
+        const token = localStorage.getItem('accessToken');
+
+        // 2. Construcción correcta del Payload: Solo respuetas de preguntas visibles
+        const respuestasEnviar: any[] = [];
+
+        // Usamos visibleQuestions para filtrar qué respuestas enviar
+        visibleQuestions.forEach(p => {
+            const key = p.idPregunta;
+            const valor = respuestas[key];
+
+            // Si no hay respuesta (y era opcional), no la enviamos o la enviamos null? 
+            // El backend suele ignorar si no se envía, pero si quieres borrar una respuesta previa...
+            // Por simplicidad enviamos solo si existe valor
+            if (valor === undefined || valor === null || valor === "") return;
+            if (Array.isArray(valor) && valor.length === 0) return;
+
+            if (p.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
+                valor.forEach(idOp => {
+                    respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: idOp });
+                });
+            } else if (p.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
+                respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: valor });
+            } else {
+                respuestasEnviar.push({ idPregunta: key, valorTexto: String(valor) });
+            }
+        });
+
+        // NOTA: El payload NO debe incluir respuestas de preguntas ocultas para evitar inconsistencias
+
+        const payload = {
+            idEncuesta: parseInt(idEncuesta!),
+            idPaciente: parseInt(selectedPaciente),
+            respuestas: respuestasEnviar
+        };
+
+        try {
+            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                await Swal.fire('¡Registrado!', 'Datos guardados.', 'success');
+                router.push('/dashboard/encuesta');
+            } else {
+                // Manejo del error 403
+                if (res.status === 403) {
+                    Swal.fire('Error 403', 'No tienes permisos para guardar respuestas. Revisa tu rol o la configuración del Backend.', 'error');
+                } else {
+                    const txt = await res.text();
+                    Swal.fire('Error', `Backend: ${txt}`, 'error');
+                }
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Fallo de conexión.', 'error');
+        }
+    };
+
+    const handleSaveDraft = async () => {
+        if (!encuesta) return;
+
+        if (!selectedPaciente) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selección Requerida',
+                text: 'Por favor seleccione un paciente para guardar el borrador.',
+                confirmButtonColor: '#f39c12'
+            });
+            return;
+        }
+
+        const token = localStorage.getItem('accessToken');
+
+        // Construcción del Payload para borrador
+        // Para borradores, quizás quieras guardar TODO, incluso ocultas, para no perder datos si el usuario cambia de opinión después?
+        // Pero para ser consistente con la lógica de salto, mejor guardar solo lo visible o lo que el usuario "cree" que respondió.
+        // Vamos a guardar solo visibles para mantener consistencia.
+        const respuestasEnviar: any[] = [];
+
+        visibleQuestions.forEach(p => {
+            const key = p.idPregunta;
+            const valor = respuestas[key];
+
+            if (valor === undefined || valor === null || valor === "") return;
+            if (Array.isArray(valor) && valor.length === 0) return;
+
+            if (p.tipoPregunta === 'SELECCION_MULTIPLE' && Array.isArray(valor)) {
+                valor.forEach(idOp => {
+                    respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: idOp });
+                });
+            } else if (p.tipoPregunta.includes('SELECCION') && typeof valor === 'number') {
+                respuestasEnviar.push({ idPregunta: key, idOpcionSeleccionada: valor });
+            } else {
+                respuestasEnviar.push({ idPregunta: key, valorTexto: String(valor) });
+            }
+        });
+
+
+        const payload = {
+            idEncuesta: parseInt(idEncuesta!),
+            idPaciente: parseInt(selectedPaciente),
+            respuestas: respuestasEnviar,
+            esBorrador: true
+        };
+
+        // ... (resto del fetch igual)
+        try {
+            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Borrador Guardado',
+                    text: 'Puedes continuar editando esta encuesta más tarde desde la sección de Borradores.',
+                    confirmButtonColor: '#3498db',
+                });
+                router.push('/borradores');
+            } else {
+                const txt = await res.text();
+                Swal.fire('Error', `No se pudo guardar el borrador: ${txt}`, 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Fallo de conexión al guardar borrador.', 'error');
+        }
+    };
+
+    if (!idEncuesta || loading) return <div className={styles.loading}>Cargando...</div>;
+    if (!encuesta) return <div className={styles.error}>Encuesta no encontrada.</div>;
+
+    if (step === 'intro') {
+        return (
+            <div className={styles.container}>
+                <div className={styles.introCard}>
+                    <button onClick={() => router.back()} className={styles.backButton}><FaArrowLeft /> Volver</button>
+                    <div className={styles.iconBig}>📝</div>
+                    <h1 className={styles.title}>{encuesta.titulo}</h1>
+                    <div style={{ display: 'inline-block', backgroundColor: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+                        Versión {encuesta.version || '1.0'}
+                    </div>
+                    <p className={styles.desc}>Selecciona el paciente.</p>
+
+                    <div className={styles.formGroup} style={{ marginBottom: '2rem', textAlign: 'left' }}>
+                        <label className={styles.questionLabel} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FaUserInjured /> Seleccionar Paciente:
+                        </label>
+                        <select className={styles.select} value={selectedPaciente} onChange={(e) => setSelectedPaciente(e.target.value)} style={{ width: '100%', padding: '10px' }}>
+                            <option value="">-- Buscar Paciente --</option>
+                            {pacientes.map(p => <option key={p.idPaciente} value={p.idPaciente}>{p.nombre} {p.apellidos}</option>)}
+                        </select>
+                    </div>
+                    <button className={styles.startBtn} onClick={handleStart}>Comenzar Ahora</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <>
-            {/* Header Superior */}
-            <header className={styles.header}>
-                <div>
-                    <button
-                        onClick={() => router.back()}
-                        style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px', fontSize: '0.9rem' }}
-                    >
-                        <FaArrowLeft /> Volver
-                    </button>
-                    <div className={styles.titleSection}>
-                        <h1>
-                            {encuesta.titulo}
-                            {encuesta.version && <span className={styles.badge}>v{encuesta.version}</span>}
-                        </h1>
-                        <p className={styles.subtitle}>Gestión y seguimiento de respuestas</p>
-                    </div>
+        <div className={styles.container}>
+            <div className={styles.formCard}>
+                <div className={styles.formHeader}>
+                    <h2>{encuesta.titulo}</h2>
+                    <small style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Paciente: {pacientes.find(p => p.idPaciente.toString() === selectedPaciente)?.nombre}</small>
                 </div>
-
-                {/* --- BOTÓN SUPERIOR ELIMINADO --- */}
-
-            </header>
-
-            {/* VISTA DE ADMINISTRADOR */}
-            {isAdmin ? (
-                <>
-                    {/* Estadísticas Rápidas */}
-                    <section className={styles.statsGrid}>
-                        <div className={styles.statCard}>
-                            <div className={styles.iconBox}>
-                                <FaUserCheck />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Realizadas</h3>
-                                <p>{registros.length}</p>
-                            </div>
+                <form onSubmit={handleSubmit}>
+                    {visibleQuestions.map((p) => (
+                        <div
+                            key={p.idPregunta}
+                            id={`pregunta-${p.idPregunta}`}
+                            className={styles.questionBlock}
+                            style={errorIds.includes(p.idPregunta) ? {
+                                border: '1px solid #ff6b6b',
+                                backgroundColor: 'rgba(255, 0, 0, 0.15)',
+                                padding: '10px', // Asegurar padding extra si se resalta
+                                borderRadius: '8px'
+                            } : {}}
+                        >
+                            <label className={styles.questionLabel}>{p.textoPregunta} {p.obligatoria && <span className={styles.required}>*</span>}</label>
+                            {(p.tipoPregunta === 'TEXTO' || p.tipoPregunta === 'TEXTO_LIBRE') && (
+                                p.tipoPregunta === 'TEXTO' ?
+                                    <input className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} /> :
+                                    <textarea className={styles.textarea} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />
+                            )}
+                            {p.tipoPregunta === 'NUMERO' && <input type="number" className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />}
+                            {p.tipoPregunta === 'FECHA' && <input type="date" className={styles.input} value={respuestas[p.idPregunta] as string || ''} onChange={e => handleInputChange(p.idPregunta, e.target.value)} />}
+                            {(p.tipoPregunta === 'SELECCION_UNICA' || p.tipoPregunta === 'SELECCION') && (
+                                <div className={styles.optionsContainer}>
+                                    {p.opciones?.map((op) => (
+                                        <label key={op.idOpcion} className={styles.optionLabel}>
+                                            <input type="radio" name={`p_${p.idPregunta}`} checked={respuestas[p.idPregunta] === op.idOpcion} onClick={() => handleRadioClick(p.idPregunta, op.idOpcion)} onChange={() => { }} />
+                                            {op.textoOpcion}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                            {p.tipoPregunta === 'SELECCION_MULTIPLE' && (
+                                <div className={styles.optionsContainer}>
+                                    {p.opciones?.map((op) => (
+                                        <label key={op.idOpcion} className={styles.optionLabel}>
+                                            <input type="checkbox" checked={((respuestas[p.idPregunta] as number[]) || []).includes(op.idOpcion)} onChange={(e) => handleCheckboxChange(p.idPregunta, op.idOpcion, e.target.checked)} />
+                                            {op.textoOpcion}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-
-                        <div className={styles.statCard}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>
-                                <FaExclamationTriangle />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Incompletas</h3>
-                                <p>{Math.max(0, totalPacientes - registros.length)}</p>
-                            </div>
-                        </div>
-
-                        <div className={styles.statCard}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#fef2f2', color: '#ef4444' }}>
-                                <FaTrashAlt />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Eliminadas</h3>
-                                <p>0</p>
-                            </div>
-                        </div>
-
-                        <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={handleResponder}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }}>
-                                <FaClipboardList />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Acción Rápida</h3>
-                                <p style={{ fontSize: '1rem', color: '#4f46e5' }}>Responder Encuesta</p>
-                            </div>
-                        </div>
-
-                        {/* Botón Editar Encuesta */}
-                        <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => router.push(`/dashboard/constructor/${id}`)}>
-                            <div className={styles.iconBox} style={{ backgroundColor: '#f3e8ff', color: '#9333ea' }}>
-                                <FaEdit />
-                            </div>
-                            <div className={styles.statContent}>
-                                <h3>Gestión</h3>
-                                <p style={{ fontSize: '1rem', color: '#9333ea' }}>Editar Estructura</p>
-                            </div>
-                        </div>
-
-                    </section>
-
-                    {/* Tabla de Registros */}
-                    <div className={styles.card}>
-                        <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}><FaClipboardList color="#4f46e5" /> Registro de Respuestas</h3>
-                        </div>
-                        <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Paciente</th>
-                                    <th>Fecha</th>
-                                    <th>Usuario</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {registros.length > 0 ? registros.map((reg) => (
-                                    <tr key={reg.idRegistro}>
-                                        <td style={{ color: '#64748b' }}>#{reg.idRegistro}</td>
-                                        <td style={{ fontWeight: '600', color: '#1e293b' }}>{reg.paciente?.nombre || 'N/A'}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <FaRegCalendarAlt color="#94a3b8" />
-                                                {new Date(reg.fechaRealizacion).toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <FaUser color="#94a3b8" size={12} />
-                                                {reg.usuario?.username}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <button className={styles.btnSecondary} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
-                                                <FaEye /> Ver
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr>
-                                        <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
-                                            No hay respuestas registradas aún.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    ))}
+                    <div className={styles.actions}>
+                        <button type="submit" className={styles.btnPrimary}><FaPaperPlane style={{ marginRight: '5px' }} /> Guardar</button>
+                        <button
+                            type="button"
+                            onClick={handleSaveDraft}
+                            disabled={loading}
+                            style={{
+                                padding: '10px 20px',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                backgroundColor: '#95a5a6',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '1rem',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            <FaHistory /> Guardar Borrador
+                        </button>
                     </div>
-                </>
-            ) : (
-                /* VISTA DE USUARIO NORMAL (ESTADO) */
-                <div className={styles.card}>
-                    <div className={styles.userState}>
-                        {hasResponded ? (
-                            <>
-                                <div className={`${styles.stateIcon} ${styles.successIcon}`}>
-                                    <FaCheckCircle />
-                                </div>
-                                <div className={styles.stateText}>
-                                    <h2>¡Encuesta Completada!</h2>
-                                    <p>Ya has registrado una respuesta para este formulario.</p>
-                                </div>
-                                <button className={`${styles.btn} ${styles.btnSecondary}`} disabled>
-                                    Completado
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <div className={styles.stateIcon}>
-                                    <FaClipboardList />
-                                </div>
-                                <div className={styles.stateText}>
-                                    <h2>Disponible para Responder</h2>
-                                    <p>Selecciona un paciente y comienza a llenar el formulario clínico.</p>
-                                </div>
-
-                                {/* --- BOTÓN CENTRAL (ÚNICO) --- */}
-                                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleResponder}>
-                                    Comenzar Ahora
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-        </>
+                </form>
+            </div>
+        </div>
     );
 }

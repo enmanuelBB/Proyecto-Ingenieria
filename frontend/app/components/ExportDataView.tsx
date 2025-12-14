@@ -234,12 +234,11 @@ const ExportDataView = () => {
 
           <button
             className={styles.exportBtn}
-            onClick={() => alert("Función PDF próximamente")}
-            disabled={true}
-            style={{ opacity: 0.5 }}
+            onClick={() => handleExport('pdf')}
+            disabled={loading}
           >
             <FaFilePdf size={30} color="#dc2626" style={{ marginBottom: '10px' }} />
-            PDF (Pronto)
+            PDF (Reporte)
           </button>
 
         </div>

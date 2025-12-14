@@ -1,10 +1,9 @@
-
 .formContainer {
-  background-color: white;
+  background-color: var(--bg-card); 
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color); 
   max-width: 900px;
   margin: 0 auto;
 }
@@ -28,22 +27,22 @@
 .label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-main); 
 }
 
 .input, .select {
   padding: 0.75rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-color); 
   border-radius: 8px;
   font-size: 1rem;
-  color: #334155;
-  background-color: #fff;
+  color: var(--text-main); 
+  background-color: var(--bg-input); 
   transition: border-color 0.2s;
 }
 
 .input:focus, .select:focus {
   outline: none;
-  border-color: #4f46e5;
+  border-color: var(--primary); 
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
@@ -51,17 +50,17 @@
   grid-column: span 2;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #4f46e5;
+  color: var(--primary); 
   margin-top: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e0e7ff;
+  border-bottom: 2px solid var(--border-color); 
 }
 
 .submitButton {
   grid-column: span 2;
   margin-top: 2rem;
   padding: 1rem;
-  background-color: #4f46e5;
+  background-color: var(--primary); 
   color: white;
   border: none;
   border-radius: 8px;
@@ -71,7 +70,7 @@
 }
 
 .submitButton:hover {
-  background-color: #4338ca;
+  background-color: var(--primary-hover);
 }
 
 .errorMsg {
@@ -82,7 +81,6 @@
   border-radius: 8px;
   text-align: center;
 }
-
 
 @media (max-width: 640px) {
   .formGrid { grid-template-columns: 1fr; }

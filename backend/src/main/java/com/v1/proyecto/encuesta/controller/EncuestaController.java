@@ -139,6 +139,30 @@ public class EncuestaController {
     }
 
     /**
+     * URL: GET /api/v1/encuestas/borradores
+     * Obtiene los borradores del usuario actual.
+     */
+    @GetMapping("/borradores")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<java.util.List<RegistroCompletoResponseDto>> getBorradores(
+            @AuthenticationPrincipal Users user) {
+        if (user == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.ok(encuestaService.getBorradoresByUsuario(user));
+    }
+
+    /**
+     * URL: GET /api/v1/encuestas/registro/{id}
+     * Obtiene un registro específico por ID (para cargar borradores o ver
+     * detalles).
+     */
+    @GetMapping("/registro/{id}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<RegistroCompletoResponseDto> getRegistroById(@PathVariable Integer id) {
+        return ResponseEntity.ok(encuestaService.getRegistroById(id));
+    }
+
+    /**
      * elimina una pregunta URL: DELETE /api/v1/encuestas/preguntas/{id}
      */
     @DeleteMapping("/preguntas/{id}")
@@ -215,7 +239,24 @@ public class EncuestaController {
      * EXPORTAR ENCUESTA A PDF
      * URL: GET /api/v1/encuestas/{id}/export/pdf
      */
-    @GetMapping("/{id}/export/csv")
+    @GetMapping("/{id}/export/pdf")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    public ResponseEntity<Resource> exportarPdf(
+            @PathVariable(name = "id") Integer id,
+            @RequestParam(name = "idPaciente", required = false) Integer idPaciente) {
+        String filename = "encuesta_" + id + ".pdf";
+        InputStreamResource file = new InputStreamResource(exportService.generatePdf(id, idPaciente));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(file);
+    }
+
+    /**
+     * EXPORTAR ENCUESTA A CSV
+     * URL: GET /api/v1/encuestas/{id}/export/csv
+     */
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<Resource> exportarCsv(
             @PathVariable(name = "id") Integer id,

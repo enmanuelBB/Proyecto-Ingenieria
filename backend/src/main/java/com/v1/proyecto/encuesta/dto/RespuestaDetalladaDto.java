@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RespuestaDetalladaDto {
     private Integer idRespuesta;
+    private Integer idPregunta;
     private String textoPregunta;
     private String respuestaDada;
     private Integer idOpcionSeleccionada;
