@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -22,14 +21,15 @@ interface Pregunta {
 interface Encuesta {
     idEncuesta: number;
     titulo: string;
-    descripcion: string;
+    version?: string;    
     preguntas: Pregunta[];
 }
 
 export default function ResponderEncuestaPage() {
     const params = useParams();
     const router = useRouter();
-    const idEncuesta = params.id;
+    // Validación de seguridad para params
+    const idEncuesta = params?.id ? String(params.id) : null;
 
     const [encuesta, setEncuesta] = useState<Encuesta | null>(null);
     const [loading, setLoading] = useState(true);
@@ -42,6 +42,8 @@ export default function ResponderEncuestaPage() {
 
     const fetchEncuesta = async () => {
         const token = localStorage.getItem('accessToken');
+        if (!idEncuesta) return;
+        
         try {
             const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -124,17 +126,38 @@ export default function ResponderEncuestaPage() {
     if (loading) return <div className={styles.loading}>Cargando formulario...</div>;
     if (!encuesta) return <div className={styles.error}>Encuesta no encontrada.</div>;
 
+    // --- VISTA 1: INTRODUCCIÓN ---
     if (step === 'intro') {
         return (
             <div className={styles.container}>
                 <div className={styles.introCard}>
-                    <button onClick={() => router.back()} className={styles.backButton}><FaArrowLeft /> Volver</button>
+                    <button onClick={() => router.back()} className={styles.backButton}>
+                        <FaArrowLeft /> Volver
+                    </button>
+                    
                     <div className={styles.iconBig}>📝</div>
+                    
                     <h1 className={styles.title}>{encuesta.titulo}</h1>
-                    <p className={styles.desc}>{encuesta.descripcion || 'Sin descripción.'}</p>
-                    <div className={styles.metaInfo}>
-                        <span>{encuesta.preguntas?.length || 0} Preguntas</span>
+                    
+                    {/* CAMBIO 1: Mostrar Versión */}
+                    <div style={{
+                        display: 'inline-block',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)', 
+                        color: 'var(--primary)',
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        marginBottom: '1.5rem'
+                    }}>
+                        Versión {encuesta.version || '1.0'}
                     </div>
+
+                    {/* CAMBIO 2: Mejorar espaciado (marginBottom agregado) */}
+                    <div className={styles.metaInfo} style={{ marginBottom: '2.5rem', color: 'var(--text-muted)' }}>
+                        <span>Esta encuesta contiene <strong>{encuesta.preguntas?.length || 0}</strong> preguntas.</span>
+                    </div>
+
                     <button className={styles.startBtn} onClick={() => setStep('form')}>
                         Comenzar Ahora
                     </button>
@@ -143,6 +166,7 @@ export default function ResponderEncuestaPage() {
         );
     }
 
+    // --- VISTA 2: FORMULARIO ---
     return (
         <div className={styles.container}>
             <div className={styles.formCard}>
@@ -159,7 +183,7 @@ export default function ResponderEncuestaPage() {
                                 {p.obligatoria && <span className={styles.required}>*</span>}
                             </label>
 
-                            {/* --- TEXTO CORTO --- */}
+                            {/* TEXTO CORTO */}
                             {p.tipoPregunta === 'TEXTO' && (
                                 <input 
                                     type="text" 
@@ -170,7 +194,7 @@ export default function ResponderEncuestaPage() {
                                 />
                             )}
 
-                            {/* --- TEXTO LIBRE (BLOQUE GRANDE) --- */}
+                            {/* TEXTO LIBRE (BLOQUE GRANDE) */}
                             {p.tipoPregunta === 'TEXTO_LIBRE' && (
                                 <textarea 
                                     className={styles.textarea} 
@@ -180,7 +204,7 @@ export default function ResponderEncuestaPage() {
                                 />
                             )}
 
-                            {/* --- NUMERO --- */}
+                            {/* NUMERO */}
                             {p.tipoPregunta === 'NUMERO' && (
                                 <input 
                                     type="number" 
@@ -191,7 +215,7 @@ export default function ResponderEncuestaPage() {
                                 />
                             )}
 
-                            {/* --- FECHA --- */}
+                            {/* FECHA */}
                             {p.tipoPregunta === 'FECHA' && (
                                 <input 
                                     type="date" 
@@ -201,14 +225,14 @@ export default function ResponderEncuestaPage() {
                                 />
                             )}
 
-                            {/* --- SELECCION UNICA (RADIO BUTTONS / PUNTITOS) --- */}
+                            {/* SELECCION UNICA (RADIO BUTTONS) */}
                             {(p.tipoPregunta === 'SELECCION_UNICA' || p.tipoPregunta === 'SELECCION') && (
                                 <div className={styles.optionsContainer}>
                                     {p.opciones?.map((op, idx) => (
                                         <label key={idx} className={styles.optionLabel}>
                                             <input 
                                                 type="radio"
-                                                name={`pregunta_${p.idPregunta}`} // Agrupa los radios
+                                                name={`pregunta_${p.idPregunta}`} 
                                                 value={op.textoOpcion}
                                                 checked={respuestas[p.idPregunta] === op.textoOpcion}
                                                 onChange={(e) => handleInputChange(p.idPregunta, e.target.value)}
@@ -219,7 +243,7 @@ export default function ResponderEncuestaPage() {
                                 </div>
                             )}
 
-                            {/* --- SELECCION MULTIPLE (CHECKBOXES / CUADRADOS) --- */}
+                            {/* SELECCION MULTIPLE (CHECKBOXES) */}
                             {p.tipoPregunta === 'SELECCION_MULTIPLE' && (
                                 <div className={styles.optionsContainer}>
                                     {p.opciones?.map((op, idx) => {
