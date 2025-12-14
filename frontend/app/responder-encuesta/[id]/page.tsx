@@ -297,7 +297,7 @@ function ResponderEncuestaContent() {
                     text: 'El formulario clínico ha sido guardado y asociado al paciente correctamente.',
                     confirmButtonColor: '#3085d6',
                 });
-                router.push('/dashboard');
+                router.push('/dashboard/encuesta');
             } else {
                 const errData = await res.text(); // Could be text or json
                 Swal.fire({
@@ -365,7 +365,7 @@ function ResponderEncuestaContent() {
                     text: 'Puede continuar editando esta encuesta más tarde desde la sección de Borradores.',
                     confirmButtonColor: '#3085d6',
                 });
-                router.push('/dashboard');
+                router.push('/borradores');
             } else {
                 const errData = await res.text();
                 Swal.fire({
@@ -472,7 +472,7 @@ function ResponderEncuestaContent() {
                             className={styles.submitButton}
                             disabled={submitting}
                         >
-                            {submitting ? 'Enviando...' : 'Enviar Encuesta'}
+                            {submitting ? 'Guardando...' : 'Guardar'}
                         </button>
                         <button
                             type="button"
@@ -481,7 +481,7 @@ function ResponderEncuestaContent() {
                             disabled={submitting}
                             style={{ marginLeft: '10px', backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}
                         >
-                            Guardar Borrador
+                            Dejar como borrador
                         </button>
                     </div>
                 </form>
