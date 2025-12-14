@@ -328,12 +328,12 @@ public class EncuestaService {
         return EncuestaResponseDto.builder()
                 .idEncuesta(encuesta.getIdEncuesta())
                 .titulo(encuesta.getTitulo())
+                .version(encuesta.getVersion()) 
                 .preguntas(encuesta.getPreguntas().stream()
                         .map(this::mapPreguntaToDto)
                         .collect(Collectors.toList()))
                 .build();
     }
-
     private PreguntaDto mapPreguntaToDto(Pregunta pregunta) {
         return PreguntaDto.builder()
                 .idPregunta(pregunta.getIdPregunta())

@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
+// --- INTERFACES ---
 interface Opcion {
     textoOpcion: string;
 }
@@ -29,8 +30,10 @@ interface EncuestaSimple {
 
 export default function FormBuilderPage() {
     const router = useRouter();
-    const params = useParams();
-    const idEncuesta = params.id;
+    const params = useParams(); 
+    
+
+    const idEncuesta = params && params.id ? String(params.id) : null;
 
     // --- ESTADOS GLOBALES ---
     const [listaEncuestas, setListaEncuestas] = useState<EncuestaSimple[]>([]);
@@ -50,8 +53,10 @@ export default function FormBuilderPage() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchAllEncuestas();
-        fetchEncuestaData();
+        if (idEncuesta) {
+            fetchAllEncuestas();
+            fetchEncuestaData();
+        }
     }, [idEncuesta]);
 
     // 1. Obtener lista para el selector
@@ -118,7 +123,7 @@ export default function FormBuilderPage() {
 
     // --- EDITAR METADATA DE ENCUESTA (TITULO/DESCRIPCION) ---
     const handleEditSurveyMetadata = async () => {
-        if (!encuestaActual) return;
+        if (!encuestaActual || !idEncuesta) return;
 
         const { value: formValues } = await Swal.fire({
             title: 'Editar Detalles de Encuesta',
@@ -206,6 +211,7 @@ export default function FormBuilderPage() {
         setObligatoria(p.obligatoria);
 
         let tipoUI = "TEXTO";
+
         if (p.tipoPregunta.includes('SELECCION')) {
             tipoUI = 'SELECCION';
             if (p.opciones && p.opciones.length > 0) {
@@ -213,8 +219,11 @@ export default function FormBuilderPage() {
             } else {
                 setOpcionesLista([]);
             }
+        } else if (p.tipoPregunta === 'TEXTO_LIBRE') {
+            tipoUI = "TEXTO";
+            setOpcionesLista([]);
         } else {
-            tipoUI = p.tipoPregunta;
+            tipoUI = p.tipoPregunta; // NUMERO, FECHA
             setOpcionesLista([]);
         }
         setTipo(tipoUI);
@@ -244,9 +253,12 @@ export default function FormBuilderPage() {
         let opcionesEnviar: any[] = [];
         let tipoBackend = tipo;
 
+        // Mapeo UI -> Backend
         if (tipo === 'SELECCION') { 
             opcionesEnviar = opcionesLista.map(op => ({ textoOpcion: op }));
             tipoBackend = 'SELECCION_UNICA'; 
+        } else if (tipo === 'TEXTO') {
+            tipoBackend = 'TEXTO_LIBRE'; 
         }
 
         const payload = {
@@ -321,6 +333,9 @@ export default function FormBuilderPage() {
             }
         } catch (e) { console.error(e); }
     };
+
+    // Si no hay ID, mostramos carga
+    if (!idEncuesta) return <div className={styles.container}><div className={styles.loading}>Cargando constructor...</div></div>;
 
     return (
         <div className={styles.container}>
