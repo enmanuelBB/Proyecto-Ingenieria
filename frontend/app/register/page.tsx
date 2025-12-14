@@ -98,7 +98,7 @@ export default function RegisterPage() {
         <div className={styles.header}>
             <div className={styles.logoWrapper}>
                 <Image
-                    src="/logo-vital2.png" // Asegúrate de que esta ruta sea correcta
+                    src="/logo-vital3.png" // Asegúrate de que esta ruta sea correcta
                     alt="Logo Ingeniería Vital"
                     width={50} 
                     height={50}
