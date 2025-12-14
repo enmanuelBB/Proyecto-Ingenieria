@@ -227,7 +227,7 @@ export default function DashboardPage() {
               </div>
             </button>
 
-            <button className={styles.actionButton} onClick={() => defaultSurveyId && router.push(`/dashboard/encuesta/${defaultSurveyId}`)}>
+            <button className={styles.actionButton} onClick={() => router.push('/dashboard/encuesta')}>
               <FaClipboardList size={20} color="#4f46e5" />
               <div>
                 <div style={{ textAlign: 'left' }}>Responder Encuesta</div>
