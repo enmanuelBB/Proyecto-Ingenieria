@@ -237,17 +237,22 @@ function ResponderEncuestaContent() {
             if (firstErrorId !== null) {
                 const element = document.getElementById(`pregunta-${firstErrorId}`);
                 if (element) {
+                    // Use auto for instant jump if smooth is conflicting, or give it time
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     element.focus();
                 }
             }
 
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campos Incompletos',
-                text: 'Por favor, responda todas las preguntas obligatorias resaltadas.',
-                confirmButtonColor: '#f39c12'
-            });
+            // Small delay to allow scroll to start/finish before Alert locks the thread/viewport
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos Incompletos',
+                    text: 'Por favor, responda todas las preguntas obligatorias resaltadas.',
+                    confirmButtonColor: '#f39c12'
+                });
+            }, 600); // 600ms delay to let the smooth scroll animation play out visibly
+
             return false;
         }
 
