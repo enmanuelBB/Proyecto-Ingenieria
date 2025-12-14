@@ -14,6 +14,7 @@ import java.util.List;
 public class EncuestaResponseDto {
     private Integer idEncuesta;
     private String titulo;
+    private String version;
     private List<PreguntaDto> preguntas;
   
 }
