@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './encuesta.module.css';
-import { FaPlus, FaClipboardList, FaEdit, FaPlay, FaClipboardCheck } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaPlay, FaClipboardCheck } from 'react-icons/fa'; // Corregido import
 import Swal from 'sweetalert2';
 
+// 1. ACTUALIZAMOS LA INTERFAZ
 interface Encuesta {
     idEncuesta: number;
     titulo: string;
-    descripcion: string;
+    version?: string;     
 }
 
 export default function EncuestasMenuPage() {
@@ -32,6 +33,8 @@ export default function EncuestasMenuPage() {
             });
             if (res.ok) {
                 const data = await res.json();
+                
+                data.sort((a: Encuesta, b: Encuesta) => b.idEncuesta - a.idEncuesta);
                 setEncuestas(data);
             }
         } catch (error) {
@@ -41,7 +44,6 @@ export default function EncuestasMenuPage() {
         }
     };
 
-    // Función para crear una nueva encuesta rápida
     const handleCreateSurvey = async () => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
@@ -49,7 +51,6 @@ export default function EncuestasMenuPage() {
             return;
         }
 
-        
         let userId = null;
         try {
             const base64Url = token.split('.')[1];
@@ -62,7 +63,6 @@ export default function EncuestasMenuPage() {
             title: 'Nueva Encuesta',
             html:
                 '<input id="swal-title" class="swal2-input" placeholder="Título de la encuesta">' +
-                
                 '<input id="swal-version" class="swal2-input" placeholder="Versión (ej: 1.0)" value="1.0">',
             focusConfirm: false,
             showCancelButton: true,
@@ -85,9 +85,7 @@ export default function EncuestasMenuPage() {
             Swal.showLoading();
 
             try {
-                // CAMBIO: El objeto ahora envía 'version'
                 const payload: any = { titulo, version };
-                
                 if (userId) payload.usuarioId = userId; 
 
                 const res = await fetch('http://localhost:8080/api/v1/encuestas', {
@@ -106,7 +104,7 @@ export default function EncuestasMenuPage() {
                 } else {
                     const errorText = await res.text();
                     console.error("Error Backend:", errorText);
-                    Swal.fire('Error', `El servidor respondió con error: ${res.status}`, 'error');
+                    Swal.fire('Error', `El servidor respondió: ${res.status}`, 'error');
                 }
             } catch (error) {
                 console.error(error);
@@ -145,9 +143,15 @@ export default function EncuestasMenuPage() {
                                     <FaClipboardCheck />
                                 </div>
                                 <h3 className={styles.cardTitle}>{encuesta.titulo}</h3>
-                                <p className={styles.cardDesc}>
-                                    {encuesta.descripcion || "Sin descripción disponible."}
+                                
+                                {/* 2. CAMBIAMOS LA DESCRIPCIÓN POR LA VERSIÓN */}
+                                <p className={styles.cardDesc} style={{display:'flex', alignItems:'center', gap:'5px'}}>
+                                    <span style={{fontWeight:'600', color:'var(--text-main)'}}>Versión:</span> 
+                                    <span style={{backgroundColor:'var(--bg-input)', padding:'2px 8px', borderRadius:'12px', fontSize:'0.85rem'}}>
+                                        {encuesta.version || "1.0"}
+                                    </span>
                                 </p>
+
                             </div>
                             
                             <div className={styles.cardActions}>
