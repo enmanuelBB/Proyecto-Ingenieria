@@ -59,6 +59,8 @@ export default function ResponderEncuestaPage() {
 
     // State to store answers: { [questionId]: { optionId: number | null, text: string | null } }
     const [respuestas, setRespuestas] = useState<Record<number, { optionId: number | null, text: string | null }>>({});
+    // New state for validation errors
+    const [validationErrors, setValidationErrors] = useState<Set<number>>(new Set());
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -118,6 +120,27 @@ export default function ResponderEncuestaPage() {
         }));
     };
 
+    const clearError = (questionId: number) => {
+        if (validationErrors.has(questionId)) {
+            setValidationErrors(prev => {
+                const next = new Set(prev);
+                next.delete(questionId);
+                return next;
+            });
+        }
+    }
+
+    // Wrap handlers to clear errors on interaction
+    const handleOptionChangeWrapped = (questionId: number, optionId: number) => {
+        handleOptionChange(questionId, optionId);
+        clearError(questionId);
+    };
+
+    const handleTextChangeWrapped = (questionId: number, text: string) => {
+        handleTextChange(questionId, text);
+        clearError(questionId);
+    };
+
     const validateForm = (): boolean => {
         if (!encuesta) return false;
         if (!selectedPacienteId) {
@@ -130,30 +153,42 @@ export default function ResponderEncuestaPage() {
             return false;
         }
 
+        const newErrors = new Set<number>();
+        let firstErrorId: number | null = null;
+
         for (const pregunta of encuesta.preguntas) {
             if (pregunta.obligatoria) {
                 const respuesta = respuestas[pregunta.idPregunta];
                 const hasAnswer = respuesta && (respuesta.optionId !== null || (respuesta.text && respuesta.text.trim().length > 0));
 
                 if (!hasAnswer) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Pregunta Obligatoria',
-                        text: `La pregunta "${pregunta.textoPregunta}" es obligatoria.`,
-                        confirmButtonColor: '#f39c12',
-                        willClose: () => {
-                            const element = document.getElementById(`pregunta-${pregunta.idPregunta}`);
-                            if (element) {
-                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                element.classList.add(styles.highlightError); // Optional: Add a visual cue
-                                setTimeout(() => element.classList.remove(styles.highlightError), 2000);
-                            }
-                        }
-                    });
-                    return false;
+                    newErrors.add(pregunta.idPregunta);
+                    if (firstErrorId === null) {
+                        firstErrorId = pregunta.idPregunta;
+                    }
                 }
             }
         }
+
+        setValidationErrors(newErrors);
+
+        if (newErrors.size > 0) {
+            if (firstErrorId !== null) {
+                const element = document.getElementById(`pregunta-${firstErrorId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos Incompletos',
+                text: 'Por favor, responda todas las preguntas obligatorias resaltadas.',
+                confirmButtonColor: '#f39c12'
+            });
+            return false;
+        }
+
         return true;
     };
 
@@ -252,7 +287,11 @@ export default function ResponderEncuestaPage() {
 
                     {/* Questions Loop */}
                     {encuesta.preguntas.map((pregunta) => (
-                        <div key={pregunta.idPregunta} id={`pregunta-${pregunta.idPregunta}`} className={styles.questionBlock}>
+                        <div
+                            key={pregunta.idPregunta}
+                            id={`pregunta-${pregunta.idPregunta}`}
+                            className={`${styles.questionBlock} ${validationErrors.has(pregunta.idPregunta) ? styles.questionError : ''}`}
+                        >
                             <p className={styles.questionText}>
                                 {pregunta.textoPregunta}
                                 {pregunta.obligatoria && <span className={styles.required}>*</span>}
@@ -268,7 +307,7 @@ export default function ResponderEncuestaPage() {
                                                 name={`q_${pregunta.idPregunta}`}
                                                 className={styles.radioInput}
                                                 checked={respuestas[pregunta.idPregunta]?.optionId === opcion.idOpcion}
-                                                onChange={() => handleOptionChange(pregunta.idPregunta, opcion.idOpcion)}
+                                                onChange={() => handleOptionChangeWrapped(pregunta.idPregunta, opcion.idOpcion)}
                                             />
                                             {opcion.textoOpcion}
                                         </label>
@@ -279,7 +318,7 @@ export default function ResponderEncuestaPage() {
                                     className={styles.textarea}
                                     placeholder="Escriba su respuesta aquí..."
                                     value={respuestas[pregunta.idPregunta]?.text || ''}
-                                    onChange={(e) => handleTextChange(pregunta.idPregunta, e.target.value)}
+                                    onChange={(e) => handleTextChangeWrapped(pregunta.idPregunta, e.target.value)}
                                 />
                             )}
                         </div>

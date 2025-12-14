@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -15,14 +14,21 @@ export default function NuevoPacientePage() {
       <main style={{flex: 1, padding: '2rem'}}>
         <button 
             onClick={() => router.back()} 
-            style={{display: 'flex', alignItems: 'center', gap: '5px', border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', marginBottom: '1rem'}}
+            // CAMBIO: color '#64748b' -> 'var(--text-muted)'
+            style={{display: 'flex', alignItems: 'center', gap: '5px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', marginBottom: '1rem'}}
         >
             <FaArrowLeft /> Volver
         </button>
 
         <header style={{marginBottom: '2rem'}}>
-            <h1 style={{fontSize: '2rem', color: '#1e293b', fontWeight: 'bold'}}>Nuevo Registro</h1>
-            <p style={{color: '#64748b'}}>Ingresa los datos del participante para crear su ficha.</p>
+            {/* CAMBIO PRINCIPAL: color '#1e293b' -> 'var(--text-main)' */}
+            <h1 style={{fontSize: '2rem', color: 'var(--text-main)', fontWeight: 'bold'}}>
+                Nuevo Registro
+            </h1>
+            {/* CAMBIO: color '#64748b' -> 'var(--text-muted)' */}
+            <p style={{color: 'var(--text-muted)'}}>
+                Ingresa los datos del participante para crear su ficha.
+            </p>
         </header>
 
         <PacienteForm />
