@@ -20,6 +20,7 @@ interface Pregunta {
     textoPregunta: string;
     tipoPregunta: string;
     obligatoria: boolean;
+    oculta: boolean; // NUEVO CAMPO
     opciones: Opcion[];
 }
 
@@ -49,6 +50,7 @@ export default function FormBuilderPage() {
     const [texto, setTexto] = useState("");
     const [tipo, setTipo] = useState("TEXTO");
     const [obligatoria, setObligatoria] = useState(false);
+    const [oculta, setOculta] = useState(false); // NUEVO ESTADO
     const [opcionesLista, setOpcionesLista] = useState<Opcion[]>([]);
     const [nuevaOpcion, setNuevaOpcion] = useState("");
     const [nuevaOpcionDestino, setNuevaOpcionDestino] = useState<number | string>("");
@@ -61,7 +63,8 @@ export default function FormBuilderPage() {
         }
     }, [idEncuesta]);
 
-    // 1. Obtener lista para el selector
+    // ... (fetchAllEncuestas permanece igual)
+
     const fetchAllEncuestas = async () => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
@@ -217,17 +220,46 @@ export default function FormBuilderPage() {
     };
 
     // --- CRUD PREGUNTAS ---
+    const handleDelete = async (idPregunta: number) => {
+        const result = await Swal.fire({
+            title: '¿Eliminar variable?',
+            text: "No podrás deshacer esta acción",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'var(--bg-input)',
+            confirmButtonText: 'Eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
+        const token = localStorage.getItem('accessToken');
+        try {
+            const res = await fetch(`http://localhost:8080/api/v1/encuestas/preguntas/${idPregunta}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setPreguntas(prev => prev.filter(p => p.idPregunta !== idPregunta));
+                if (editingId === idPregunta) handleCancelEdit();
+                Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1000, showConfirmButton: false });
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    // ... (handleEdit - ACTUALIZADO)
     const handleEdit = (p: Pregunta) => {
         setEditingId(p.idPregunta);
         setTexto(p.textoPregunta);
         setObligatoria(p.obligatoria);
+        setOculta(p.oculta); // CARGAR ESTADO
 
         let tipoUI = "TEXTO";
 
         if (p.tipoPregunta.includes('SELECCION')) {
             tipoUI = 'SELECCION';
             if (p.opciones && p.opciones.length > 0) {
-                // Copia opciones existentes
                 setOpcionesLista(p.opciones.map(o => ({
                     textoOpcion: o.textoOpcion,
                     idPreguntaDestino: o.idPreguntaDestino
@@ -250,6 +282,7 @@ export default function FormBuilderPage() {
         setTexto("");
         setTipo("TEXTO");
         setObligatoria(false);
+        setOculta(false); // RESET
         setOpcionesLista([]);
         setNuevaOpcionDestino("");
     };
@@ -271,7 +304,6 @@ export default function FormBuilderPage() {
 
         // Mapeo UI -> Backend
         if (tipo === 'SELECCION') {
-            // Enviamos los objetos Opcion completos (texto + idDestino)
             opcionesEnviar = opcionesLista;
             tipoBackend = 'SELECCION_UNICA';
         } else if (tipo === 'TEXTO') {
@@ -282,6 +314,7 @@ export default function FormBuilderPage() {
             textoPregunta: texto,
             tipoPregunta: tipoBackend,
             obligatoria: obligatoria,
+            oculta: oculta, // ENVIAR CAMPO
             opciones: opcionesEnviar
         };
 
@@ -323,33 +356,7 @@ export default function FormBuilderPage() {
         }
     };
 
-    const handleDelete = async (idPregunta: number) => {
-        const result = await Swal.fire({
-            title: '¿Eliminar variable?',
-            text: "No podrás deshacer esta acción",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: 'var(--bg-input)',
-            confirmButtonText: 'Eliminar',
-            cancelButtonText: 'Cancelar'
-        });
 
-        if (!result.isConfirmed) return;
-
-        const token = localStorage.getItem('accessToken');
-        try {
-            const res = await fetch(`http://localhost:8080/api/v1/encuestas/preguntas/${idPregunta}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                setPreguntas(prev => prev.filter(p => p.idPregunta !== idPregunta));
-                if (editingId === idPregunta) handleCancelEdit();
-                Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1000, showConfirmButton: false });
-            }
-        } catch (e) { console.error(e); }
-    };
 
     // Si no hay ID, mostramos carga
     if (!idEncuesta) return <div className={styles.container}><div className={styles.loading}>Cargando constructor...</div></div>;
@@ -565,9 +572,15 @@ export default function FormBuilderPage() {
                             )}
 
 
-                            <div className={styles.checkboxGroup}>
-                                <input type="checkbox" id="obligatoria" checked={obligatoria} onChange={e => setObligatoria(e.target.checked)} />
-                                <label htmlFor="obligatoria" className={styles.label} style={{ cursor: 'pointer' }}>Es obligatoria</label>
+                            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '10px' }}>
+                                <div className={styles.checkboxGroup}>
+                                    <input type="checkbox" id="obligatoria" checked={obligatoria} onChange={e => setObligatoria(e.target.checked)} />
+                                    <label htmlFor="obligatoria" className={styles.label} style={{ cursor: 'pointer' }}>Es obligatoria</label>
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <input type="checkbox" id="oculta" checked={oculta} onChange={e => setOculta(e.target.checked)} />
+                                    <label htmlFor="oculta" className={styles.label} style={{ cursor: 'pointer' }}>Ocultar por defecto</label>
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>

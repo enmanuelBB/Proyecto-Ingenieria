@@ -126,6 +126,7 @@ public class EncuestaService {
                                 .textoPregunta(preguntaDto.getTextoPregunta())
                                 .tipoPregunta(preguntaDto.getTipoPregunta())
                                 .obligatoria(preguntaDto.isObligatoria())
+                                .oculta(preguntaDto.isOculta())
                                 .encuesta(encuesta)
                                 .build();
 
@@ -158,6 +159,7 @@ public class EncuestaService {
                 .textoPregunta(preguntaDto.getTextoPregunta())
                 .tipoPregunta(preguntaDto.getTipoPregunta())
                 .obligatoria(preguntaDto.isObligatoria())
+                .oculta(preguntaDto.isOculta())
                 .encuesta(encuesta)
                 .build();
 
@@ -190,7 +192,9 @@ public class EncuestaService {
 
         pregunta.setTextoPregunta(preguntaDto.getTextoPregunta());
         pregunta.setTipoPregunta(preguntaDto.getTipoPregunta());
+        pregunta.setTipoPregunta(preguntaDto.getTipoPregunta());
         pregunta.setObligatoria(preguntaDto.isObligatoria());
+        pregunta.setOculta(preguntaDto.isOculta());
 
         // Limpiar opciones existentes (esto borrará las opciones por orphanRemoval)
         // Nota: Si la DB no tiene ON DELETE CASCADE en LogicaSalto, esto podría fallar
@@ -226,6 +230,10 @@ public class EncuestaService {
         // Asumimos que el orden de pregunta.getOpciones() coincide con opcionesDto
         // porque acabamos de guardarlas en ese orden.
         List<OpcionRespuesta> opcionesGuardadas = pregunta.getOpciones();
+
+        if (opcionesGuardadas == null || opcionesDto == null) {
+            return;
+        }
 
         if (opcionesGuardadas.size() != opcionesDto.size()) {
             // Mismatch en tamaño, algo raro pasó o no se guardaron en orden
@@ -416,6 +424,7 @@ public class EncuestaService {
                 .textoPregunta(pregunta.getTextoPregunta())
                 .tipoPregunta(pregunta.getTipoPregunta())
                 .obligatoria(pregunta.isObligatoria())
+                .oculta(pregunta.isOculta())
                 .opciones(pregunta.getOpciones() != null ? pregunta.getOpciones().stream()
                         .map(this::mapOpcionToDto)
                         .collect(Collectors.toList()) : new ArrayList<>())

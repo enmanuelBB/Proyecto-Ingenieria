@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "pregunta")
-public class Pregunta { 
+public class Pregunta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,10 +31,16 @@ public class Pregunta {
     @JoinColumn(name = "id_encuesta", nullable = false)
     private Encuesta encuesta;
 
-    @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true) // <-- ¡AÑADE ORPHAN REMOVAL!
+    @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true) // <--
+                                                                                                               // ¡AÑADE
+                                                                                                               // ORPHAN
+                                                                                                               // REMOVAL!
     private List<OpcionRespuesta> opciones;
 
     @Column(name = "obligatoria", nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
     private boolean obligatoria;
+
+    @Column(name = "oculta", nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    private boolean oculta;
 
 }

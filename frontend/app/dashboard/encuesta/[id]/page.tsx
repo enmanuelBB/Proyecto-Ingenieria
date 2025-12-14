@@ -25,6 +25,7 @@ interface Pregunta {
     textoPregunta: string;
     tipoPregunta: string;
     obligatoria: boolean;
+    oculta?: boolean; // Campo opcional
     opciones: Opcion[];
 }
 
@@ -88,43 +89,49 @@ export default function ResponderEncuestaPage() {
         } catch (error) { console.error(error); }
     };
 
-    // --- LOGICA DE SALTO (VISIBILIDAD) ---
+    // --- LÓGICA DE SALTO DE PREGUNTAS (SKIP LOGIC) ---
     const getVisibleQuestions = () => {
-        if (!encuesta || !encuesta.preguntas) return [];
+        if (!encuesta) return [];
 
         const visibleQuestions: Pregunta[] = [];
         let jumpTargetId: number | null = null;
 
-        for (const pregunta of encuesta.preguntas) {
-            // 1. Si hay un salto activo
+        // Ordenar por ID para flujo secuencial
+        const sortedQuestions = [...encuesta.preguntas].sort((a, b) => a.idPregunta - b.idPregunta);
+
+        for (const p of sortedQuestions) {
+
+            // 1. MANEJO DE SALTO ACTIVO
             if (jumpTargetId !== null) {
-                // Si llegamos a la pregunta destino, desactivamos el salto y la mostramos
-                if (pregunta.idPregunta === jumpTargetId) {
-                    jumpTargetId = null;
-                    visibleQuestions.push(pregunta);
+                if (p.idPregunta === jumpTargetId) {
+                    jumpTargetId = null; // Aterrizamos
+                    visibleQuestions.push(p);
+                } else {
+                    continue; // Saltamos
                 }
-                // Si no, la ignoramos (saltamos) mientras el ID sea menor al destino
-                // (Nota: esto asume orden ascendente de IDs, que ya aseguramos en el fetch)
-                else if (pregunta.idPregunta > jumpTargetId) {
-                    // Caso de seguridad: si nos pasamos del destino sin encontrarlo (ej: se borró), reseteamos
-                    jumpTargetId = null;
-                    visibleQuestions.push(pregunta);
+            } else {
+                // 2. FLUJO NORMAL
+                // Si la pregunta es OCULTA por defecto, solo se muestra si el salto nos trajo aquí.
+                // Como jumpTargetId es null aquí, significa que llegamos por flujo natural.
+                if (p.oculta) {
+                    continue;
                 }
-                continue;
+                visibleQuestions.push(p);
             }
 
-            // 2. Si no hay salto activo, mostramos la pregunta
-            visibleQuestions.push(pregunta);
+            // 3. VERIFICAR NUEVO SALTO
+            // Solo verificamos si la pregunta actual está visible y fue respondida
+            if (jumpTargetId === null) {
+                const respuesta: string | number | number[] | undefined = respuestas[p.idPregunta];
 
-            // 3. Verificamos si la respuesta actual dispara un NUEVO salto
-            const respuestaActual = respuestas[pregunta.idPregunta];
-            if (respuestaActual !== undefined && respuestaActual !== null) {
-                // Solo las preguntas de selección (radio) suelen tener lógica de salto simple
-                if (pregunta.tipoPregunta.includes('SELECCION') && typeof respuestaActual === 'number') {
-                    // Buscar la opción seleccionada
-                    const opcionSeleccionada = pregunta.opciones.find(op => op.idOpcion === respuestaActual);
-                    if (opcionSeleccionada && opcionSeleccionada.idPreguntaDestino) {
-                        jumpTargetId = opcionSeleccionada.idPreguntaDestino;
+                // Si hay respuesta y es tipo selección (que maneja lógica de ID)
+                if (respuesta !== undefined && respuesta !== null && p.opciones) {
+                    // Si es número, buscamos por ID de opción
+                    if (typeof respuesta === 'number') {
+                        const opcionSeleccionada: Opcion | undefined = p.opciones.find((op: Opcion) => op.idOpcion === respuesta);
+                        if (opcionSeleccionada && opcionSeleccionada.idPreguntaDestino) {
+                            jumpTargetId = opcionSeleccionada.idPreguntaDestino;
+                        }
                     }
                 }
             }

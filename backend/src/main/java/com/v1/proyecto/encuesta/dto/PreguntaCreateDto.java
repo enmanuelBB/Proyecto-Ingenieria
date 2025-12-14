@@ -16,4 +16,5 @@ public class PreguntaCreateDto {
     private String tipoPregunta;
     private List<OpcionRespuestaCreateDto> opciones;
     private boolean obligatoria;
+    private boolean oculta;
 }
