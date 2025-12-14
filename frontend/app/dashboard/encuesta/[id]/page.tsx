@@ -49,6 +49,7 @@ export default function ResponderEncuestaPage() {
 
     const [loading, setLoading] = useState(true);
     const [respuestas, setRespuestas] = useState<{ [key: number]: string | number | number[] }>({});
+    const [errorIds, setErrorIds] = useState<number[]>([]); // Estado de errores
     const [step, setStep] = useState<'intro' | 'form'>('intro');
 
     // Cargar datos
@@ -144,6 +145,7 @@ export default function ResponderEncuestaPage() {
     // --- HANDLERS ---
     const handleInputChange = (idPregunta: number, value: string) => {
         setRespuestas(prev => ({ ...prev, [idPregunta]: value }));
+        if (errorIds.includes(idPregunta)) setErrorIds(prev => prev.filter(id => id !== idPregunta));
     };
 
     const handleRadioClick = (idPregunta: number, idOpcion: number) => {
@@ -154,6 +156,7 @@ export default function ResponderEncuestaPage() {
         } else {
             setRespuestas(prev => ({ ...prev, [idPregunta]: idOpcion }));
         }
+        if (errorIds.includes(idPregunta)) setErrorIds(prev => prev.filter(id => id !== idPregunta));
     };
 
     const handleCheckboxChange = (idPregunta: number, idOpcion: number, checked: boolean) => {
@@ -161,9 +164,9 @@ export default function ResponderEncuestaPage() {
             const current = (prev[idPregunta] as number[]) || [];
             let nuevoState = [...current];
             if (checked) nuevoState.push(idOpcion);
-            else nuevoState = nuevoState.filter(id => id !== idOpcion);
             return { ...prev, [idPregunta]: nuevoState };
         });
+        if (errorIds.includes(idPregunta)) setErrorIds(prev => prev.filter(id => id !== idPregunta));
     };
 
     const handleStart = () => {
@@ -179,36 +182,49 @@ export default function ResponderEncuestaPage() {
         if (!encuesta) return;
 
         // Validación: Solo de preguntas visibles
+        // Validación de preguntas visibles
+        const newErrors: number[] = [];
+
         for (const p of visibleQuestions) {
             const r = respuestas[p.idPregunta];
             const estaVacio = r === undefined || r === null || r === "" || (Array.isArray(r) && r.length === 0);
-            if (p.obligatoria && estaVacio) {
-                // Hacemos scroll inmediato (visual)
-                const element = document.getElementById(`pregunta-${p.idPregunta}`);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
 
-                Swal.fire({
-                    title: 'Faltan datos',
-                    text: `La pregunta "${p.textoPregunta}" es obligatoria.`,
-                    icon: 'warning',
-                    confirmButtonText: 'Entendido',
-                    returnFocus: false, // CRÍTICO: No volver al botón save
-                    didClose: () => {
-                        // Al cerrar, forzamos foco
-                        const el = document.getElementById(`pregunta-${p.idPregunta}`);
-                        if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            const input = el.querySelector('input, textarea, select') as HTMLElement;
-                            if (input) {
-                                input.focus({ preventScroll: true });
-                            }
+            if (p.obligatoria && estaVacio) {
+                newErrors.push(p.idPregunta);
+            }
+        }
+
+        setErrorIds(newErrors);
+
+        if (newErrors.length > 0) {
+            const firstErrorId = newErrors[0];
+            const p = visibleQuestions.find(q => q.idPregunta === firstErrorId);
+
+            // Hacemos scroll inmediato (visual) al PRIMER error
+            const element = document.getElementById(`pregunta-${firstErrorId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            await Swal.fire({
+                title: 'Faltan datos',
+                text: `Faltan preguntas obligatorias (marcadas en rojo). Por favor contéstalas.`, // Mensaje genérico mejorado
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+                returnFocus: false, // CRÍTICO: No volver al botón save
+                didClose: () => {
+                    // Al cerrar, forzamos foco en el PRIMER error
+                    const el = document.getElementById(`pregunta-${firstErrorId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const input = el.querySelector('input, textarea, select') as HTMLElement;
+                        if (input) {
+                            input.focus({ preventScroll: true });
                         }
                     }
-                });
-                return;
-            }
+                }
+            });
+            return;
         }
 
         const token = localStorage.getItem('accessToken');
@@ -387,7 +403,17 @@ export default function ResponderEncuestaPage() {
                 </div>
                 <form onSubmit={handleSubmit}>
                     {visibleQuestions.map((p) => (
-                        <div key={p.idPregunta} id={`pregunta-${p.idPregunta}`} className={styles.questionBlock}>
+                        <div
+                            key={p.idPregunta}
+                            id={`pregunta-${p.idPregunta}`}
+                            className={styles.questionBlock}
+                            style={errorIds.includes(p.idPregunta) ? {
+                                border: '1px solid #ff6b6b',
+                                backgroundColor: 'rgba(255, 0, 0, 0.15)',
+                                padding: '10px', // Asegurar padding extra si se resalta
+                                borderRadius: '8px'
+                            } : {}}
+                        >
                             <label className={styles.questionLabel}>{p.textoPregunta} {p.obligatoria && <span className={styles.required}>*</span>}</label>
                             {(p.tipoPregunta === 'TEXTO' || p.tipoPregunta === 'TEXTO_LIBRE') && (
                                 p.tipoPregunta === 'TEXTO' ?
