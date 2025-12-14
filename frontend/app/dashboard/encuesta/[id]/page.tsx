@@ -183,7 +183,30 @@ export default function ResponderEncuestaPage() {
             const r = respuestas[p.idPregunta];
             const estaVacio = r === undefined || r === null || r === "" || (Array.isArray(r) && r.length === 0);
             if (p.obligatoria && estaVacio) {
-                Swal.fire('Faltan datos', `La pregunta "${p.textoPregunta}" es obligatoria.`, 'warning');
+                // Hacemos scroll inmediato (visual)
+                const element = document.getElementById(`pregunta-${p.idPregunta}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                Swal.fire({
+                    title: 'Faltan datos',
+                    text: `La pregunta "${p.textoPregunta}" es obligatoria.`,
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    returnFocus: false, // CRÍTICO: No volver al botón save
+                    didClose: () => {
+                        // Al cerrar, forzamos foco
+                        const el = document.getElementById(`pregunta-${p.idPregunta}`);
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            const input = el.querySelector('input, textarea, select') as HTMLElement;
+                            if (input) {
+                                input.focus({ preventScroll: true });
+                            }
+                        }
+                    }
+                });
                 return;
             }
         }
@@ -364,7 +387,7 @@ export default function ResponderEncuestaPage() {
                 </div>
                 <form onSubmit={handleSubmit}>
                     {visibleQuestions.map((p) => (
-                        <div key={p.idPregunta} className={styles.questionBlock}>
+                        <div key={p.idPregunta} id={`pregunta-${p.idPregunta}`} className={styles.questionBlock}>
                             <label className={styles.questionLabel}>{p.textoPregunta} {p.obligatoria && <span className={styles.required}>*</span>}</label>
                             {(p.tipoPregunta === 'TEXTO' || p.tipoPregunta === 'TEXTO_LIBRE') && (
                                 p.tipoPregunta === 'TEXTO' ?
