@@ -44,43 +44,51 @@ export default function EncuestasMenuPage() {
     // Función para crear una nueva encuesta rápida
     const handleCreateSurvey = async () => {
         const token = localStorage.getItem('accessToken');
-        
-        // 1. Verificación visual si falta el token
         if (!token) {
-            Swal.fire('Error', 'No estás autenticado. Por favor inicia sesión nuevamente.', 'error');
+            Swal.fire('Error', 'No estás autenticado.', 'error');
             return;
         }
+
+        
+        let userId = null;
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(decodeURIComponent(window.atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+            userId = payload.id || payload.userId || payload.sub; 
+        } catch (e) { console.error(e); }
 
         const { value: formValues } = await Swal.fire({
             title: 'Nueva Encuesta',
             html:
                 '<input id="swal-title" class="swal2-input" placeholder="Título de la encuesta">' +
-                '<textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción breve" style="margin-top: 10px;"></textarea>',
+                
+                '<input id="swal-version" class="swal2-input" placeholder="Versión (ej: 1.0)" value="1.0">',
             focusConfirm: false,
             showCancelButton: true,
-            confirmButtonText: 'Crear y Personalizar',
+            confirmButtonText: 'Crear',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: 'var(--primary)',
             preConfirm: () => {
                 const titulo = (document.getElementById('swal-title') as HTMLInputElement).value;
-                const descripcion = (document.getElementById('swal-desc') as HTMLTextAreaElement).value;
+                const version = (document.getElementById('swal-version') as HTMLInputElement).value;
                 
                 if (!titulo) {
                     Swal.showValidationMessage('El título es obligatorio');
-                    return false; // Detiene el cierre del modal
+                    return false;
                 }
-                return [titulo, descripcion];
+                return [titulo, version];
             }
         });
 
         if (formValues) {
-            const [titulo, descripcion] = formValues;
-            
-            try {
-                // Indicador de carga
-                Swal.showLoading();
+            const [titulo, version] = formValues;
+            Swal.showLoading();
 
-                console.log("Enviando datos:", { titulo, descripcion }); // DEBUG
+            try {
+                // CAMBIO: El objeto ahora envía 'version'
+                const payload: any = { titulo, version };
+                
+                if (userId) payload.usuarioId = userId; 
 
                 const res = await fetch('http://localhost:8080/api/v1/encuestas', {
                     method: 'POST',
@@ -88,34 +96,21 @@ export default function EncuestasMenuPage() {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ titulo, descripcion })
+                    body: JSON.stringify(payload)
                 });
-
-                console.log("Status respuesta:", res.status); // DEBUG
 
                 if (res.ok) {
                     const data = await res.json();
-                    console.log("Data recibida:", data); // DEBUG
-
-                    if (data && data.idEncuesta) {
-                        // Éxito total: Redirigir
-                        router.push(`/dashboard/constructor/${data.idEncuesta}`);
-                        
-                        // Cerramos el loading de Swal
-                        Swal.close();
-                    } else {
-                        
-                        Swal.fire('Creada', 'La encuesta se creó, pero no pudimos redirigirte automáticamente.', 'success');
-                        fetchEncuestas(); // Recargamos la lista
-                    }
+                    Swal.close();
+                    router.push(`/dashboard/constructor/${data.idEncuesta}`);
                 } else {
-                    const textError = await res.text();
-                    console.error("Error backend:", textError);
-                    Swal.fire('Error', `El servidor respondió: ${res.status}`, 'error');
+                    const errorText = await res.text();
+                    console.error("Error Backend:", errorText);
+                    Swal.fire('Error', `El servidor respondió con error: ${res.status}`, 'error');
                 }
             } catch (error) {
-                console.error("Error de red:", error);
-                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                console.error(error);
+                Swal.fire('Error', 'Fallo de conexión', 'error');
             }
         }
     };
