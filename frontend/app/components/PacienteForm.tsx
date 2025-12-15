@@ -211,7 +211,7 @@ export default function PacienteForm({ idPaciente }: PacienteFormProps) {
   };
 
   return (
-    <form className={styles.formContainer} onSubmit={handleSubmit} noValidate>
+    <form className={styles.formContainer} onSubmit={handleSubmit}>
       <div className={styles.formGrid}>
 
         <h3 className={styles.sectionTitle}>Identificación del Paciente</h3>
