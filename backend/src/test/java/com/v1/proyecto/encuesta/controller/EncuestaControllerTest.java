@@ -101,7 +101,8 @@ class EncuestaControllerTest {
 
         @Test
         void exportarExcel_ShouldReturnOk() throws Exception {
-                when(exportService.generateExcel(1, null)).thenReturn(new ByteArrayInputStream(new byte[0]));
+                when(exportService.generateExcel(eq(1), eq(null), any()))
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
 
                 mockMvc.perform(get("/api/v1/encuestas/1/export/excel"))
                                 .andExpect(status().isOk());
@@ -109,7 +110,8 @@ class EncuestaControllerTest {
 
         @Test
         void exportarPdf_ShouldReturnOk() throws Exception {
-                when(exportService.generatePdf(1, null)).thenReturn(new ByteArrayInputStream(new byte[0]));
+                when(exportService.generatePdf(eq(1), eq(null), any()))
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
 
                 mockMvc.perform(get("/api/v1/encuestas/1/export/pdf"))
                                 .andExpect(status().isOk());
@@ -117,7 +119,8 @@ class EncuestaControllerTest {
 
         @Test
         void exportarCsv_ShouldReturnOk() throws Exception {
-                when(exportService.generateCsv(1, null)).thenReturn(new ByteArrayInputStream(new byte[0]));
+                when(exportService.generateCsv(eq(1), eq(null), any()))
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
 
                 mockMvc.perform(get("/api/v1/encuestas/1/export/csv"))
                                 .andExpect(status().isOk());

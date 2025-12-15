@@ -81,7 +81,7 @@ class ExportServiceTest {
         when(encuestaRepository.findById(1)).thenReturn(Optional.of(encuesta));
         when(registroEncuestaRepository.findByEncuestaIdEncuesta(1)).thenReturn(Collections.singletonList(registro));
 
-        ByteArrayInputStream result = exportService.generateExcel(1, null);
+        ByteArrayInputStream result = exportService.generateExcel(1, null, com.v1.proyecto.auth.model.Role.ADMIN);
 
         assertNotNull(result);
         assertTrue(result.available() > 0);
@@ -92,7 +92,7 @@ class ExportServiceTest {
         when(encuestaRepository.findById(1)).thenReturn(Optional.of(encuesta));
         when(registroEncuestaRepository.findByEncuestaIdEncuesta(1)).thenReturn(Collections.singletonList(registro));
 
-        ByteArrayInputStream result = exportService.generatePdf(1, null);
+        ByteArrayInputStream result = exportService.generatePdf(1, null, com.v1.proyecto.auth.model.Role.ADMIN);
 
         assertNotNull(result);
         assertTrue(result.available() > 0);
@@ -103,7 +103,7 @@ class ExportServiceTest {
         when(encuestaRepository.findById(1)).thenReturn(Optional.of(encuesta));
         when(registroEncuestaRepository.findByEncuestaIdEncuesta(1)).thenReturn(Collections.singletonList(registro));
 
-        ByteArrayInputStream result = exportService.generateCsv(1, null);
+        ByteArrayInputStream result = exportService.generateCsv(1, null, com.v1.proyecto.auth.model.Role.ADMIN);
 
         assertNotNull(result);
         assertTrue(result.available() > 0);

@@ -220,13 +220,18 @@ public class EncuestaController {
      * EXPORTAR ENCUESTA A EXCEL
      * URL: GET /api/v1/encuestas/{id}/export/excel
      */
+    /**
+     * EXPORTAR ENCUESTA A EXCEL
+     * URL: GET /api/v1/encuestas/{id}/export/excel
+     */
     @GetMapping("/{id}/export/excel")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarExcel(
             @PathVariable(name = "id") Integer id,
-            @RequestParam(name = "idPaciente", required = false) Integer idPaciente) throws java.io.IOException {
+            @RequestParam(name = "idPaciente", required = false) Integer idPaciente,
+            @AuthenticationPrincipal Users user) throws java.io.IOException {
         String filename = "encuesta_" + id + ".xlsx";
-        InputStreamResource file = new InputStreamResource(exportService.generateExcel(id, idPaciente));
+        InputStreamResource file = new InputStreamResource(exportService.generateExcel(id, idPaciente, user.getRole()));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
@@ -243,9 +248,10 @@ public class EncuestaController {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarPdf(
             @PathVariable(name = "id") Integer id,
-            @RequestParam(name = "idPaciente", required = false) Integer idPaciente) {
+            @RequestParam(name = "idPaciente", required = false) Integer idPaciente,
+            @AuthenticationPrincipal Users user) {
         String filename = "encuesta_" + id + ".pdf";
-        InputStreamResource file = new InputStreamResource(exportService.generatePdf(id, idPaciente));
+        InputStreamResource file = new InputStreamResource(exportService.generatePdf(id, idPaciente, user.getRole()));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
@@ -261,9 +267,10 @@ public class EncuestaController {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarCsv(
             @PathVariable(name = "id") Integer id,
-            @RequestParam(name = "idPaciente", required = false) Integer idPaciente) {
+            @RequestParam(name = "idPaciente", required = false) Integer idPaciente,
+            @AuthenticationPrincipal Users user) {
         String filename = "encuesta_" + id + ".csv";
-        InputStreamResource file = new InputStreamResource(exportService.generateCsv(id, idPaciente));
+        InputStreamResource file = new InputStreamResource(exportService.generateCsv(id, idPaciente, user.getRole()));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)

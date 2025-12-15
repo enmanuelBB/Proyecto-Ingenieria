@@ -1,5 +1,7 @@
 package com.v1.proyecto.encuesta.service;
 
+import com.v1.proyecto.auth.model.Role;
+
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
@@ -40,9 +42,10 @@ public class ExportService {
 
     private final EncuestaRepository encuestaRepository;
     private final RegistroEncuestaRepository registroEncuestaRepository;
+    private final DataEncoder dataEncoder;
 
     @Transactional(readOnly = true)
-    public ByteArrayInputStream generateExcel(Integer idEncuesta, Integer idPaciente) throws IOException {
+    public ByteArrayInputStream generateExcel(Integer idEncuesta, Integer idPaciente, Role role) throws IOException {
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
 
@@ -78,14 +81,16 @@ public class ExportService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(registro.getIdRegistro());
                 row.createCell(1).setCellValue(registro.getFechaRealizacion().toString());
-                row.createCell(2)
-                        .setCellValue(registro.getPaciente().getNombre() + " " + registro.getPaciente().getApellidos());
+
+                // Anonymize Patient
+                row.createCell(2).setCellValue(dataEncoder.anonymizePaciente(registro.getPaciente(), role));
+
                 row.createCell(3).setCellValue(registro.getUsuario().getUsername());
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
                                 r -> r.getPregunta().getIdPregunta(),
-                                this::getRespuestaTexto));
+                                r -> this.getRespuestaTexto(r, role)));
 
                 colIdx = 4;
                 for (Pregunta p : preguntas) {
@@ -100,7 +105,7 @@ public class ExportService {
     }
 
     @Transactional(readOnly = true)
-    public ByteArrayInputStream generatePdf(Integer idEncuesta, Integer idPaciente) {
+    public ByteArrayInputStream generatePdf(Integer idEncuesta, Integer idPaciente, Role role) {
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
 
@@ -141,7 +146,6 @@ public class ExportService {
             Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
 
             // Headers
-            // Helper local (aunque idealmente método privado) para celdas de header
             addHeaderCell(table, "ID", headerFont);
             addHeaderCell(table, "Fecha", headerFont);
             addHeaderCell(table, "Paciente", headerFont);
@@ -158,14 +162,15 @@ public class ExportService {
 
                 addCell(table, registro.getIdRegistro().toString(), dataFont, rowColor);
                 addCell(table, registro.getFechaRealizacion().toString(), dataFont, rowColor);
-                addCell(table, registro.getPaciente().getNombre() + " " + registro.getPaciente().getApellidos(),
+                // Anonymize Patient
+                addCell(table, dataEncoder.anonymizePaciente(registro.getPaciente(), role),
                         dataFont, rowColor);
                 addCell(table, registro.getUsuario().getUsername(), dataFont, rowColor);
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
                                 r -> r.getPregunta().getIdPregunta(),
-                                this::getRespuestaTexto));
+                                r -> this.getRespuestaTexto(r, role)));
 
                 for (Pregunta p : preguntas) {
                     addCell(table, respuestasMap.getOrDefault(p.getIdPregunta(), ""), dataFont, rowColor);
@@ -184,7 +189,7 @@ public class ExportService {
     }
 
     @Transactional(readOnly = true)
-    public ByteArrayInputStream generateCsv(Integer idEncuesta, Integer idPaciente) {
+    public ByteArrayInputStream generateCsv(Integer idEncuesta, Integer idPaciente, Role role) {
         Encuesta encuesta = encuestaRepository.findById(idEncuesta)
                 .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
 
@@ -215,14 +220,17 @@ public class ExportService {
                 StringBuilder row = new StringBuilder();
                 row.append(registro.getIdRegistro()).append(",");
                 row.append(registro.getFechaRealizacion()).append(",");
-                row.append(escapeCsv(registro.getPaciente().getNombre() + " " + registro.getPaciente().getApellidos()))
+
+                // Anonymize Patient
+                row.append(escapeCsv(dataEncoder.anonymizePaciente(registro.getPaciente(), role)))
                         .append(",");
+
                 row.append(escapeCsv(registro.getUsuario().getUsername()));
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
                                 r -> r.getPregunta().getIdPregunta(),
-                                this::getRespuestaTexto));
+                                r -> this.getRespuestaTexto(r, role)));
 
                 for (Pregunta p : preguntas) {
                     row.append(",").append(escapeCsv(respuestasMap.getOrDefault(p.getIdPregunta(), "")));
@@ -236,11 +244,14 @@ public class ExportService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    private String getRespuestaTexto(Respuesta r) {
+    private String getRespuestaTexto(Respuesta r, Role role) {
+        String raw = "";
         if (r.getOpcionSeleccionada() != null) {
-            return r.getOpcionSeleccionada().getTextoOpcion();
+            raw = r.getOpcionSeleccionada().getTextoOpcion();
+        } else {
+            raw = r.getValorTexto() != null ? r.getValorTexto() : "";
         }
-        return r.getValorTexto() != null ? r.getValorTexto() : "";
+        return dataEncoder.encodeRespuesta(r.getPregunta().getTextoPregunta(), raw, role);
     }
 
     private String escapeCsv(String data) {
