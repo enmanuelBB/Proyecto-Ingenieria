@@ -80,7 +80,6 @@
 }
 
 /* ACCIONES (Footer de la tarjeta) */
-/* ACCIONES (Footer de la tarjeta) */
 .cardActions {
   padding: 1rem 2rem 2rem 2rem;
   display: flex;
@@ -97,9 +96,6 @@
   /* Para que intenten ocupar el mismo ancho */
   min-width: 100px;
   /* Ancho mínimo para legibilidad */
-}
-
-.btn {
   padding: 0.75rem;
   border-radius: 8px;
   font-weight: 600;
@@ -113,6 +109,7 @@
   transition: all 0.2s;
   border: none;
 }
+
 
 .btnPrimary {
   background-color: var(--primary);

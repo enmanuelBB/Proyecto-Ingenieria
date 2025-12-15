@@ -43,4 +43,7 @@ public class Pregunta {
     @Column(name = "oculta", nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
     private boolean oculta;
 
+    @OneToMany(mappedBy = "pregunta", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Respuesta> respuestas;
+
 }

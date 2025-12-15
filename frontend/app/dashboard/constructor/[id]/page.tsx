@@ -24,10 +24,10 @@ interface Pregunta {
     opciones: Opcion[];
 }
 
-interface EncuestaSimple {
+interface Encuesta {
     idEncuesta: number;
     titulo: string;
-    descripcion: string;
+    version?: string; // IMPORTANTE: Backend no tiene descripción en Encuesta, tiene version
 }
 
 export default function FormBuilderPage() {
@@ -38,8 +38,8 @@ export default function FormBuilderPage() {
     const idEncuesta = params && params.id ? String(params.id) : null;
 
     // --- ESTADOS GLOBALES ---
-    const [listaEncuestas, setListaEncuestas] = useState<EncuestaSimple[]>([]);
-    const [encuestaActual, setEncuestaActual] = useState<EncuestaSimple | null>(null);
+    const [listaEncuestas, setListaEncuestas] = useState<Encuesta[]>([]);
+    const [encuestaActual, setEncuestaActual] = useState<Encuesta | null>(null);
     const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -101,7 +101,7 @@ export default function FormBuilderPage() {
                 setEncuestaActual({
                     idEncuesta: data.idEncuesta,
                     titulo: data.titulo,
-                    descripcion: data.descripcion
+                    version: data.version
                 });
 
                 if (data.preguntas) {
@@ -126,7 +126,7 @@ export default function FormBuilderPage() {
         }
     };
 
-    // --- EDITAR METADATA DE ENCUESTA (TITULO/DESCRIPCION) ---
+    // --- EDITAR METADATA DE ENCUESTA (TITULO/VERSION) ---
     const handleEditSurveyMetadata = async () => {
         if (!encuestaActual || !idEncuesta) return;
 
@@ -134,7 +134,7 @@ export default function FormBuilderPage() {
             title: 'Editar Detalles de Encuesta',
             html:
                 `<input id="swal-input1" class="swal2-input" placeholder="Título" value="${encuestaActual.titulo}">` +
-                `<textarea id="swal-input2" class="swal2-textarea" placeholder="Descripción">${encuestaActual.descripcion || ''}</textarea>`,
+                `<input id="swal-input2" class="swal2-input" placeholder="Versión" value="${encuestaActual.version || ''}">`,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Guardar Cambios',
@@ -142,13 +142,13 @@ export default function FormBuilderPage() {
             preConfirm: () => {
                 return [
                     (document.getElementById('swal-input1') as HTMLInputElement).value,
-                    (document.getElementById('swal-input2') as HTMLTextAreaElement).value
+                    (document.getElementById('swal-input2') as HTMLInputElement).value
                 ]
             }
         });
 
         if (formValues) {
-            const [newTitle, newDesc] = formValues;
+            const [newTitle, newVersion] = formValues;
             if (!newTitle) return Swal.fire('Error', 'El título es obligatorio', 'error');
 
             const token = localStorage.getItem('accessToken');
@@ -161,7 +161,8 @@ export default function FormBuilderPage() {
                     },
                     body: JSON.stringify({
                         titulo: newTitle,
-                        descripcion: newDesc
+                        version: newVersion, // Frontend enviaba descripcion, Backend espera version
+                        preguntas: [] // IMPORTANTE: Enviamos lista vacía para no borrar preguntas, el backend debe manejarlo o usamos otro DTO
                     })
                 });
 
