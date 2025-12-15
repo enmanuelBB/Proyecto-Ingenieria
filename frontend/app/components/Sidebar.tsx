@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import Link from 'next/link'; 
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import styles from '../dashboard/dashboard.module.css';
 import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, FaShieldAlt, FaChevronLeft, FaChevronRight, FaUsers, FaMoon, FaSun } from 'react-icons/fa';
@@ -16,27 +16,44 @@ export default function Sidebar() {
     const { isCollapsed, toggleSidebar } = useSidebar();
     const [defaultSurveyId, setDefaultSurveyId] = React.useState<number | null>(null);
     const [role, setRole] = React.useState<string | null>(null);
-    
+
     const { theme, toggleTheme } = useTheme();
 
     React.useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (token) {
             try {
+                // Decode token to get role and name
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
                     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                 }).join(''));
-                const payload = JSON.parse(jsonPayload);
-                let userRole = payload.role;
-                if (!userRole && payload.authorities && Array.isArray(payload.authorities)) {
-                    const firstAuthority = payload.authorities[0];
-                    userRole = firstAuthority?.authority || firstAuthority;
+                const decoded = JSON.parse(jsonPayload);
+
+                // Set Role
+                const userRole = decoded.role || decoded.authorities?.[0]?.authority || '';
+                setRole(userRole);
+
+                // Log Access if not already logged for this session
+                if (!sessionStorage.getItem('session_logged')) {
+                    const userName = decoded.sub || decoded.name || 'Usuario';
+                    const newLog = {
+                        idRegistro: `local-${Date.now()}`,
+                        usuarioNombre: userName,
+                        fechaRealizacion: new Date().toISOString(),
+                        tipo: 'ACCESO',
+                        descripcion: 'Inicio de sesión exitoso'
+                    };
+
+                    const existingLogs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
+                    localStorage.setItem('audit_logs', JSON.stringify([...existingLogs, newLog]));
+                    sessionStorage.setItem('session_logged', 'true');
                 }
-                setRole(userRole || null);
-            } catch (e) {
-                console.error("Error decoding token for role:", e);
+
+            } catch (error) {
+                console.error("Error decoding token:", error);
+                setRole('');
             }
         }
         if (!token) return;
@@ -72,7 +89,7 @@ export default function Sidebar() {
 
     return (
         <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ''}`}>
-            
+
             {/* 1. HEADER (Logo + Título) */}
             <div className={styles.sidebarHeader}>
                 <Image src="/logo-vital3.png" alt="Logo" width={30} height={30} style={{ minWidth: '30px' }} />
@@ -103,14 +120,14 @@ export default function Sidebar() {
                 </Link>
 
                 <Link
-                     href="/dashboard/encuesta"
-                     className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
-                     title={isCollapsed ? "Encuestas" : ""}
+                    href="/dashboard/encuesta"
+                    className={`${styles.navItem} ${pathname.startsWith('/dashboard/encuesta') ? styles.navItemActive : ''}`}
+                    title={isCollapsed ? "Encuestas" : ""}
                 >
                     <FaSearch size={20} style={{ minWidth: '20px' }} />
                     {!isCollapsed && <span className={styles.linkText}>Encuestas</span>}
                 </Link>
-                
+
                 <Link
                     href="/dashboard/exportar-datos"
                     className={`${styles.navItem} ${pathname === '/dashboard/exportar-datos' ? styles.navItemActive : ''}`}
@@ -120,14 +137,16 @@ export default function Sidebar() {
                     {!isCollapsed && <span className={styles.linkText}>Exportar Datos</span>}
                 </Link>
 
-                <Link
-                    href="/dashboard/auditoria"
-                    className={`${styles.navItem} ${pathname === '/dashboard/auditoria' ? styles.navItemActive : ''}`}
-                    title={isCollapsed ? "Auditoría" : ""}
-                >
-                    <FaShieldAlt size={20} style={{ minWidth: '20px' }} />
-                    {!isCollapsed && <span className={styles.linkText}>Auditoría</span>}
-                </Link>
+                {(role === 'ADMIN' || role === 'ROLE_ADMIN') && (
+                    <Link
+                        href="/dashboard/auditoria"
+                        className={`${styles.navItem} ${pathname === '/dashboard/auditoria' ? styles.navItemActive : ''}`}
+                        title={isCollapsed ? "Auditoría" : ""}
+                    >
+                        <FaShieldAlt size={20} style={{ minWidth: '20px' }} />
+                        {!isCollapsed && <span className={styles.linkText}>Auditoría</span>}
+                    </Link>
+                )}
 
                 {(role === 'ADMIN' || role === 'ROLE_ADMIN') && (
                     <Link
@@ -143,9 +162,9 @@ export default function Sidebar() {
 
             {/* 3. FOOTER (Modo Oscuro + Logout) */}
             <div className={styles.sidebarFooter}>
-                <button 
-                    onClick={toggleTheme} 
-                    className={styles.navItem} 
+                <button
+                    onClick={toggleTheme}
+                    className={styles.navItem}
                     title={isCollapsed ? (theme === 'light' ? "Modo Oscuro" : "Modo Claro") : ""}
                     style={{ justifyContent: isCollapsed ? 'center' : 'flex-start', background: 'transparent', border: 'none', width: '100%' }}
                 >

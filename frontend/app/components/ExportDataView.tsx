@@ -111,6 +111,30 @@ const ExportDataView = () => {
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
 
+      // Log Export Action to LocalStorage for Audit Consistency
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const decoded = JSON.parse(jsonPayload);
+        const userName = decoded.sub || decoded.name || 'Usuario';
+
+        const newLog = {
+          idRegistro: `local-exp-${Date.now()}`,
+          usuarioNombre: userName,
+          fechaRealizacion: new Date().toISOString(),
+          tipo: 'EXPORTACION',
+          descripcion: `Exportación de datos (${format.toUpperCase()})`
+        };
+
+        const existingLogs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
+        localStorage.setItem('audit_logs', JSON.stringify([...existingLogs, newLog]));
+      } catch (e) {
+        console.error("Audit log error:", e);
+      }
+
       Swal.fire({
         icon: 'success',
         title: '¡Exportación Exitosa!',

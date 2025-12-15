@@ -34,12 +34,27 @@ export default function PatientDetailPage() {
     const [registros, setRegistros] = useState<Registro[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [role, setRole] = useState<string>('');
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
             router.push('/');
             return;
+        }
+
+        // Decode Role
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const decoded = JSON.parse(jsonPayload);
+            const userRole = decoded.role || decoded.authorities?.[0]?.authority || '';
+            setRole(userRole);
+        } catch (e) {
+            console.error("Error decoding token for role:", e);
         }
 
         if (!idPaciente) return;
@@ -154,12 +169,18 @@ export default function PatientDetailPage() {
                                     {registros.map((reg, idx) => (
                                         <tr key={idx}>
                                             <td>{reg.tituloEncuesta || "Sin Título"}</td>
-                                            <td>{reg.fechaRealizacion ? new Date(reg.fechaRealizacion).toLocaleDateString() : "-"}</td>
-                                            <td>
-                                                {/* Aquí podríamos poner un botón para ver el detalle de esa respuesta específica */}
-                                                <button style={{ color: '#4f46e5', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                                                    Ver Detalles
-                                                </button>
+                                            <td className={styles.td}>{new Date(reg.fechaRealizacion).toLocaleDateString()}</td>
+                                            <td className={styles.td}>
+                                                {/* Botón visible solo para ADMIN */}
+                                                {(role === 'ADMIN' || role === 'ROLE_ADMIN') && (
+                                                    <button
+                                                        className={styles.btnSecondary}
+                                                        style={{ fontSize: '0.8rem', padding: '5px 10px' }}
+                                                        onClick={() => router.push(`/dashboard/encuesta/${reg.tituloEncuesta.includes('Gástrico') ? 1 : reg.idEncuesta}?registro=${reg.idRespuesta}&mode=edit`)}
+                                                    >
+                                                        Editar Respuesta
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

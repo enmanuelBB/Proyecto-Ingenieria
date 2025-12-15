@@ -3,14 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './audit.module.css';
-import { FaEdit, FaShieldAlt, FaExclamationTriangle, FaDoorOpen, FaSearch, FaArrowRight } from 'react-icons/fa';
+import { FaEdit, FaShieldAlt, FaExclamationTriangle, FaDoorOpen, FaSearch, FaArrowRight, FaFileExport, FaSignInAlt, FaSave } from 'react-icons/fa';
 
 interface RegistroLog {
-    idRegistro: number;
-    nombrePaciente: string;
+    idRegistro: string | number;
+    nombrePaciente?: string;
     usuarioNombre: string;
     fechaRealizacion: string;
-    tituloEncuesta: string;
+    tituloEncuesta?: string;
+    tipo: 'ACCESO' | 'MODIFICACION' | 'ALERTA' | 'EXPORTACION';
+    descripcion?: string;
 }
 
 export default function AuditPage() {
@@ -24,16 +26,16 @@ export default function AuditPage() {
         accesos: 0,
         modificaciones: 0,
         alertas: 0,
-        cierres: 0
+        exportaciones: 0
     });
-
-    useEffect(() => {
-        fetchLogs();
-    }, []);
 
     const [selectedUser, setSelectedUser] = useState("all");
     const [selectedType, setSelectedType] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
+
+    useEffect(() => {
+        fetchLogs();
+    }, []);
 
     useEffect(() => {
         applyFilters();
@@ -49,7 +51,7 @@ export default function AuditPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            let logsFetched: RegistroLog[] = [];
+            let realLogs: RegistroLog[] = [];
 
             if (resEncuestas.ok) {
                 const encuestas: any[] = await resEncuestas.json();
@@ -60,12 +62,29 @@ export default function AuditPage() {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (resReg.ok) {
-                        logsFetched = await resReg.json();
+                        const data = await resReg.json();
+                        // Map real registers to our extended Log interface
+                        realLogs = data.map((d: any) => ({
+                            idRegistro: d.idRegistro,
+                            nombrePaciente: d.nombrePaciente,
+                            usuarioNombre: d.usuarioNombre,
+                            fechaRealizacion: d.fechaRealizacion,
+                            tituloEncuesta: d.tituloEncuesta,
+                            tipo: 'MODIFICACION',
+                            descripcion: `Se guardó respuesta para el paciente ${d.nombrePaciente}`
+                        }));
                     }
                 }
             }
-            logsFetched.sort((a, b) => new Date(b.fechaRealizacion).getTime() - new Date(a.fechaRealizacion).getTime());
-            setAllLogs(logsFetched);
+
+            // Get LocalStorage Logs (Access & Exports)
+            const localAuthLogs: RegistroLog[] = JSON.parse(localStorage.getItem('audit_logs') || '[]');
+
+            // Merge and Sort
+            const merged = [...realLogs, ...localAuthLogs];
+            merged.sort((a, b) => new Date(b.fechaRealizacion).getTime() - new Date(a.fechaRealizacion).getTime());
+
+            setAllLogs(merged);
         } catch (e) {
             console.error(e);
         } finally {
@@ -75,81 +94,56 @@ export default function AuditPage() {
 
     const applyFilters = () => {
         const now = new Date();
-        let cutoff = new Date();
+        let cutoff = new Date(); // default all time essentially if check fails, but logic below sets it
+        let cutoffTime = 0;
 
         if (period === '24h') cutoff.setDate(now.getDate() - 1);
         else if (period === '7d') cutoff.setDate(now.getDate() - 7);
         else if (period === '30d') cutoff.setDate(now.getDate() - 30);
 
-        let filtered = allLogs.filter(l => new Date(l.fechaRealizacion) >= cutoff);
+        cutoffTime = cutoff.getTime();
+
+        let filtered = allLogs.filter(l => new Date(l.fechaRealizacion).getTime() >= cutoffTime);
 
         // Filter by User
         if (selectedUser !== 'all') {
             filtered = filtered.filter(l => (l.usuarioNombre || 'Sistema') === selectedUser);
         }
 
-        // Filter by Type (Mock logic as data is only 'Respuesta')
+        // Filter by Type
         if (selectedType !== 'all') {
-            if (selectedType === 'RESPUESTA') {
-                // Keep all since they are all responses
-            } else {
-                // If filtering by access/alert/closure, return empty as we don't have those logs yet
-                filtered = [];
-            }
+            filtered = filtered.filter(l => l.tipo === selectedType);
         }
 
-        // Filter by Search Term (Patient Name)
+        // Filter by Search Term (Patient Name or Description)
         if (searchTerm.trim() !== "") {
             const lowerTerm = searchTerm.toLowerCase();
-            filtered = filtered.filter(l => l.nombrePaciente && l.nombrePaciente.toLowerCase().includes(lowerTerm));
+            filtered = filtered.filter(l =>
+                (l.nombrePaciente && l.nombrePaciente.toLowerCase().includes(lowerTerm)) ||
+                (l.descripcion && l.descripcion.toLowerCase().includes(lowerTerm))
+            );
         }
 
         setFilteredLogs(filtered);
+        calculateStats(filtered);
     };
 
-    const calculateStats = () => {
-        // Only used for the cards now, filtering is separate
-        // ... existing stats logic (simplified since applyFilters handles the list)
-        // We can reuse filteredLogs for stats or recalculate if stats should be period-only independent of user filter?
-        // Usually Stats Cards reflect the period, not necessarily the specific list filters unless desired.
-        // Let's keep stats based on Period Only to show "Global Activity" vs "Filtered List"
+    const calculateStats = (currentLogs: RegistroLog[]) => {
+        const statsCount = {
+            accesos: 0,
+            modificaciones: 0,
+            alertas: 0,
+            exportaciones: 0
+        };
 
-        // ... (keeping original stats logic roughly same but using period-filtered logs)
-        const now = new Date();
-        let cutoff = new Date();
-        if (period === '24h') cutoff.setDate(now.getDate() - 1);
-        else if (period === '7d') cutoff.setDate(now.getDate() - 7);
-        else if (period === '30d') cutoff.setDate(now.getDate() - 30);
-
-        const periodLogs = allLogs.filter(l => new Date(l.fechaRealizacion) >= cutoff);
-
-        const totalMods = periodLogs.length;
-        const uniqueUsers = new Set(periodLogs.map(l => l.usuarioNombre || 'Sistema'));
-        // ... (token decoding logic same as before)
-        let uniqueAccessCount = uniqueUsers.size; // Simplified for now
-
-        // Re-add token logic if needed for accuracy, or keep simple
-        try {
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                const decoded = JSON.parse(jsonPayload);
-                if (decoded.name) uniqueUsers.add(decoded.name);
-                else if (decoded.sub) uniqueUsers.add(decoded.sub);
-            }
-        } catch (e) { }
-        uniqueAccessCount = uniqueUsers.size;
-
-        setStats({
-            accesos: uniqueAccessCount,
-            modificaciones: totalMods,
-            alertas: Math.floor(Math.random() * 2), // Reduced mock noise
-            cierres: Math.floor(Math.random() * 3)
+        currentLogs.forEach(l => {
+            if (l.tipo === 'ACCESO') statsCount.accesos++;
+            else if (l.tipo === 'MODIFICACION') statsCount.modificaciones++;
+            else if (l.tipo === 'ALERTA') statsCount.alertas++;
+            else if (l.tipo === 'EXPORTACION') statsCount.exportaciones++;
         });
+
+        setStats(statsCount);
     };
 
     // Get unique users for dropdown
@@ -164,6 +158,26 @@ export default function AuditPage() {
     };
 
     const chartData = [5, 12, 8, 15, 20, 10, stats.modificaciones > 20 ? 20 : stats.modificaciones];
+
+    const getIconForType = (type: string) => {
+        switch (type) {
+            case 'ACCESO': return <FaSignInAlt />;
+            case 'MODIFICACION': return <FaSave />; // Or FaEdit
+            case 'ALERTA': return <FaExclamationTriangle />;
+            case 'EXPORTACION': return <FaFileExport />;
+            default: return <FaEdit />;
+        }
+    };
+
+    const getTitleForType = (type: string) => {
+        switch (type) {
+            case 'ACCESO': return 'Acceso al Sistema';
+            case 'MODIFICACION': return 'Registro Guardado';
+            case 'ALERTA': return 'Alerta de Seguridad';
+            case 'EXPORTACION': return 'Exportación de Datos';
+            default: return 'Actividad';
+        }
+    };
 
     return (
         <>
@@ -219,11 +233,11 @@ export default function AuditPage() {
                     </div>
                 </div>
 
-                {/* Cierres */}
+                {/* Exportaciones (Was Cierres) */}
                 <div className={`${styles.statCard} ${styles.cardRed}`}>
                     <div>
-                        <span className={styles.statLabel}>Cierres de Sesión</span>
-                        <div className={styles.statValue}>{stats.cierres}</div>
+                        <span className={styles.statLabel}>Exportaciones</span>
+                        <div className={styles.statValue}>{stats.exportaciones}</div>
                         <div className={styles.statSub}>Manuales</div>
                     </div>
                 </div>
@@ -252,12 +266,12 @@ export default function AuditPage() {
                                 return (
                                     <div key={log.idRegistro} className={styles.eventItem}>
                                         <div className={styles.eventIcon}>
-                                            <FaEdit />
+                                            {getIconForType(log.tipo)}
                                         </div>
                                         <div className={styles.eventBody}>
-                                            <div className={styles.eventTitle}>ACTUALIZAR en Respuesta</div>
+                                            <div className={styles.eventTitle}>{getTitleForType(log.tipo)}</div>
                                             <div className={styles.eventDesc}>
-                                                Se guardó respuesta para el paciente <strong style={{ color: 'var(--text-main)' }}>{log.nombrePaciente}</strong>.
+                                                {log.descripcion || log.nombrePaciente || 'Actividad registrada'}
                                                 <br />
                                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Usuario: {log.usuarioNombre || 'Sistema'}</span>
                                             </div>
@@ -279,10 +293,10 @@ export default function AuditPage() {
                         <h3 className={styles.sectionTitle} style={{ marginBottom: '1rem' }}>Filtros Avanzados</h3>
 
                         <div className={styles.filterGroup}>
-                            <label className={styles.label}>Buscar Paciente</label>
+                            <label className={styles.label}>Buscar Paciente / Descripción</label>
                             <input
                                 type="text"
-                                placeholder="Nombre del paciente..."
+                                placeholder="Nombre..."
                                 className={styles.select} // Reusing select style for consistency
                                 style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-main)', borderColor: 'var(--border-color)' }}
                                 value={searchTerm}
@@ -314,10 +328,10 @@ export default function AuditPage() {
                                 onChange={(e) => setSelectedType(e.target.value)}
                             >
                                 <option value="all">Todos los eventos</option>
-                                <option value="RESPUESTA">Respuesta Guardada</option>
-                                <option value="ACCESO">Inicio de Sesión</option>
-                                <option value="ALERTA">Alerta de Seguridad</option>
-                                <option value="CIERRE">Cierre de Sesión</option>
+                                <option value="MODIFICACION">Modificaciones</option>
+                                <option value="ACCESO">Accesos</option>
+                                <option value="ALERTA">Alertas</option>
+                                <option value="EXPORTACION">Exportaciones</option>
                             </select>
                         </div>
 

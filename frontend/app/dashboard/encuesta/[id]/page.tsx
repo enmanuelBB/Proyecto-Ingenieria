@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import styles from './responder.module.css';
 import { FaArrowLeft, FaPaperPlane, FaUserInjured, FaHistory } from 'react-icons/fa';
 import Swal from 'sweetalert2';
@@ -39,9 +39,11 @@ interface Encuesta {
 export default function ResponderEncuestaPage() {
     const router = useRouter();
     const params = useParams();
-
+    const searchParams = useSearchParams();
 
     const idEncuesta = params?.id ? String(params.id) : null;
+    const mode = searchParams.get('mode');
+    const registroId = searchParams.get('registro');
 
     const [encuesta, setEncuesta] = useState<Encuesta | null>(null);
     const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -59,6 +61,67 @@ export default function ResponderEncuestaPage() {
             fetchPacientes();
         }
     }, [idEncuesta]);
+
+    // Cargar Datos de Respuesta si es Modo Edición
+    useEffect(() => {
+        if (mode === 'edit' && registroId && pacientes.length > 0 && encuesta) {
+            fetchRegistroForEdit();
+        }
+    }, [mode, registroId, pacientes.length, encuesta?.idEncuesta]);
+
+    const fetchRegistroForEdit = async () => {
+        const token = localStorage.getItem('accessToken');
+        try {
+            const res = await fetch(`http://localhost:8080/api/v1/encuestas/registro/${registroId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+
+                // Set Paciente
+                setSelectedPaciente(String(data.idPaciente));
+
+                // Map Respuestas
+                const mappedRespuestas: { [key: number]: string | number | number[] } = {};
+
+                data.respuestas.forEach((r: any) => {
+                    const qId = r.idPregunta;
+
+                    // Si ya existe (caso array, multiple selection), agregar al array
+                    if (mappedRespuestas[qId]) {
+                        if (Array.isArray(mappedRespuestas[qId])) {
+                            (mappedRespuestas[qId] as number[]).push(r.idOpcionSeleccionada);
+                        } else {
+                            // Convertir a array si era simple y llega otro valor (raro pero posible)
+                            mappedRespuestas[qId] = [mappedRespuestas[qId] as number, r.idOpcionSeleccionada];
+                        }
+                    } else {
+                        // Nuevo valor
+                        if (r.idOpcionSeleccionada) {
+                            // Check tipo pregunta from encuesta state to know if it should be array initially? 
+                            // Easier: Backend logic often implies multiple rows = multiple selections. 
+                            // But for single select backend also sends idOpcionSeleccionada.
+                            // We need access to question type to decide if [] or number.
+                            const pregunta = encuesta?.preguntas.find(p => p.idPregunta === qId);
+                            if (pregunta && pregunta.tipoPregunta === 'SELECCION_MULTIPLE') {
+                                mappedRespuestas[qId] = [r.idOpcionSeleccionada];
+                            } else {
+                                mappedRespuestas[qId] = r.idOpcionSeleccionada;
+                            }
+                        } else {
+                            mappedRespuestas[qId] = r.respuestaDada; // Texto or Numero as string
+                        }
+                    }
+                });
+
+                setRespuestas(mappedRespuestas);
+                setStep('form'); // Skip intro
+            }
+        } catch (e) {
+            console.error("Error loading registro for edit", e);
+            Swal.fire('Error', 'No se pudo cargar la respuesta para editar.', 'error');
+        }
+    };
 
     const fetchEncuesta = async () => {
         const token = localStorage.getItem('accessToken');
