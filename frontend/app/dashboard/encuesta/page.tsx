@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './encuesta.module.css';
-import { FaPlus, FaEdit, FaPlay, FaClipboardCheck, FaHistory } from 'react-icons/fa'; // Corregido import
+import { FaPlus, FaEdit, FaPlay, FaClipboardCheck, FaHistory, FaTrash } from 'react-icons/fa'; // Corregido import
 import Swal from 'sweetalert2';
 
 // 1. ACTUALIZAMOS LA INTERFAZ
@@ -113,6 +113,39 @@ export default function EncuestasMenuPage() {
         }
     };
 
+    const handleDeleteSurvey = async (id: number, titulo: string) => {
+        const result = await Swal.fire({
+            title: '¿Eliminar encuesta?',
+            text: `Vas a eliminar "${titulo}". Esta acción borrará todas las preguntas y respuestas asociadas y NO se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            const token = localStorage.getItem('accessToken');
+            try {
+                const res = await fetch(`http://localhost:8080/api/v1/encuestas/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) { // 204 No Content
+                    setEncuestas(prev => prev.filter(e => e.idEncuesta !== id));
+                    Swal.fire('Eliminada', 'La encuesta ha sido eliminada.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar la encuesta.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Fallo de conexión.', 'error');
+            }
+        }
+    };
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -179,6 +212,15 @@ export default function EncuestasMenuPage() {
                                 >
                                     <FaPlay size={12} /> Responder
                                 </Link>
+
+                                {/* BOTÓN: ELIMINAR */}
+                                <button
+                                    onClick={() => handleDeleteSurvey(encuesta.idEncuesta, encuesta.titulo)}
+                                    className={`${styles.btn} ${styles.btnDelete}`}
+                                    title="Eliminar encuesta"
+                                >
+                                    <FaTrash />
+                                </button>
                             </div>
                         </div>
                     ))}
