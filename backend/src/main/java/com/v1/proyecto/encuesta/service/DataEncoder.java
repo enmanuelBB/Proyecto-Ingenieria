@@ -180,6 +180,16 @@ public class DataEncoder {
 
         // Use normalized for matching below
         // Handle Context-Dependent Collisions first
+        // Context-Dependent: Previsión
+        if (questionContains(question, "Previsión") || questionContains(question, "Prevision")) {
+            if (normalized.equalsIgnoreCase("Otra"))
+                return "4";
+            // Map "Capredena / Dipreca" (with spaces) if not caught by exact map
+            if (normalized.equalsIgnoreCase("Capredena / Dipreca"))
+                return "2";
+        }
+
+        // Context-Dependent: Histopatologia
         if (questionContains(question, "Histológico") || questionContains(question, "Histopatología")) {
             if (normalized.equalsIgnoreCase("Difuso"))
                 return "1";

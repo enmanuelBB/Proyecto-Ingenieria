@@ -106,18 +106,97 @@ public class ExportService {
     }
 
     public ByteArrayInputStream generatePdf(Integer idEncuesta, Integer idPaciente, Role role) {
+        Encuesta encuesta = encuestaRepository.findById(idEncuesta)
+                .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
+
+        // Ensure we load questions and options
+        List<Pregunta> preguntas = encuesta.getPreguntas().stream()
+                .sorted(Comparator.comparing(Pregunta::getIdPregunta))
+                .collect(Collectors.toList());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4);
+
         try {
-            // Load the static PDF file from resources
-            java.io.InputStream is = getClass().getResourceAsStream("/Leyenda_Datos_Cancer_Gastrico.pdf");
-            if (is == null) {
-                // Try file system if resource not found (dev mode fallback)
-                // This is just a fallback, the resource should be there if built correctly
-                throw new RuntimeException("El archivo de leyenda no se encuentra en los recursos.");
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // Título
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
+            Paragraph title = new Paragraph("Diccionario de Datos: " + encuesta.getTitulo(), titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(10);
+            document.add(title);
+
+            document.add(new Paragraph("Versión: " + encuesta.getVersion()));
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph(
+                    "Este documento detalla la codificación (dicotomización) aplicada a cada pregunta y sus opciones de respuesta para usuarios no administrativos (Analistas/Investigadores)."));
+            document.add(new Paragraph(" "));
+
+            // Detailed Table
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
+            Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
+            Font questionFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
+
+            PdfPTable table = new PdfPTable(3);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[] { 4f, 4f, 1f }); // Pregunta wider, Option wide, Value narrow
+
+            addHeaderCell(table, "Pregunta", headerFont);
+            addHeaderCell(table, "Opción de Respuesta", headerFont);
+            addHeaderCell(table, "Valor", headerFont);
+
+            for (Pregunta p : preguntas) {
+                boolean isFirstOption = true;
+                List<com.v1.proyecto.encuesta.model.OpcionRespuesta> opciones = p.getOpciones();
+
+                if (opciones != null && !opciones.isEmpty()) {
+                    for (com.v1.proyecto.encuesta.model.OpcionRespuesta op : opciones) {
+                        String textoOpcion = op.getTextoOpcion();
+                        // Encode using role USER to see the dichotomized value (0, 1, etc.)
+                        // We use the question text to ensure context-aware encoding (e.g. H. Pylori)
+                        // works
+                        String val = dataEncoder.encodeRespuesta(p.getTextoPregunta(), textoOpcion, Role.USER);
+
+                        // Add Question Text only on the first row for clarity
+                        if (isFirstOption) {
+                            addCell(table, p.getTextoPregunta(), questionFont, new Color(240, 240, 240));
+                            isFirstOption = false;
+                        } else {
+                            addCell(table, "", dataFont, Color.WHITE); // Empty cell for subsequent options
+                        }
+
+                        addCell(table, textoOpcion, dataFont, Color.WHITE);
+                        addCell(table, val, dataFont, Color.WHITE);
+                    }
+                } else {
+                    // Open Text Question
+                    // Try to guess if it's a known field from our manual dictionary
+                    // or just label it as "Texto Libre"
+                    addCell(table, p.getTextoPregunta(), questionFont, new Color(240, 240, 240));
+                    addCell(table, "(Texto Libre / Numérico)", dataFont, Color.WHITE);
+
+                    // See if we have a static mapping for this question's potential answers
+                    // roughly?
+                    // Hard to guess. Just output raw if no options.
+                    // But wait, H. Pylori might be free text in some versions?
+                    // Assuming DB has options. If not, we can't list "que respuestas hay".
+                    // We'll leave it as Free Text.
+                    addCell(table, "-", dataFont, Color.WHITE);
+                }
+
+                // Add a small divider or just rely on the question text cell background
             }
-            return new ByteArrayInputStream(is.readAllBytes());
-        } catch (IOException e) {
-            throw new RuntimeException("Error al leer el archivo PDF de leyenda", e);
+
+            document.add(table);
+            document.close();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error al generar PDF", e);
         }
+
+        return new ByteArrayInputStream(out.toByteArray());
     }
 
     @Transactional(readOnly = true)
