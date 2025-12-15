@@ -75,7 +75,7 @@ public class EncuestaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EncuestaResponseDto> updateEncuesta(
-            @PathVariable Integer id,
+            @PathVariable(name = "id") Integer id,
             @Valid @RequestBody EncuestaCreateDto encuestaDto) {
 
         EncuestaResponseDto encuestaActualizada = encuestaService.updateEncuesta(id, encuestaDto);
