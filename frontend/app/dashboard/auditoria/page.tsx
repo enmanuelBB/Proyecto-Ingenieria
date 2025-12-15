@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './audit.module.css';
 import { FaEdit, FaShieldAlt, FaExclamationTriangle, FaDoorOpen, FaSearch, FaArrowRight, FaFileExport, FaSignInAlt, FaSave } from 'react-icons/fa';
+import { API_URL } from '@/app/config';
 
 interface RegistroLog {
     idRegistro: string | number;
@@ -47,7 +48,7 @@ export default function AuditPage() {
 
         try {
             setLoading(true);
-            const resEncuestas = await fetch('http://localhost:8080/api/v1/encuestas', {
+            const resEncuestas = await fetch(`${API_URL}/api/v1/encuestas`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -58,7 +59,7 @@ export default function AuditPage() {
                 const targetSurvey = encuestas.find(e => e.titulo.includes("Estudio")) || encuestas[0];
 
                 if (targetSurvey) {
-                    const resReg = await fetch(`http://localhost:8080/api/v1/encuestas/${targetSurvey.idEncuesta}/registros`, {
+                    const resReg = await fetch(`${API_URL}/api/v1/encuestas/${targetSurvey.idEncuesta}/registros`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (resReg.ok) {

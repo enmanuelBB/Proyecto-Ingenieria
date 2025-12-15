@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./users.module.css";
 import { FaEdit, FaSearch } from "react-icons/fa";
+import { API_URL } from '@/app/config';
 
 interface User {
     id: number;
@@ -38,7 +39,7 @@ export default function UsuariosPage() {
                 return;
             }
 
-            const response = await fetch("http://localhost:8080/api/v1/user", {
+            const response = await fetch(`${API_URL}/api/v1/user`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -68,7 +69,7 @@ export default function UsuariosPage() {
 
         try {
             const token = localStorage.getItem("accessToken");
-            const response = await fetch(`http://localhost:8080/api/v1/user/${selectedUser.id}`, {
+            const response = await fetch(`${API_URL}/api/v1/user/${selectedUser.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -112,18 +113,18 @@ export default function UsuariosPage() {
             </div>
 
             {/* --- CORRECCIÓN: FILTRO Y BUSCADOR MEJORADOS --- */}
-            <div 
-                style={{ 
-                    display: "flex", 
+            <div
+                style={{
+                    display: "flex",
                     justifyContent: "space-between",
-                    gap: "2rem", 
-                    marginBottom: "1.5rem", 
-                    flexWrap: "wrap", 
+                    gap: "2rem",
+                    marginBottom: "1.5rem",
+                    flexWrap: "wrap",
                     alignItems: 'center'
                 }}
             >
                 {/* 1. Buscador */}
-                <div style={{ position: "relative", flex: "1 1 300px", maxWidth: "500px",marginRight: "1rem" }}>
+                <div style={{ position: "relative", flex: "1 1 300px", maxWidth: "500px", marginRight: "1rem" }}>
                     <FaSearch style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", left: "12px", color: "var(--text-muted)" }} />
                     <input
                         type="text"
@@ -143,14 +144,14 @@ export default function UsuariosPage() {
                 </div>
 
                 {/* 2. Selector de Rol  */}
-                <div style={{ flex: "0 0 220px" }}> 
+                <div style={{ flex: "0 0 220px" }}>
                     <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
-                        style={{ 
+                        style={{
                             width: "100%",
-                            padding: "0.7rem 1rem", 
-                            borderRadius: "8px", 
+                            padding: "0.7rem 1rem",
+                            borderRadius: "8px",
                             border: "1px solid var(--border-color)",
                             backgroundColor: "var(--bg-input)",
                             color: "var(--text-main)",
@@ -167,10 +168,10 @@ export default function UsuariosPage() {
                 </div>
             </div>
 
-            <div style={{ 
-                overflowX: "auto", 
-                backgroundColor: "var(--bg-card)", 
-                borderRadius: "12px", 
+            <div style={{
+                overflowX: "auto",
+                backgroundColor: "var(--bg-card)",
+                borderRadius: "12px",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                 border: "1px solid var(--border-color)"
             }}>
@@ -199,18 +200,17 @@ export default function UsuariosPage() {
                                                 fontSize: "0.75rem",
                                                 fontWeight: "600",
                                                 backgroundColor:
-                                                    user.role === "ADMIN" ? "rgba(34, 197, 94, 0.15)" : 
-                                                        user.role === "ANALISTA" ? "rgba(59, 130, 246, 0.15)" : 
+                                                    user.role === "ADMIN" ? "rgba(34, 197, 94, 0.15)" :
+                                                        user.role === "ANALISTA" ? "rgba(59, 130, 246, 0.15)" :
                                                             user.role === "INVESTIGADOR" ? "rgba(234, 179, 8, 0.15)" : "rgba(148, 163, 184, 0.15)",
                                                 color:
                                                     user.role === "ADMIN" ? "#16a34a" :
                                                         user.role === "ANALISTA" ? "#2563eb" :
                                                             user.role === "INVESTIGADOR" ? "#ca8a04" : "#64748b",
-                                                border: `1px solid ${
-                                                    user.role === "ADMIN" ? "rgba(34, 197, 94, 0.3)" : 
-                                                        user.role === "ANALISTA" ? "rgba(59, 130, 246, 0.3)" : 
+                                                border: `1px solid ${user.role === "ADMIN" ? "rgba(34, 197, 94, 0.3)" :
+                                                        user.role === "ANALISTA" ? "rgba(59, 130, 246, 0.3)" :
                                                             user.role === "INVESTIGADOR" ? "rgba(234, 179, 8, 0.3)" : "rgba(148, 163, 184, 0.3)"
-                                                }`
+                                                    }`
                                             }}
                                         >
                                             {user.role}
@@ -238,7 +238,7 @@ export default function UsuariosPage() {
                                 </tr>
                             ))
                         ) : (
-                             <tr><td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>No se encontraron usuarios.</td></tr>
+                            <tr><td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>No se encontraron usuarios.</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -261,18 +261,18 @@ export default function UsuariosPage() {
                     }}
                 >
                     <div style={{ backgroundColor: "var(--bg-card)", padding: "2rem", borderRadius: "12px", width: "90%", maxWidth: "400px", border: "1px solid var(--border-color)", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}>
-                        <h2 style={{color: "var(--text-main)", marginTop: 0}}>Editar Rol</h2>
-                        <p style={{marginBottom: "1.5rem", color: "var(--text-muted)", fontSize: '0.9rem'}}>Usuario: <strong>{selectedUser?.name} {selectedUser?.lastname}</strong></p>
+                        <h2 style={{ color: "var(--text-main)", marginTop: 0 }}>Editar Rol</h2>
+                        <p style={{ marginBottom: "1.5rem", color: "var(--text-muted)", fontSize: '0.9rem' }}>Usuario: <strong>{selectedUser?.name} {selectedUser?.lastname}</strong></p>
 
                         <div style={{ marginBottom: "2rem" }}>
                             <label style={{ display: "block", marginBottom: "0.5rem", color: "var(--text-main)", fontSize: '0.9rem', fontWeight: '500' }}>Seleccionar nuevo rol:</label>
                             <select
                                 value={newRole}
                                 onChange={(e) => setNewRole(e.target.value)}
-                                style={{ 
-                                    width: "100%", 
-                                    padding: "0.7rem", 
-                                    borderRadius: "8px", 
+                                style={{
+                                    width: "100%",
+                                    padding: "0.7rem",
+                                    borderRadius: "8px",
                                     border: "1px solid var(--border-color)",
                                     backgroundColor: "var(--bg-input)",
                                     color: "var(--text-main)",

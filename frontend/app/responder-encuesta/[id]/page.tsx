@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './responder.module.css';
+import { API_URL } from '@/app/config';
 
 // --- Interfaces based on Backend DTOs ---
 
@@ -87,7 +88,7 @@ function ResponderEncuestaContent() {
         const fetchData = async () => {
             try {
                 // 1. Fetch Survey
-                const resEncuesta = await fetch(`http://localhost:8080/api/v1/encuestas/${id}`, {
+                const resEncuesta = await fetch(`${API_URL}/api/v1/encuestas/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -96,7 +97,7 @@ function ResponderEncuestaContent() {
                 setEncuesta(dataEncuesta);
 
                 // 2. Fetch Patients for the selector
-                const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
+                const resPacientes = await fetch(`${API_URL}/api/v1/pacientes`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -126,7 +127,7 @@ function ResponderEncuestaContent() {
             if (!token) return;
 
             try {
-                const res = await fetch(`http://localhost:8080/api/v1/encuestas/registro/${registroId}`, {
+                const res = await fetch(`${API_URL}/api/v1/encuestas/registro/${registroId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -281,7 +282,7 @@ function ResponderEncuestaContent() {
         };
 
         try {
-            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/registro`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -349,7 +350,7 @@ function ResponderEncuestaContent() {
         };
 
         try {
-            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/registro`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

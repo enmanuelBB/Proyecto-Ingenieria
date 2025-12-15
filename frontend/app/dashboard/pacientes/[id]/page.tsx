@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import styles from './patientDetail.module.css';
 import { FaArrowLeft, FaFileMedical, FaUser } from 'react-icons/fa';
+import { API_URL } from '@/app/config';
 
 interface Paciente {
     idPaciente: number;
@@ -63,7 +64,7 @@ export default function PatientDetailPage() {
             try {
                 setLoading(true);
                 // 1. Obtener datos del paciente
-                const resPaciente = await fetch(`http://localhost:8080/api/v1/pacientes/${idPaciente}`, {
+                const resPaciente = await fetch(`${API_URL}/api/v1/pacientes/${idPaciente}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -75,7 +76,7 @@ export default function PatientDetailPage() {
                 setPaciente(dataPaciente);
 
                 // 2. Obtener registros (historial de encuestas)
-                const resRegistros = await fetch(`http://localhost:8080/api/v1/pacientes/${idPaciente}/registros`, {
+                const resRegistros = await fetch(`${API_URL}/api/v1/pacientes/${idPaciente}/registros`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

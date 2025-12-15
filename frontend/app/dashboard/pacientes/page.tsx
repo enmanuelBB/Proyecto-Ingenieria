@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard.module.css';
-import { FaUserPlus, FaSearch, FaFileMedical } from 'react-icons/fa'; 
+import { FaUserPlus, FaSearch, FaFileMedical } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import { API_URL } from '@/app/config';
 
 interface Paciente {
   idPaciente: number;
@@ -20,7 +21,7 @@ export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // 1. Estado para el rol
   const [role, setRole] = useState<string | null>(null);
 
@@ -50,7 +51,7 @@ export default function PacientesPage() {
 
     const fetchPacientes = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/v1/pacientes', {
+        const response = await fetch(`${API_URL}/api/v1/pacientes`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -91,7 +92,7 @@ export default function PacientesPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`http://localhost:8080/api/v1/pacientes/${id}`, {
+        const response = await fetch(`${API_URL}/api/v1/pacientes/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -174,26 +175,26 @@ export default function PacientesPage() {
                   <td>{p.sexo}</td>
                   <td>{new Date(p.fechaNacimiento).toLocaleDateString()}</td>
                   <td>
-                    
+
                     {/* --- 3. BOTÓN VER FICHA (SOLO ADMIN) --- */}
                     {role === 'ADMIN' && (
-                        <button
-                          style={{ 
-                            color: '#3b82f6', 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer', 
-                            marginRight: '10px', 
-                            fontWeight: 'bold',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                          onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
-                          title="Ver Ficha Clínica Detallada"
-                        >
-                          <FaFileMedical /> Ver Ficha
-                        </button>
+                      <button
+                        style={{
+                          color: '#3b82f6',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          marginRight: '10px',
+                          fontWeight: 'bold',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                        onClick={() => router.push(`/dashboard/pacientes/${p.idPaciente}`)}
+                        title="Ver Ficha Clínica Detallada"
+                      >
+                        <FaFileMedical /> Ver Ficha
+                      </button>
                     )}
 
                     <button

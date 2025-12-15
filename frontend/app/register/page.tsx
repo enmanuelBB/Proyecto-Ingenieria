@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
-import styles from './register.module.css'; 
+import styles from './register.module.css';
+import { API_URL } from '@/app/config';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -96,96 +97,96 @@ export default function RegisterPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-            <div className={styles.logoWrapper}>
-                <Image
-                    src="/logo-vital3.png" // Asegúrate de que esta ruta sea correcta
-                    alt="Logo Ingeniería Vital"
-                    width={50} 
-                    height={50}
-                    className={styles.logo}
-                />
-            </div>
-            <h2 className={styles.title}>Crear Nueva Cuenta</h2>
-            <p className={styles.subtitle}>Únete a la plataforma para comenzar</p>
+          <div className={styles.logoWrapper}>
+            <Image
+              src="/logo-vital3.png" // Asegúrate de que esta ruta sea correcta
+              alt="Logo Ingeniería Vital"
+              width={50}
+              height={50}
+              className={styles.logo}
+            />
+          </div>
+          <h2 className={styles.title}>Crear Nueva Cuenta</h2>
+          <p className={styles.subtitle}>Únete a la plataforma para comenzar</p>
         </div>
-          
+
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-            
-            <div className={styles.row}>
-                <div className={styles.inputGroup}>
-                    <label className={styles.label}>Nombres</label>
-                    <input
-                        className={styles.input}
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Ej: Juan"
-                    />
-                </div>
 
-                <div className={styles.inputGroup}>
-                    <label className={styles.label}>Apellidos</label>
-                    <input
-                        className={styles.input}
-                        name="lastname"
-                        value={formData.lastname}
-                        onChange={handleChange}
-                        placeholder="Ej: Pérez"
-                    />
-                </div>
+          <div className={styles.row}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Nombres</label>
+              <input
+                className={styles.input}
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Ej: Juan"
+              />
             </div>
 
             <div className={styles.inputGroup}>
-                <label className={styles.label}>Correo Electrónico</label>
-                <input
-                    type="email"
-                    className={styles.input}
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="juan.perez@ejemplo.com"
-                />
+              <label className={styles.label}>Apellidos</label>
+              <input
+                className={styles.input}
+                name="lastname"
+                value={formData.lastname}
+                onChange={handleChange}
+                placeholder="Ej: Pérez"
+              />
             </div>
+          </div>
 
-            <div className={styles.inputGroup}>
-                <label className={styles.label}>Contraseña</label>
-                <input
-                    type="password"
-                    className={styles.input}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="******"
-                    minLength={6}
-                />
-            </div>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Correo Electrónico</label>
+            <input
+              type="email"
+              className={styles.input}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="juan.perez@ejemplo.com"
+            />
+          </div>
 
-            <div className={styles.inputGroup}>
-                <label className={styles.label}>Confirmar Contraseña</label>
-                <input
-                    type="password"
-                    className={styles.input}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="******"
-                />
-            </div>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Contraseña</label>
+            <input
+              type="password"
+              className={styles.input}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="******"
+              minLength={6}
+            />
+          </div>
 
-            <button
-                type="submit"
-                className={styles.button}
-                disabled={isLoading}
-            >
-                {isLoading ? 'Registrando...' : 'Crear Cuenta'}
-            </button>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Confirmar Contraseña</label>
+            <input
+              type="password"
+              className={styles.input}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="******"
+            />
+          </div>
 
-            <div className={styles.footer}>
-                <span className={styles.footerText}>¿Ya tienes cuenta? </span>
-                <Link href="/" className={styles.link}>
-                    Inicia Sesión
-                </Link>
-            </div>
+          <button
+            type="submit"
+            className={styles.button}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Registrando...' : 'Crear Cuenta'}
+          </button>
+
+          <div className={styles.footer}>
+            <span className={styles.footerText}>¿Ya tienes cuenta? </span>
+            <Link href="/" className={styles.link}>
+              Inicia Sesión
+            </Link>
+          </div>
         </form>
       </div>
     </div>

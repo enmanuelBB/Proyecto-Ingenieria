@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaEdit, FaClipboardList, FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import { API_URL } from '@/app/config';
 
 interface RegistroBorrador {
     idRegistro: number;
@@ -30,7 +31,7 @@ export default function BorradoresPage() {
             }
 
             try {
-                const res = await fetch('http://localhost:8080/api/v1/encuestas/borradores', {
+                const res = await fetch(`${API_URL}/api/v1/encuestas/borradores`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

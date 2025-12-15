@@ -9,6 +9,7 @@ import { FaClipboardList, FaUserInjured, FaSearch, FaFileExport, FaSignOutAlt, F
 import { useSidebar } from '../context/SidebarContext';
 import Swal from 'sweetalert2';
 import { useTheme } from '../hooks/useTheme';
+import { API_URL } from '@/app/config';
 
 export default function Sidebar() {
     const router = useRouter();
@@ -58,7 +59,7 @@ export default function Sidebar() {
         }
         if (!token) return;
 
-        fetch('http://localhost:8080/api/v1/encuestas', {
+        fetch(`${API_URL}/api/v1/encuestas`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
             .then(res => res.ok ? res.json() : [])

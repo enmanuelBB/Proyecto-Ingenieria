@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './dashboard.module.css';
 import { FaUserPlus, FaClipboardList, FaUserInjured, FaEdit, FaPlus } from 'react-icons/fa';
+import { API_URL } from '@/app/config';
 
 interface Paciente {
   idPaciente: number;
@@ -39,7 +40,7 @@ export default function DashboardPage() {
 
       const decoded = JSON.parse(jsonPayload);
       if (decoded.name) setUser(decoded.name);
-      
+
       // Lógica para extraer el rol (ADMIN, USER, etc.)
       if (decoded.authorities && Array.isArray(decoded.authorities)) {
         const r = decoded.authorities[0]?.authority || decoded.authorities[0] || "";
@@ -51,7 +52,7 @@ export default function DashboardPage() {
 
     const fetchData = async () => {
       try {
-        const resPacientes = await fetch('http://localhost:8080/api/v1/pacientes', {
+        const resPacientes = await fetch(`${API_URL}/api/v1/pacientes`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -62,7 +63,7 @@ export default function DashboardPage() {
           totalPacientesLen = dataPacientes.length;
         }
 
-        const resEncuestas = await fetch('http://localhost:8080/api/v1/encuestas', {
+        const resEncuestas = await fetch(`${API_URL}/api/v1/encuestas`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -85,7 +86,7 @@ export default function DashboardPage() {
         let registrosHoyLen = 0;
 
         if (surveyIdToUse) {
-          const resRegistros = await fetch(`http://localhost:8080/api/v1/encuestas/${surveyIdToUse}/registros`, {
+          const resRegistros = await fetch(`${API_URL}/api/v1/encuestas/${surveyIdToUse}/registros`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
 
@@ -178,7 +179,7 @@ export default function DashboardPage() {
                           Ver Ficha
                         </button>
                       )}
-                      {role !== 'ADMIN' && <span style={{color: '#9ca3af', fontSize:'0.9em'}}>Restringido</span>}
+                      {role !== 'ADMIN' && <span style={{ color: '#9ca3af', fontSize: '0.9em' }}>Restringido</span>}
                     </td>
                   </tr>
                 ))

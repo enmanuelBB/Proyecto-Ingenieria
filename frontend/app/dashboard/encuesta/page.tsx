@@ -6,6 +6,7 @@ import Link from 'next/link';
 import styles from './encuesta.module.css';
 import { FaPlus, FaEdit, FaPlay, FaClipboardCheck, FaHistory, FaTrash } from 'react-icons/fa'; // Corregido import
 import Swal from 'sweetalert2';
+import { API_URL } from '@/app/config';
 
 // 1. ACTUALIZAMOS LA INTERFAZ
 interface Encuesta {
@@ -28,7 +29,7 @@ export default function EncuestasMenuPage() {
         if (!token) return;
 
         try {
-            const res = await fetch('http://localhost:8080/api/v1/encuestas', {
+            const res = await fetch(`${API_URL}/api/v1/encuestas`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -88,7 +89,7 @@ export default function EncuestasMenuPage() {
                 const payload: any = { titulo, version };
                 if (userId) payload.usuarioId = userId;
 
-                const res = await fetch('http://localhost:8080/api/v1/encuestas', {
+                const res = await fetch(`${API_URL}/api/v1/encuestas`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -128,7 +129,7 @@ export default function EncuestasMenuPage() {
         if (result.isConfirmed) {
             const token = localStorage.getItem('accessToken');
             try {
-                const res = await fetch(`http://localhost:8080/api/v1/encuestas/${id}`, {
+                const res = await fetch(`${API_URL}/api/v1/encuestas/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

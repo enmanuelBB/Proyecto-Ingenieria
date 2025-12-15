@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import styles from './responder.module.css';
 import { FaArrowLeft, FaPaperPlane, FaUserInjured, FaHistory } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import { API_URL } from '@/app/config';
 
 // --- INTERFACES ---
 interface Paciente {
@@ -73,7 +74,7 @@ export default function ResponderEncuestaPage() {
     const fetchRegistroForEdit = async () => {
         const token = localStorage.getItem('accessToken');
         try {
-            const res = await fetch(`http://localhost:8080/api/v1/encuestas/registro/${registroId}`, {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/registro/${registroId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -129,7 +130,7 @@ export default function ResponderEncuestaPage() {
         const token = localStorage.getItem('accessToken');
         if (!idEncuesta) return;
         try {
-            const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}`, {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/${idEncuesta}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -145,7 +146,7 @@ export default function ResponderEncuestaPage() {
     const fetchPacientes = async () => {
         const token = localStorage.getItem('accessToken');
         try {
-            const res = await fetch('http://localhost:8080/api/v1/pacientes', {
+            const res = await fetch(`${API_URL}/api/v1/pacientes`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -328,7 +329,7 @@ export default function ResponderEncuestaPage() {
         };
 
         try {
-            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/registro`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -403,7 +404,7 @@ export default function ResponderEncuestaPage() {
 
         // ... (resto del fetch igual)
         try {
-            const res = await fetch('http://localhost:8080/api/v1/encuestas/registro', {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/registro`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

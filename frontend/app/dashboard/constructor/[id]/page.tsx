@@ -8,6 +8,7 @@ import {
     FaSave, FaBan, FaExchangeAlt, FaPen
 } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import { API_URL } from '@/app/config';
 
 // --- INTERFACES ---
 interface Opcion {
@@ -69,7 +70,7 @@ export default function FormBuilderPage() {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:8080/api/v1/encuestas', {
+            const res = await fetch(`${API_URL}/api/v1/encuestas`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -91,7 +92,7 @@ export default function FormBuilderPage() {
             setEditingId(null);
             handleCancelEdit();
 
-            const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}`, {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/${idEncuesta}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -153,7 +154,7 @@ export default function FormBuilderPage() {
 
             const token = localStorage.getItem('accessToken');
             try {
-                const res = await fetch(`http://localhost:8080/api/v1/encuestas/${idEncuesta}`, {
+                const res = await fetch(`${API_URL}/api/v1/encuestas/${idEncuesta}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -237,7 +238,7 @@ export default function FormBuilderPage() {
 
         const token = localStorage.getItem('accessToken');
         try {
-            const res = await fetch(`http://localhost:8080/api/v1/encuestas/preguntas/${idPregunta}`, {
+            const res = await fetch(`${API_URL}/api/v1/encuestas/preguntas/${idPregunta}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -320,11 +321,11 @@ export default function FormBuilderPage() {
         };
 
         try {
-            let url = `http://localhost:8080/api/v1/encuestas/${idEncuesta}/preguntas`;
+            let url = `${API_URL}/api/v1/encuestas/${idEncuesta}/preguntas`;
             let method = 'POST';
 
             if (editingId) {
-                url = `http://localhost:8080/api/v1/encuestas/preguntas/${editingId}`;
+                url = `${API_URL}/api/v1/encuestas/preguntas/${editingId}`;
                 method = 'PUT';
             }
 

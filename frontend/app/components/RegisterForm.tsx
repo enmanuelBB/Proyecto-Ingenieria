@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './PacienteForm.module.css'; // Reusing existing styles for consistency
+import { API_URL } from '../config';
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -60,8 +61,9 @@ export default function RegisterForm() {
       password: formData.password
     };
 
+
     try {
-      const response = await fetch('http://localhost:8080/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaLock, FaCheckCircle } from 'react-icons/fa';
 import styles from './resetPassword.module.css';
+import { API_URL } from '@/app/config';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -36,12 +37,12 @@ function ResetPasswordContent() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/auth/reset-password', {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            token: token, 
-            newPassword: newPassword 
+        body: JSON.stringify({
+          token: token,
+          newPassword: newPassword
         }),
       });
 
@@ -60,43 +61,43 @@ function ResetPasswordContent() {
   };
 
   if (!token) {
-      return (
-        <div className={styles.container}>
-            <div className={styles.card} style={{ textAlign: 'center' }}>
-                <div className={styles.error} style={{ marginBottom: 0 }}>
-                    Error: Enlace inválido o incompleto.
-                </div>
-            </div>
+    return (
+      <div className={styles.container}>
+        <div className={styles.card} style={{ textAlign: 'center' }}>
+          <div className={styles.error} style={{ marginBottom: 0 }}>
+            Error: Enlace inválido o incompleto.
+          </div>
         </div>
-      );
+      </div>
+    );
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        
+
         {/* Header Visual Opcional */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-            <div style={{ backgroundColor: 'var(--bg-input)', padding: '12px', borderRadius: '50%' }}>
-                <FaLock size={24} color="var(--primary)" />
-            </div>
+          <div style={{ backgroundColor: 'var(--bg-input)', padding: '12px', borderRadius: '50%' }}>
+            <FaLock size={24} color="var(--primary)" />
+          </div>
         </div>
 
         <h2 className={styles.title}>Crear Nueva Contraseña</h2>
-        
+
         {message && (
-            <div className={styles.message} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaCheckCircle /> {message}
-            </div>
+          <div className={styles.message} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaCheckCircle /> {message}
+          </div>
         )}
-        
+
         {error && <div className={styles.error}>{error}</div>}
 
         {!message && (
-            <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.inputGroup}>
-                <FaLock className={styles.icon} />
-                <input
+              <FaLock className={styles.icon} />
+              <input
                 type="password"
                 required
                 placeholder="Nueva contraseña"
@@ -104,24 +105,24 @@ function ResetPasswordContent() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 className={styles.input}
                 minLength={4}
-                />
+              />
             </div>
             <div className={styles.inputGroup}>
-                <FaLock className={styles.icon} />
-                <input
+              <FaLock className={styles.icon} />
+              <input
                 type="password"
                 required
                 placeholder="Confirmar contraseña"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={styles.input}
-                />
+              />
             </div>
-            
+
             <button type="submit" disabled={isLoading} className={styles.button}>
-                {isLoading ? 'Actualizando...' : 'Cambiar Contraseña'}
+              {isLoading ? 'Actualizando...' : 'Cambiar Contraseña'}
             </button>
-            </form>
+          </form>
         )}
       </div>
     </div>

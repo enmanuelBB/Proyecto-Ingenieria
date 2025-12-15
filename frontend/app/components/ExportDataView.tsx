@@ -75,10 +75,8 @@ const ExportDataView = () => {
 
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
       // Construir URL con el ID de encuesta ingresado
-      let url = `${baseUrl}/api/v1/encuestas/${surveyId}/export/${format}`;
+      let url = `${API_URL}/api/v1/encuestas/${surveyId}/export/${format}`;
 
       // Agregar parámetro de paciente si es necesario
       if (exportMode === 'patient' && selectedPatientId) {
