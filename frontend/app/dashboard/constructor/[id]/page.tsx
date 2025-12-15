@@ -300,7 +300,7 @@ export default function FormBuilderPage() {
         const token = localStorage.getItem('accessToken');
         setSubmitting(true);
 
-        let opcionesEnviar: any[] = [];
+        let opcionesEnviar: Opcion[] = [];
         let tipoBackend = tipo;
 
         // Mapeo UI -> Backend
