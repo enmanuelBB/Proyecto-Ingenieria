@@ -19,7 +19,7 @@ interface Paciente {
 }
 
 interface Registro {
-    idRespuesta: number;
+    idRegistro: number;
     idEncuesta: number;
     tituloEncuesta: string;
     fechaRealizacion: string; // ISO String
