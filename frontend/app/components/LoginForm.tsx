@@ -1,23 +1,82 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './LoginForm.module.css';
 import { FaEnvelope, FaLock, FaKey } from 'react-icons/fa';
 import { API_URL } from '../config';
 
 function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  //...
-  try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, deviceId }),
-    });
-    //...
+  const [deviceId, setDeviceId] = useState('');
+
+  const [verificationCode, setVerificationCode] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Generate or retrieve a simple device ID
+    let storedDeviceId = localStorage.getItem('device_id');
+    if (!storedDeviceId) {
+      storedDeviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('device_id', storedDeviceId);
+    }
+    setDeviceId(storedDeviceId);
+
+    // Show registration success message if needed
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMessage('¡Cuenta creada exitosamente! Por favor inicia sesión.');
+    }
+  }, [searchParams]);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, deviceId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Check if verification is needed (2FA or device check)
+        if (data.requiresVerification) {
+          setShowVerification(true);
+        } else {
+          // Direct login success
+          localStorage.setItem('accessToken', data.access_token);
+          localStorage.setItem('refreshToken', data.refresh_token);
+          router.push('/dashboard');
+        }
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        setError(errData.message || 'Credenciales inválidas');
+      }
+
+    } catch (e) {
+      console.error(e);
+      setError('Error al intentar ingresar.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`${API_URL}/auth/verify`, {
         method: 'POST',
@@ -32,14 +91,12 @@ function LoginForm() {
 
       if (!response.ok) {
         setError('Código incorrecto o expirado. Intente nuevamente.');
-        setIsLoading(false);
         return;
       }
 
       const data = await response.json();
       localStorage.setItem('accessToken', data.access_token);
       localStorage.setItem('refreshToken', data.refresh_token);
-      console.log('Verificación exitosa.');
       router.push('/dashboard');
 
     } catch (e) {
