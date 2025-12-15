@@ -68,7 +68,7 @@ export default function AuditPage() {
                             idRegistro: d.idRegistro,
                             nombrePaciente: d.nombrePaciente,
                             usuarioNombre: d.usuarioNombre,
-                            fechaRealizacion: d.fechaRealizacion,
+                            fechaRealizacion: d.fechaRealizacion.endsWith('Z') ? d.fechaRealizacion : d.fechaRealizacion + 'Z',
                             tituloEncuesta: d.tituloEncuesta,
                             tipo: 'MODIFICACION',
                             descripcion: `Se guardó respuesta para el paciente ${d.nombrePaciente}`
