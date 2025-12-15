@@ -205,6 +205,26 @@ public class DataEncoder {
             return answer; // Admin and Investigator see raw (original)
         }
 
+        // H. Pylori Specific Logic (User requested: Positive=0, Negative=1,
+        // Desconocido=2)
+        // This inverts the standard boolean logic for these specific questions.
+        if (questionContains(question, "Helicobacter") || questionContains(question, "H. pylori")) {
+            if (normalized.equalsIgnoreCase("Positivo"))
+                return "0";
+            if (normalized.equalsIgnoreCase("Negativo"))
+                return "1";
+            if (normalized.equalsIgnoreCase("Desconocido"))
+                return "2";
+
+            // For "Have you had a POSITIVE result?", "Sí" implies Positive (0)
+            if (normalized.equalsIgnoreCase("Sí") || normalized.equalsIgnoreCase("Si"))
+                return "0";
+            if (normalized.equalsIgnoreCase("No"))
+                return "1";
+            if (normalized.equalsIgnoreCase("No recuerda"))
+                return "2";
+        }
+
         // H. Pylori Exam Types
         if (questionContains(question, "Tipo de examen")) {
             String lower = normalized.toLowerCase();
