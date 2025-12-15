@@ -18,8 +18,8 @@ public class DataEncoder {
         EXACT_MATCH_MAP.put("No", 0);
         EXACT_MATCH_MAP.put("Sí", 1);
         EXACT_MATCH_MAP.put("Si", 1); // tolerance
-        EXACT_MATCH_MAP.put("No recuerda", 9);
-        EXACT_MATCH_MAP.put("Desconocido", 9);
+        EXACT_MATCH_MAP.put("No recuerda", 2);
+        EXACT_MATCH_MAP.put("Desconocido", 2);
 
         // Identificación y Sociodemográficos
         EXACT_MATCH_MAP.put("Control", 0);
@@ -175,21 +175,25 @@ public class DataEncoder {
             return "";
         }
 
+        // Normalize answer to handle dashes (en-dash vs hyphen)
+        String normalized = normalizeAnswer(answer);
+
+        // Use normalized for matching below
         // Handle Context-Dependent Collisions first
         if (questionContains(question, "Histológico") || questionContains(question, "Histopatología")) {
-            if (answer.equalsIgnoreCase("Difuso"))
+            if (normalized.equalsIgnoreCase("Difuso"))
                 return "1";
-            if (answer.equalsIgnoreCase("Otro"))
+            if (normalized.equalsIgnoreCase("Otro"))
                 return "3";
         }
 
         if (questionContains(question, "Localización")) {
-            if (answer.equalsIgnoreCase("Difuso"))
+            if (normalized.equalsIgnoreCase("Difuso"))
                 return "3";
         }
 
         if (questionContains(question, "Agua")) {
-            if (answer.equalsIgnoreCase("Otra") || answer.equalsIgnoreCase("Otro"))
+            if (normalized.equalsIgnoreCase("Otra") || normalized.equalsIgnoreCase("Otro"))
                 return "3";
         }
 
@@ -198,29 +202,30 @@ public class DataEncoder {
             if (role == Role.ANALISTA || role == Role.USER) {
                 return "REDACTED";
             }
-            return answer; // Admin and Investigator see raw
+            return answer; // Admin and Investigator see raw (original)
         }
 
         // H. Pylori Exam Types
         if (questionContains(question, "Tipo de examen")) {
-            if (answer.toLowerCase().contains("aliento"))
+            String lower = normalized.toLowerCase();
+            if (lower.contains("aliento"))
                 return "1";
-            if (answer.toLowerCase().contains("antígeno"))
+            if (lower.contains("antígeno"))
                 return "2";
-            if (answer.toLowerCase().contains("serología"))
+            if (lower.contains("serología"))
                 return "3";
-            if (answer.toLowerCase().contains("ureasa"))
+            if (lower.contains("ureasa"))
                 return "4";
-            if (answer.toLowerCase().contains("histología") || answer.toLowerCase().contains("biopsia"))
+            if (lower.contains("histología") || lower.contains("biopsia"))
                 return "5";
-            if (answer.toLowerCase().contains("otro"))
+            if (lower.contains("otro"))
                 return "6";
         }
 
-        // Try exact match or flexible start match
+        // Try exact match or flexible start match with NORMALIZED string
         for (Map.Entry<String, Integer> entry : EXACT_MATCH_MAP.entrySet()) {
             // Check for exact equality
-            if (answer.equalsIgnoreCase(entry.getKey())) {
+            if (normalized.equalsIgnoreCase(entry.getKey())) {
                 return String.valueOf(entry.getValue());
             }
 
@@ -228,7 +233,7 @@ public class DataEncoder {
             // Ensure we don't match short keys into long answers incorrectly (e.g. "No"
             // inside "No recuerda")
             // The map keys should be specific enough.
-            if (answer.toLowerCase().startsWith(entry.getKey().toLowerCase())) {
+            if (normalized.toLowerCase().startsWith(entry.getKey().toLowerCase())) {
                 return String.valueOf(entry.getValue());
             }
         }
@@ -256,5 +261,15 @@ public class DataEncoder {
 
     private boolean questionContains(String question, String keyword) {
         return question != null && question.toLowerCase().contains(keyword.toLowerCase());
+    }
+
+    private String normalizeAnswer(String answer) {
+        if (answer == null)
+            return "";
+        // Replace en-dash, em-dash, minus sign with standard hyphen
+        return answer.replace("\u2013", "-") // en-dash
+                .replace("\u2014", "-") // em-dash
+                .replace("\u2212", "-") // minus sign
+                .trim();
     }
 }
