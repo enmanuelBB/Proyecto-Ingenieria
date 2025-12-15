@@ -22,8 +22,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      # Puntero a la base de datos local a través del túnel SSH
-      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/tareadb?createDatabaseIfNotExist=true
+    environment:
+      # Conexión directa a la base de datos en el mismo servidor (Docker network)
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/tareadb?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
@@ -36,3 +37,19 @@ services:
       # --- CORREOS ---
       - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
       - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
+    depends_on:
+      - db
+
+  # Servicio 3: Base de Datos (Agregado para correr en el servidor)
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: tareadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
