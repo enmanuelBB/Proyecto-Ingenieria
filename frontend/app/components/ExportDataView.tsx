@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { FaFileExcel, FaFileCsv, FaFilePdf, FaDownload, FaUser, FaUsers, FaCog, FaExclamationCircle } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import styles from './ExportDataView.module.css';
+import { API_URL } from '../config';
 
 interface Paciente {
   idPaciente: number;
@@ -35,8 +36,7 @@ const ExportDataView = () => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
 
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-        const res = await fetch(`${baseUrl}/api/v1/pacientes`, {
+        const res = await fetch(`${API_URL}/api/v1/pacientes`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
