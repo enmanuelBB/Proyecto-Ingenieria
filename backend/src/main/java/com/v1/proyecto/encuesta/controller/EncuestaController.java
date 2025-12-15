@@ -41,14 +41,14 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<EncuestaResponseDto> getEncuestaCompleta(@PathVariable(name = "id") Integer id) {
         EncuestaResponseDto encuestaDto = encuestaService.getEncuestaCompleta(id);
         return ResponseEntity.ok(encuestaDto);
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<java.util.List<EncuestaResponseDto>> getAllEncuestas() {
         return ResponseEntity.ok(encuestaService.getAllEncuestas());
     }
@@ -221,7 +221,7 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}/export/excel
      */
     @GetMapping("/{id}/export/excel")
-    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarExcel(
             @PathVariable(name = "id") Integer id,
             @RequestParam(name = "idPaciente", required = false) Integer idPaciente) throws java.io.IOException {
@@ -240,7 +240,7 @@ public class EncuestaController {
      * URL: GET /api/v1/encuestas/{id}/export/pdf
      */
     @GetMapping("/{id}/export/pdf")
-    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarPdf(
             @PathVariable(name = "id") Integer id,
             @RequestParam(name = "idPaciente", required = false) Integer idPaciente) {
@@ -257,7 +257,8 @@ public class EncuestaController {
      * EXPORTAR ENCUESTA A CSV
      * URL: GET /api/v1/encuestas/{id}/export/csv
      */
-    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @GetMapping("/{id}/export/csv")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarCsv(
             @PathVariable(name = "id") Integer id,
             @RequestParam(name = "idPaciente", required = false) Integer idPaciente) {
