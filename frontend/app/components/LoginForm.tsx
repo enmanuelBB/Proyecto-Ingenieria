@@ -51,13 +51,18 @@ function LoginForm() {
       if (response.ok) {
         const data = await response.json();
         // Check if verification is needed (2FA or device check)
-        if (data.requiresVerification) {
+        // Check for mfa_enabled (snake_case from backend @JsonProperty) or mfaEnabled (camelCase fallthrough)
+        if (data.mfa_enabled || data.mfaEnabled) {
           setShowVerification(true);
         } else {
           // Direct login success
-          localStorage.setItem('accessToken', data.access_token);
-          localStorage.setItem('refreshToken', data.refresh_token);
-          router.push('/dashboard');
+          if (data.access_token) {
+            localStorage.setItem('accessToken', data.access_token);
+            localStorage.setItem('refreshToken', data.refresh_token);
+            router.push('/dashboard');
+          } else {
+            setError('Error: Login exitoso pero sin token recibido.');
+          }
         }
       } else {
         const errData = await response.json().catch(() => ({}));
