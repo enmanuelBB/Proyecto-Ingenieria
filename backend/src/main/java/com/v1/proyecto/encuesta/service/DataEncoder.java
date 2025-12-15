@@ -135,6 +135,21 @@ public class DataEncoder {
         EXACT_MATCH_MAP.put("Nunca/Rara vez", 0); // Variation in form
         EXACT_MATCH_MAP.put("1 a 2 veces por semana", 1);
         EXACT_MATCH_MAP.put("3 o más veces por semana", 2);
+
+        // Screenshot Variations (Hyphens vs En-dashes, missing suffixes)
+        // Tragos
+        EXACT_MATCH_MAP.put("1-2 tragos", 0);
+        EXACT_MATCH_MAP.put("3-4 tragos", 1);
+        EXACT_MATCH_MAP.put("≥5 tragos", 2);
+
+        // Porciones
+        EXACT_MATCH_MAP.put("≤2 porciones/día", 0);
+        EXACT_MATCH_MAP.put("3-4 porciones/día", 1);
+        EXACT_MATCH_MAP.put("≥5 porciones/día", 2);
+
+        // Frequencies (Infusiones)
+        EXACT_MATCH_MAP.put("1-2/sem", 1);
+        EXACT_MATCH_MAP.put("≥3/sem", 2);
     }
 
     public String anonymizePaciente(Paciente p, Role role) {
