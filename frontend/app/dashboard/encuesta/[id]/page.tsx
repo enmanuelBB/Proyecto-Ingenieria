@@ -51,6 +51,7 @@ export default function ResponderEncuestaPage() {
 
     const [loading, setLoading] = useState(true);
     const [respuestas, setRespuestas] = useState<{ [key: number]: string | number | number[] }>({});
+    const [originalRespuestas, setOriginalRespuestas] = useState<{ [key: number]: any }>({}); // Para mostrar valor original
     const [errorIds, setErrorIds] = useState<number[]>([]); // Estado de errores
     const [step, setStep] = useState<'intro' | 'form'>('intro');
 
@@ -115,6 +116,7 @@ export default function ResponderEncuestaPage() {
                 });
 
                 setRespuestas(mappedRespuestas);
+                setOriginalRespuestas(mappedRespuestas); // Guardar copia original
                 setStep('form'); // Skip intro
             }
         } catch (e) {

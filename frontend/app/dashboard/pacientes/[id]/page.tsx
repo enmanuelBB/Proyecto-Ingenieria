@@ -176,7 +176,7 @@ export default function PatientDetailPage() {
                                                     <button
                                                         className={styles.btnSecondary}
                                                         style={{ fontSize: '0.8rem', padding: '5px 10px' }}
-                                                        onClick={() => router.push(`/dashboard/encuesta/${reg.tituloEncuesta.includes('Gástrico') ? 1 : reg.idEncuesta}?registro=${reg.idRespuesta}&mode=edit`)}
+                                                        onClick={() => router.push(`/dashboard/encuesta/${reg.tituloEncuesta.includes('Gástrico') ? 1 : reg.idEncuesta}?registro=${reg.idRegistro}&mode=edit`)}
                                                     >
                                                         Editar Respuesta
                                                     </button>
