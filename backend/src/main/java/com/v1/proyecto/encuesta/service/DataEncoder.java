@@ -101,6 +101,40 @@ public class DataEncoder {
         EXACT_MATCH_MAP.put("Cardias", 0);
         EXACT_MATCH_MAP.put("Cuerpo", 1);
         EXACT_MATCH_MAP.put("Antro", 2);
+
+        // Fix for specific user reports
+        EXACT_MATCH_MAP.put("Nunca fumó", 0);
+        EXACT_MATCH_MAP.put("Nunca fumó (menos de 100 cigarrillos en la vida)", 0);
+
+        // Tabaquismo Detailed
+        EXACT_MATCH_MAP.put("1–9 cigarrillos/día", 0);
+        EXACT_MATCH_MAP.put("1–9 cigarrillos/día (poco)", 0);
+        EXACT_MATCH_MAP.put("1-9 cigarrillos/día", 0); // variation
+        EXACT_MATCH_MAP.put("10–19 cigarrillos/día", 1);
+        EXACT_MATCH_MAP.put("10–19 cigarrillos/día (moderado)", 1);
+        EXACT_MATCH_MAP.put("10-19 cigarrillos/día", 1); // variation
+        EXACT_MATCH_MAP.put("≥20 cigarrillos/día", 2);
+        EXACT_MATCH_MAP.put("≥20 cigarrillos/día (mucho)", 2);
+
+        // Times
+        EXACT_MATCH_MAP.put("<5 años", 0);
+        EXACT_MATCH_MAP.put("5–10 años", 1);
+        EXACT_MATCH_MAP.put("5-10 años", 1);
+        EXACT_MATCH_MAP.put(">10 años", 2);
+
+        // Alcohol
+        EXACT_MATCH_MAP.put("Ocasional (menos de 1 vez/semana)", 0);
+        EXACT_MATCH_MAP.put("Regular (1–3 veces/semana)", 1);
+        EXACT_MATCH_MAP.put("Frecuente (≥4 veces/semana)", 2);
+        EXACT_MATCH_MAP.put("1–2 tragos (poco)", 0);
+        EXACT_MATCH_MAP.put("3–4 tragos (moderado)", 1);
+        EXACT_MATCH_MAP.put("≥5 tragos (mucho)", 2);
+
+        // Diet Matches
+        EXACT_MATCH_MAP.put("Casi nunca / Rara vez", 0);
+        EXACT_MATCH_MAP.put("Nunca/Rara vez", 0); // Variation in form
+        EXACT_MATCH_MAP.put("1 a 2 veces por semana", 1);
+        EXACT_MATCH_MAP.put("3 o más veces por semana", 2);
     }
 
     public String anonymizePaciente(Paciente p, Role role) {
@@ -109,6 +143,13 @@ public class DataEncoder {
         }
         // For non-admins, return Codigo Participante
         return p.getCodigoParticipante() != null ? p.getCodigoParticipante() : "ANON-" + p.getIdPaciente();
+    }
+
+    public String anonymizeUsuario(com.v1.proyecto.auth.model.Users u, Role role) {
+        if (role == Role.ADMIN) {
+            return u.getUsername();
+        }
+        return "User-" + u.getId();
     }
 
     public String encodeRespuesta(String question, String answer, Role role) {
@@ -132,28 +173,48 @@ public class DataEncoder {
                 return "3";
         }
 
-        if (questionContains(question, "Previsión") || questionContains(question, "Agua")) { // Prevision=Otra->4,
-                                                                                             // Agua=Otra->3
-            if (answer.equalsIgnoreCase("Otra") || answer.equalsIgnoreCase("Otro")) {
-                if (questionContains(question, "Previsión"))
-                    return "4";
-                if (questionContains(question, "Agua"))
-                    return "3";
-            }
+        if (questionContains(question, "Agua")) {
+            if (answer.equalsIgnoreCase("Otra") || answer.equalsIgnoreCase("Otro"))
+                return "3";
         }
 
-        // Try exact match
-        for (Map.Entry<String, Integer> entry : EXACT_MATCH_MAP.entrySet()) {
-            if (answer.equalsIgnoreCase(entry.getKey()) || answer.startsWith(entry.getKey())) {
-                // startsWith is dangerous for "1-2" vs "1-20". Use equals or specific logic.
-                // The keys are quite specific.
-                if (answer.equalsIgnoreCase(entry.getKey()))
-                    return String.valueOf(entry.getValue());
+        // Nacionalidad Visibility Rule
+        if (questionContains(question, "Nacionalidad")) {
+            if (role == Role.ANALISTA || role == Role.USER) {
+                return "REDACTED";
+            }
+            return answer; // Admin and Investigator see raw
+        }
 
-                // Handle "≤2 porciones (Riesgo)" vs "≤2 porciones"
-                if (entry.getKey().length() > 5 && answer.startsWith(entry.getKey())) {
-                    return String.valueOf(entry.getValue());
-                }
+        // H. Pylori Exam Types
+        if (questionContains(question, "Tipo de examen")) {
+            if (answer.toLowerCase().contains("aliento"))
+                return "1";
+            if (answer.toLowerCase().contains("antígeno"))
+                return "2";
+            if (answer.toLowerCase().contains("serología"))
+                return "3";
+            if (answer.toLowerCase().contains("ureasa"))
+                return "4";
+            if (answer.toLowerCase().contains("histología") || answer.toLowerCase().contains("biopsia"))
+                return "5";
+            if (answer.toLowerCase().contains("otro"))
+                return "6";
+        }
+
+        // Try exact match or flexible start match
+        for (Map.Entry<String, Integer> entry : EXACT_MATCH_MAP.entrySet()) {
+            // Check for exact equality
+            if (answer.equalsIgnoreCase(entry.getKey())) {
+                return String.valueOf(entry.getValue());
+            }
+
+            // Check for startsWith for long options (e.g. "Nunca fumó (menos de...)")
+            // Ensure we don't match short keys into long answers incorrectly (e.g. "No"
+            // inside "No recuerda")
+            // The map keys should be specific enough.
+            if (answer.toLowerCase().startsWith(entry.getKey().toLowerCase())) {
+                return String.valueOf(entry.getValue());
             }
         }
 

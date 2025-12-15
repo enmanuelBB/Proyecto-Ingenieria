@@ -220,10 +220,6 @@ public class EncuestaController {
      * EXPORTAR ENCUESTA A EXCEL
      * URL: GET /api/v1/encuestas/{id}/export/excel
      */
-    /**
-     * EXPORTAR ENCUESTA A EXCEL
-     * URL: GET /api/v1/encuestas/{id}/export/excel
-     */
     @GetMapping("/{id}/export/excel")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'ANALISTA', 'INVESTIGADOR')")
     public ResponseEntity<Resource> exportarExcel(

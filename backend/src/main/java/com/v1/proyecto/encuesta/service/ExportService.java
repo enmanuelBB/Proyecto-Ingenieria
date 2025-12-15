@@ -85,7 +85,8 @@ public class ExportService {
                 // Anonymize Patient
                 row.createCell(2).setCellValue(dataEncoder.anonymizePaciente(registro.getPaciente(), role));
 
-                row.createCell(3).setCellValue(registro.getUsuario().getUsername());
+                // Anonymize User
+                row.createCell(3).setCellValue(dataEncoder.anonymizeUsuario(registro.getUsuario(), role));
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
@@ -165,7 +166,8 @@ public class ExportService {
                 // Anonymize Patient
                 addCell(table, dataEncoder.anonymizePaciente(registro.getPaciente(), role),
                         dataFont, rowColor);
-                addCell(table, registro.getUsuario().getUsername(), dataFont, rowColor);
+                // Anonymize User
+                addCell(table, dataEncoder.anonymizeUsuario(registro.getUsuario(), role), dataFont, rowColor);
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
@@ -225,7 +227,8 @@ public class ExportService {
                 row.append(escapeCsv(dataEncoder.anonymizePaciente(registro.getPaciente(), role)))
                         .append(",");
 
-                row.append(escapeCsv(registro.getUsuario().getUsername()));
+                // Anonymize User
+                row.append(escapeCsv(dataEncoder.anonymizeUsuario(registro.getUsuario(), role)));
 
                 Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
                         .collect(Collectors.toMap(
