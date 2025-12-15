@@ -292,4 +292,8 @@ public class DataEncoder {
                 .replace("\u2212", "-") // minus sign
                 .trim();
     }
+
+    public Map<String, Integer> getDictionary() {
+        return EXACT_MATCH_MAP;
+    }
 }

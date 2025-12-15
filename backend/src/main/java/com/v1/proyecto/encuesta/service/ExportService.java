@@ -105,89 +105,19 @@ public class ExportService {
         }
     }
 
-    @Transactional(readOnly = true)
     public ByteArrayInputStream generatePdf(Integer idEncuesta, Integer idPaciente, Role role) {
-        Encuesta encuesta = encuestaRepository.findById(idEncuesta)
-                .orElseThrow(() -> new RuntimeException("Encuesta no encontrada"));
-
-        List<RegistroEncuesta> registros;
-        if (idPaciente != null) {
-            registros = registroEncuestaRepository.findByEncuestaIdEncuestaAndPacienteIdPaciente(idEncuesta,
-                    idPaciente);
-        } else {
-            registros = registroEncuestaRepository.findByEncuestaIdEncuesta(idEncuesta);
-        }
-        List<Pregunta> preguntas = encuesta.getPreguntas().stream()
-                .sorted(Comparator.comparing(Pregunta::getIdPregunta))
-                .collect(Collectors.toList());
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document document = new Document(PageSize.A4.rotate());
-
         try {
-            PdfWriter.getInstance(document, out);
-            document.open();
-
-            // Título
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
-            Paragraph title = new Paragraph("Reporte de Encuesta: " + encuesta.getTitulo(), titleFont);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-
-            document.add(new Paragraph("Versión: " + encuesta.getVersion()));
-            document.add(new Paragraph("Total Registros: " + registros.size()));
-            document.add(new Paragraph(" ")); // Espacio
-
-            PdfPTable table = new PdfPTable(4 + preguntas.size());
-            table.setWidthPercentage(100);
-            table.setHeaderRows(1);
-
-            // Definir Font para Header y Data
-            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
-            Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
-
-            // Headers
-            addHeaderCell(table, "ID", headerFont);
-            addHeaderCell(table, "Fecha", headerFont);
-            addHeaderCell(table, "Paciente", headerFont);
-            addHeaderCell(table, "Usuario", headerFont);
-
-            for (Pregunta p : preguntas) {
-                addHeaderCell(table, p.getTextoPregunta(), headerFont);
+            // Load the static PDF file from resources
+            java.io.InputStream is = getClass().getResourceAsStream("/Leyenda_Datos_Cancer_Gastrico.pdf");
+            if (is == null) {
+                // Try file system if resource not found (dev mode fallback)
+                // This is just a fallback, the resource should be there if built correctly
+                throw new RuntimeException("El archivo de leyenda no se encuentra en los recursos.");
             }
-
-            // Data
-            boolean alternate = false;
-            for (RegistroEncuesta registro : registros) {
-                Color rowColor = alternate ? new Color(245, 245, 245) : Color.WHITE; // Light Gray vs White
-
-                addCell(table, registro.getIdRegistro().toString(), dataFont, rowColor);
-                addCell(table, registro.getFechaRealizacion().toString(), dataFont, rowColor);
-                // Anonymize Patient
-                addCell(table, dataEncoder.anonymizePaciente(registro.getPaciente(), role),
-                        dataFont, rowColor);
-                // Anonymize User
-                addCell(table, dataEncoder.anonymizeUsuario(registro.getUsuario(), role), dataFont, rowColor);
-
-                Map<Integer, String> respuestasMap = registro.getRespuestas().stream()
-                        .collect(Collectors.toMap(
-                                r -> r.getPregunta().getIdPregunta(),
-                                r -> this.getRespuestaTexto(r, role)));
-
-                for (Pregunta p : preguntas) {
-                    addCell(table, respuestasMap.getOrDefault(p.getIdPregunta(), ""), dataFont, rowColor);
-                }
-                alternate = !alternate;
-            }
-
-            document.add(table);
-            document.close();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error al generar PDF", e);
+            return new ByteArrayInputStream(is.readAllBytes());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer el archivo PDF de leyenda", e);
         }
-
-        return new ByteArrayInputStream(out.toByteArray());
     }
 
     @Transactional(readOnly = true)

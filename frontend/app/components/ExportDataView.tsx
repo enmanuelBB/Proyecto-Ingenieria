@@ -238,7 +238,7 @@ const ExportDataView = () => {
             disabled={loading}
           >
             <FaFilePdf size={30} color="#dc2626" style={{ marginBottom: '10px' }} />
-            PDF (Reporte)
+            PDF (Leyenda)
           </button>
 
         </div>
