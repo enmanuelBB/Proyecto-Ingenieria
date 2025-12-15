@@ -150,6 +150,12 @@ public class DataEncoder {
         // Frequencies (Infusiones)
         EXACT_MATCH_MAP.put("1-2/sem", 1);
         EXACT_MATCH_MAP.put("≥3/sem", 2);
+
+        // Time since test (Test realizado)
+        EXACT_MATCH_MAP.put("<1 año", 0);
+        EXACT_MATCH_MAP.put("1-5 años", 1);
+        EXACT_MATCH_MAP.put("1–5 años", 1);
+        EXACT_MATCH_MAP.put(">5 años", 2);
     }
 
     public String anonymizePaciente(Paciente p, Role role) {
